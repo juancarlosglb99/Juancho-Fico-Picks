@@ -37,7 +37,8 @@ export function formatRosterPositions(positions: string[]): string {
     .join(' · ');
 }
 
-export function getScoringLabel(scoring: Record<string, number>): string {
+export function getScoringLabel(scoring: Record<string, number> | null): string {
+  if (!scoring) return 'Unknown';
   const receptions = scoring.rec ?? 0;
   if (receptions >= 1) return 'PPR';
   if (receptions >= 0.5) return 'Half PPR';

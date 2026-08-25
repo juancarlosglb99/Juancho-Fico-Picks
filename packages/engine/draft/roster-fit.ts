@@ -1,6 +1,6 @@
 import type { CanonicalPlayerMap, Position } from '../../players/types';
+import type { RosterConfiguration } from '../context/types';
 import type {
-  SleeperDraft,
   SleeperDraftPick,
   SleeperRoster,
 } from '../../sleeper/types';
@@ -18,15 +18,15 @@ export interface StarterTargets {
   FLEX: number;
 }
 
-export function getStarterTargets(draft: SleeperDraft): StarterTargets {
+export function getStarterTargets(roster: RosterConfiguration): StarterTargets {
   return {
-    QB: Math.max(1, draft.settings.slots_qb ?? 1),
-    RB: Math.max(1, draft.settings.slots_rb ?? 2),
-    WR: Math.max(1, draft.settings.slots_wr ?? 2),
-    TE: Math.max(1, draft.settings.slots_te ?? 1),
-    K: Math.max(0, draft.settings.slots_k ?? 1),
-    DEF: Math.max(0, draft.settings.slots_def ?? 1),
-    FLEX: Math.max(0, draft.settings.slots_flex ?? 1),
+    QB: Math.max(0, roster.QB + roster.SUPER_FLEX),
+    RB: Math.max(0, roster.RB),
+    WR: Math.max(0, roster.WR),
+    TE: Math.max(0, roster.TE),
+    K: Math.max(0, roster.K),
+    DEF: Math.max(0, roster.DEF),
+    FLEX: Math.max(0, roster.FLEX),
   };
 }
 

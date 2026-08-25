@@ -6,6 +6,7 @@ import type {
   SleeperNflState,
   SleeperPlayersResponse,
   SleeperRoster,
+  SleeperTradedPick,
   SleeperUser,
 } from './types';
 
@@ -105,6 +106,13 @@ export const sleeperClient = {
   getDraftPicks(draftId: string, signal?: AbortSignal) {
     return request<SleeperDraftPick[]>(
       `/draft/${encodeURIComponent(draftId)}/picks`,
+      signal,
+    );
+  },
+
+  getDraftTradedPicks(draftId: string, signal?: AbortSignal) {
+    return request<SleeperTradedPick[]>(
+      `/draft/${encodeURIComponent(draftId)}/traded_picks`,
       signal,
     );
   },

@@ -1,5 +1,6 @@
 import type { CanonicalPlayer } from '../../players/types';
 import type { MappedProjection } from '../../projections/types';
+import type { Confidence, LeagueContext } from '../context/types';
 
 export interface DraftBoardState {
   teams: number;
@@ -9,6 +10,7 @@ export interface DraftBoardState {
   currentRound: number;
   pickInRound: number;
   draftedSleeperIds: Set<string>;
+  keeperSleeperIds: Set<string>;
   unavailableSleeperIds: Set<string>;
   availablePlayers: CanonicalPlayer[];
 }
@@ -26,10 +28,15 @@ export interface DraftScoreComponents {
 }
 
 export interface DraftScoreRawValues {
+  projectedPoints: number;
+  sourceProjectedPoints: number;
   vorp: number;
   scarcityGap: number;
   adpDelta: number;
   replacementProjection: number;
+  replacementDemand: number;
+  rosterNeed: number;
+  scoringAdjusted: boolean;
 }
 
 export interface DraftRecommendation {
@@ -37,9 +44,10 @@ export interface DraftRecommendation {
   projection: MappedProjection;
   score: number;
   action: RecommendationAction;
-  availableNextPickProbability: number;
-  nextUserPick: number;
-  picksUntilNextUserPick: number;
+  availableNextPickProbability: number | null;
+  nextPickConfidence: Confidence;
+  nextUserPick: number | null;
+  picksUntilNextUserPick: number | null;
   tier: number;
   playersRemainingInTier: number;
   components: DraftScoreComponents;
@@ -49,8 +57,16 @@ export interface DraftRecommendation {
 
 export interface DraftRecommendationResult {
   recommendations: DraftRecommendation[];
-  nextUserPick: number;
-  picksUntilNextUserPick: number;
+  status: 'ready' | 'limited' | 'data_required' | 'unsupported';
+  messages: string[];
+  scoringCoverage:
+    | 'league_recalculated'
+    | 'provider_precalculated'
+    | 'mixed'
+    | 'aggregate_unverified';
+  context: LeagueContext;
+  nextUserPick: number | null;
+  picksUntilNextUserPick: number | null;
   userDraftSlot: number | null;
   userRosterId: number | null;
 }

@@ -1,67 +1,74 @@
 import type { Position } from '../../players/types';
-import type { SleeperDraft, SleeperDraftPick } from '../../sleeper/types';
+import type { SleeperTradedPick } from '../../sleeper/types';
 import { clamp, normalCdf, round } from './math';
+
+export type NormalizedDraftType =
+  | 'snake'
+  | 'linear'
+  | '3rr'
+  | 'auction'
+  | 'unknown';
 
 export function slotForOverallPick(
   overallPick: number,
   teams: number,
-  draftType: string,
+  draftType: NormalizedDraftType,
 ): number {
   const roundNumber = Math.ceil(overallPick / teams);
   const pickInRound = ((overallPick - 1) % teams) + 1;
+  if (draftType === '3rr') {
+    const reverse = roundNumber === 2 || (roundNumber >= 3 && roundNumber % 2 === 1);
+    return reverse ? teams + 1 - pickInRound : pickInRound;
+  }
   if (draftType === 'snake' && roundNumber % 2 === 0) {
     return teams + 1 - pickInRound;
   }
   return pickInRound;
 }
 
-export function resolveUserDraftSlot(
-  draft: SleeperDraft,
-  userId: string,
-  userRosterId: number | null,
-  picks: SleeperDraftPick[],
-): number | null {
-  const direct = draft.draft_order?.[userId];
-  if (direct) return direct;
-
-  if (userRosterId !== null) {
-    const slotEntry = Object.entries(draft.slot_to_roster_id ?? {}).find(
-      ([, rosterId]) => Number(rosterId) === userRosterId,
-    );
-    if (slotEntry) return Number(slotEntry[0]);
-
-    const ownPick = picks.find((pick) => Number(pick.roster_id) === userRosterId);
-    if (ownPick) return ownPick.draft_slot;
-  }
-  return null;
-}
-
 export function findNextUserSelection(
   currentOverallPick: number,
   teams: number,
   rounds: number,
-  draftType: string,
+  draftType: NormalizedDraftType,
   userSlot: number | null,
-): number {
+  ownership?: {
+    userRosterId: number | null;
+    slotToRosterId: Record<string, number> | null;
+    tradedPicks: SleeperTradedPick[];
+  },
+): number | null {
   const totalPicks = teams * rounds;
-  if (userSlot === null || draftType === 'auction') {
-    return Math.min(totalPicks, currentOverallPick + teams);
-  }
+  if (draftType === 'auction' || draftType === 'unknown') return null;
+  if (userSlot === null && ownership?.userRosterId === null) return null;
 
-  const currentSlot = slotForOverallPick(currentOverallPick, teams, draftType);
-  const start = currentSlot === userSlot ? currentOverallPick + 1 : currentOverallPick;
-  for (let pick = start; pick <= totalPicks; pick += 1) {
-    if (slotForOverallPick(pick, teams, draftType) === userSlot) return pick;
+  for (let pick = currentOverallPick; pick <= totalPicks; pick += 1) {
+    const slot = slotForOverallPick(pick, teams, draftType);
+    const round = Math.ceil(pick / teams);
+    const originalRosterId = ownership?.slotToRosterId?.[String(slot)] ?? null;
+    const traded = ownership?.tradedPicks.find(
+      (candidate) =>
+        candidate.round === round && candidate.roster_id === originalRosterId,
+    );
+    const ownerRosterId = traded?.owner_id ?? originalRosterId;
+    const isUserSelection =
+      ownership?.userRosterId !== null && ownership?.userRosterId !== undefined
+        ? ownerRosterId === ownership.userRosterId
+        : slot === userSlot;
+    if (isUserSelection && pick > currentOverallPick) {
+      return pick;
+    }
   }
-  return totalPicks;
+  return null;
 }
 
 export function getInterveningDraftSlots(
   currentOverallPick: number,
-  nextUserPick: number,
+  nextUserPick: number | null,
   teams: number,
-  draftType: string,
+  draftType: NormalizedDraftType,
 ): number[] {
+  if (nextUserPick === null) return [];
   const slots: number[] = [];
   for (let pick = currentOverallPick; pick < nextUserPick; pick += 1) {
     slots.push(slotForOverallPick(pick, teams, draftType));

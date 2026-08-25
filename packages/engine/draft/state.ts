@@ -17,6 +17,9 @@ export function deriveDraftBoardState(
   const teams = Math.max(1, draft.settings.teams ?? rosters.length ?? 1);
   const rounds = Math.max(1, draft.settings.rounds ?? 1);
   const draftedSleeperIds = new Set(picks.map((pick) => pick.player_id));
+  const keeperSleeperIds = new Set(
+    picks.filter((pick) => pick.is_keeper).map((pick) => pick.player_id),
+  );
   const unavailableSleeperIds = new Set(draftedSleeperIds);
 
   for (const roster of rosters) {
@@ -44,6 +47,7 @@ export function deriveDraftBoardState(
     currentRound,
     pickInRound,
     draftedSleeperIds,
+    keeperSleeperIds,
     unavailableSleeperIds,
     availablePlayers,
   };

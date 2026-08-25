@@ -53,6 +53,8 @@ function canonicalizeSleeperPlayer(
     position,
     team: raw.team ?? null,
     status: raw.status ?? null,
+    age: raw.age ?? null,
+    yearsExperience: raw.years_exp ?? null,
     externalIds,
   };
 }

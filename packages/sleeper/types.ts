@@ -27,9 +27,11 @@ export interface SleeperLeague {
   total_rosters: number;
   draft_id: string | null;
   avatar: string | null;
-  scoring_settings: Record<string, number>;
+  scoring_settings: Record<string, number> | null;
   roster_positions: string[];
   settings: Record<string, number | null>;
+  metadata?: Record<string, string | null> | null;
+  previous_league_id?: string | null;
 }
 
 export interface SleeperRoster {
@@ -77,15 +79,21 @@ export interface SleeperDraft {
     slots_wr?: number;
     slots_te?: number;
     slots_flex?: number;
+    slots_wrrb_flex?: number;
     slots_super_flex?: number;
     slots_bn?: number;
     slots_k?: number;
     slots_def?: number;
+    player_type?: number;
+    reversal_round?: number;
+    [key: string]: number | undefined;
   };
   metadata: {
     name?: string;
     description?: string;
     scoring_type?: string;
+    league_type?: string;
+    [key: string]: string | undefined;
   };
   draft_order: Record<string, number> | null;
   slot_to_roster_id: Record<string, number> | null;
@@ -104,6 +112,17 @@ export interface SleeperDraftPick {
     position?: string;
     team?: string;
   };
+  is_keeper?: boolean | null;
+  draft_id?: string;
+}
+
+export interface SleeperTradedPick {
+  season: string;
+  round: number;
+  roster_id: number;
+  previous_owner_id: number;
+  owner_id: number;
+  draft_id?: string;
 }
 
 export interface SleeperPlayerRaw {
@@ -116,6 +135,8 @@ export interface SleeperPlayerRaw {
   team?: string | null;
   status?: string | null;
   search_rank?: number | null;
+  age?: number | null;
+  years_exp?: number | null;
   gsis_id?: string | null;
   espn_id?: string | number | null;
   pfr_id?: string | null;

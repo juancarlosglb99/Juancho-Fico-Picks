@@ -1,6 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizeLeagueContext } from '@/packages/engine/context/normalize';
+import type {
+  DraftContext,
+  LeagueContext,
+  LeagueContextOverrides,
+  LeagueType,
+  LineupType,
+} from '@/packages/engine/context/types';
+import type { NormalizedDraftType } from '@/packages/engine/draft/next-pick-probability';
 import { deriveDraftBoardState } from '@/packages/engine/draft/state';
 import { generateDraftRecommendations } from '@/packages/engine/draft/recommendations';
 import type {
@@ -16,7 +25,6 @@ import type { ProjectionMappingResult } from '@/packages/projections/types';
 import { sleeperClient, SleeperApiError } from '@/packages/sleeper/client';
 import {
   formatRosterPositions,
-  getScoringLabel,
   joinRostersWithOwners,
 } from '@/packages/sleeper/normalization';
 import type {
@@ -25,6 +33,7 @@ import type {
   SleeperDraftPick,
   SleeperLeague,
   SleeperRoster,
+  SleeperTradedPick,
   SleeperUser,
 } from '@/packages/sleeper/types';
 
@@ -38,6 +47,7 @@ interface LeagueWorkspace {
 interface DraftWorkspace {
   draft: SleeperDraft;
   picks: SleeperDraftPick[];
+  tradedPicks: SleeperTradedPick[];
   players: CanonicalPlayerMap;
   board: DraftBoardState;
   syncedAt: Date;
@@ -110,6 +120,8 @@ export function Dashboard() {
   );
   const [busy, setBusy] = useState<BusyState>(null);
   const [error, setError] = useState<string | null>(null);
+  const [contextOverrides, setContextOverrides] =
+    useState<LeagueContextOverrides>({});
 
   const loadDraft = useCallback(
     async (draftId: string, workspace: LeagueWorkspace) => {
@@ -117,11 +129,13 @@ export function Dashboard() {
       setError(null);
       setProjectionMapping(null);
       setProjectionFilename(null);
+      setContextOverrides({});
 
       try {
-        const [draft, picks, rawPlayers] = await Promise.all([
+        const [draft, picks, tradedPicks, rawPlayers] = await Promise.all([
           sleeperClient.getDraft(draftId),
           sleeperClient.getDraftPicks(draftId),
+          sleeperClient.getDraftTradedPicks(draftId),
           sleeperClient.getActivePlayers(),
         ]);
         const players = buildCanonicalPlayerMap(rawPlayers);
@@ -131,7 +145,14 @@ export function Dashboard() {
           workspace.rosters,
           players,
         );
-        setDraftWorkspace({ draft, picks, players, board, syncedAt: new Date() });
+        setDraftWorkspace({
+          draft,
+          picks,
+          tradedPicks,
+          players,
+          board,
+          syncedAt: new Date(),
+        });
       } catch (nextError) {
         setError(formatError(nextError));
       } finally {
@@ -147,6 +168,7 @@ export function Dashboard() {
       setError(null);
       setDraftWorkspace(null);
       setProjectionMapping(null);
+      setContextOverrides({});
 
       try {
         const [league, rosters, owners, drafts] = await Promise.all([
@@ -218,16 +240,20 @@ export function Dashboard() {
   const refreshPicks = useCallback(async () => {
     if (!draftWorkspace || !leagueWorkspace) return;
     try {
-      const picks = await sleeperClient.getDraftPicks(
-        draftWorkspace.draft.draft_id,
-      );
+      const [draft, picks, tradedPicks] = await Promise.all([
+        sleeperClient.getDraft(draftWorkspace.draft.draft_id),
+        sleeperClient.getDraftPicks(draftWorkspace.draft.draft_id),
+        sleeperClient.getDraftTradedPicks(draftWorkspace.draft.draft_id),
+      ]);
       setDraftWorkspace((current) => {
         if (!current) return current;
         return {
           ...current,
+          draft,
           picks,
+          tradedPicks,
           board: deriveDraftBoardState(
-            current.draft,
+            draft,
             picks,
             leagueWorkspace.rosters,
             current.players,
@@ -284,25 +310,39 @@ export function Dashboard() {
   }, [draftWorkspace, projectionMapping]);
 
   const recommendationResult = useMemo(() => {
+    if (!draftWorkspace || !leagueWorkspace || !user) return null;
+    return normalizeLeagueContext({
+      league: leagueWorkspace.league,
+      draft: draftWorkspace.draft,
+      drafts: leagueWorkspace.drafts,
+      picks: draftWorkspace.picks,
+      tradedPicks: draftWorkspace.tradedPicks,
+      rosters: leagueWorkspace.rosters,
+      board: draftWorkspace.board,
+      userId: user.user_id,
+      overrides: contextOverrides,
+    });
+  }, [draftWorkspace, leagueWorkspace, user, contextOverrides]);
+
+  const draftRecommendations = useMemo(() => {
     if (
       !draftWorkspace ||
       !leagueWorkspace ||
       !projectionMapping ||
-      !user ||
+      !recommendationResult ||
       draftWorkspace.draft.status === 'complete'
     ) {
       return null;
     }
     return generateDraftRecommendations({
-      draft: draftWorkspace.draft,
+      context: recommendationResult,
       picks: draftWorkspace.picks,
       rosters: leagueWorkspace.rosters,
       board: draftWorkspace.board,
       players: draftWorkspace.players,
       projections: projectionMapping.mapped,
-      userId: user.user_id,
     });
-  }, [draftWorkspace, leagueWorkspace, projectionMapping, user]);
+  }, [draftWorkspace, leagueWorkspace, projectionMapping, recommendationResult]);
 
   function reset() {
     setUser(null);
@@ -312,6 +352,7 @@ export function Dashboard() {
     setDraftWorkspace(null);
     setProjectionMapping(null);
     setProjectionFilename(null);
+    setContextOverrides({});
     setError(null);
     setUsername('');
   }
@@ -330,7 +371,7 @@ export function Dashboard() {
             </button>
           ) : (
             <span className="rounded-full border border-[#20313d] bg-[#0c1822] px-3 py-1.5 text-xs font-semibold text-[#a8b4bc]">
-              Sleeper · Redraft
+              Sleeper · Format aware
             </span>
           )}
         </div>
@@ -390,7 +431,12 @@ export function Dashboard() {
           ) : leagueWorkspace ? (
             <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.42fr)]">
               <div className="space-y-6">
-                <LeagueOverview workspace={leagueWorkspace} />
+                <LeagueOverview
+                  workspace={leagueWorkspace}
+                  context={recommendationResult}
+                  overrides={contextOverrides}
+                  onOverridesChange={setContextOverrides}
+                />
                 <DraftPanel
                   workspace={leagueWorkspace}
                   draftWorkspace={draftWorkspace}
@@ -407,7 +453,7 @@ export function Dashboard() {
                     busy={busy === 'projections'}
                     onImport={importProjections}
                     available={projectedAvailable}
-                    recommendationResult={recommendationResult}
+                    recommendationResult={draftRecommendations}
                   />
                 )}
               </div>
@@ -570,7 +616,28 @@ function EmptyState({ title, body }: { title: string; body: string }) {
   );
 }
 
-function LeagueOverview({ workspace }: { workspace: LeagueWorkspace }) {
+function displayEnum(value: string): string {
+  return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function scoringSummary(context: LeagueContext | null): string {
+  if (!context) return 'Loading';
+  const scoring = context.scoring.value;
+  const premium = scoring.tePremium > 0 ? ` · TE +${scoring.tePremium}` : '';
+  return `${displayEnum(scoring.profile)} · ${scoring.passing.touchdowns}pt pass TD${premium}`;
+}
+
+function LeagueOverview({
+  workspace,
+  context,
+  overrides,
+  onOverridesChange,
+}: {
+  workspace: LeagueWorkspace;
+  context: LeagueContext | null;
+  overrides: LeagueContextOverrides;
+  onOverridesChange: (value: LeagueContextOverrides) => void;
+}) {
   const { league } = workspace;
   return (
     <section className="rounded-2xl border border-[#263845] bg-[#0c1822] p-5 sm:p-6">
@@ -587,15 +654,157 @@ function LeagueOverview({ workspace }: { workspace: LeagueWorkspace }) {
           {league.status.replace('_', ' ')}
         </span>
       </div>
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="Teams" value={String(league.total_rosters)} />
-        <Metric label="Scoring" value={getScoringLabel(league.scoring_settings)} />
+        <Metric
+          label="Format"
+          value={
+            context
+              ? `${displayEnum(context.leagueType.value)} · ${displayEnum(context.draftType.value)}`
+              : 'Loading'
+          }
+        />
+        <Metric label="Scoring" value={scoringSummary(context)} />
         <Metric
           label="Starting lineup"
           value={formatRosterPositions(league.roster_positions) || 'Custom'}
         />
       </div>
+
+      {context && (
+        <>
+          {context.warnings.length > 0 && (
+            <div className="mt-4 rounded-xl border border-[#5a4630] bg-[#251d12] p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#f0c777]">
+                Format review
+              </p>
+              <ul className="mt-2 space-y-1 text-xs leading-5 text-[#c7ad7c]">
+                {context.warnings.map((warning) => (
+                  <li key={warning}>· {warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <details className="mt-4 rounded-xl border border-[#263845] bg-[#071019] p-4">
+            <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.13em] text-[#8fa0aa]">
+              Review detected format
+            </summary>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
+                League type
+                <select
+                  value={overrides.leagueType ?? 'auto'}
+                  onChange={(event) => {
+                    const selected = event.target.value;
+                    onOverridesChange({
+                      ...overrides,
+                      leagueType:
+                        selected === 'auto' ? undefined : (selected as LeagueType),
+                    });
+                  }}
+                  className="h-10 rounded-lg border border-[#2a3c49] bg-[#0c1822] px-3 text-xs font-bold normal-case tracking-normal text-white outline-none focus:border-[#b9ff38]"
+                >
+                  <option value="auto">Auto · {displayEnum(context.leagueType.value)}</option>
+                  <option value="redraft">Redraft</option>
+                  <option value="keeper">Keeper</option>
+                  <option value="dynasty">Dynasty</option>
+                </select>
+              </label>
+              <label className="grid gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
+                Draft context
+                <select
+                  value={overrides.draftContext ?? 'auto'}
+                  onChange={(event) => {
+                    const selected = event.target.value;
+                    onOverridesChange({
+                      ...overrides,
+                      draftContext:
+                        selected === 'auto'
+                          ? undefined
+                          : (selected as DraftContext),
+                    });
+                  }}
+                  className="h-10 rounded-lg border border-[#2a3c49] bg-[#0c1822] px-3 text-xs font-bold normal-case tracking-normal text-white outline-none focus:border-[#b9ff38]"
+                >
+                  <option value="auto">Auto · {displayEnum(context.draftContext.value)}</option>
+                  <option value="startup">Dynasty startup</option>
+                  <option value="rookie_supplemental">Rookie / supplemental</option>
+                  <option value="veteran_all_player">Veteran / all-player</option>
+                </select>
+              </label>
+              <label className="grid gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
+                Draft order
+                <select
+                  value={overrides.draftType ?? 'auto'}
+                  onChange={(event) => {
+                    const selected = event.target.value;
+                    onOverridesChange({
+                      ...overrides,
+                      draftType:
+                        selected === 'auto'
+                          ? undefined
+                          : (selected as NormalizedDraftType),
+                    });
+                  }}
+                  className="h-10 rounded-lg border border-[#2a3c49] bg-[#0c1822] px-3 text-xs font-bold normal-case tracking-normal text-white outline-none focus:border-[#b9ff38]"
+                >
+                  <option value="auto">Auto · {displayEnum(context.draftType.value)}</option>
+                  <option value="snake">Snake</option>
+                  <option value="linear">Linear</option>
+                  <option value="3rr">Third-round reversal</option>
+                  <option value="auction">Auction</option>
+                </select>
+              </label>
+              <label className="grid gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
+                Lineup type
+                <select
+                  value={overrides.lineupType ?? 'auto'}
+                  onChange={(event) => {
+                    const selected = event.target.value;
+                    onOverridesChange({
+                      ...overrides,
+                      lineupType:
+                        selected === 'auto' ? undefined : (selected as LineupType),
+                    });
+                  }}
+                  className="h-10 rounded-lg border border-[#2a3c49] bg-[#0c1822] px-3 text-xs font-bold normal-case tracking-normal text-white outline-none focus:border-[#b9ff38]"
+                >
+                  <option value="auto">Auto · {displayEnum(context.lineupType.value)}</option>
+                  <option value="classic">Classic</option>
+                  <option value="best_ball">Best Ball</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-4 grid gap-2 text-xs text-[#71838e] sm:grid-cols-2">
+              <ContextSource label="League" item={context.leagueType} />
+              <ContextSource label="Draft context" item={context.draftContext} />
+              <ContextSource label="Draft order" item={context.draftType} />
+              <ContextSource label="Lineup" item={context.lineupType} />
+              <ContextSource label="Roster" item={context.roster} />
+              <ContextSource label="Scoring" item={context.scoring} />
+            </div>
+          </details>
+        </>
+      )}
     </section>
+  );
+}
+
+function ContextSource({
+  label,
+  item,
+}: {
+  label: string;
+  item: { source: string; confidence: string };
+}) {
+  return (
+    <div className="rounded-lg bg-[#0c1822] p-3">
+      <p className="font-bold text-[#b8c3c9]">
+        {label} · {displayEnum(item.confidence)} confidence
+      </p>
+      <p className="mt-1 text-[11px] leading-4">{item.source}</p>
+    </div>
   );
 }
 
@@ -764,7 +973,9 @@ function ProjectionPanel({
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-[#82939d]">
             Required columns: player, projection, adp, rank, position. Add
-            sleeper_id for exact matching.{' '}
+            sleeper_id for exact matching. Add adp_format and projection_scoring
+            to verify source compatibility; optional stat columns let the engine
+            recalculate Sleeper scoring.{' '}
             <a
               href="/projection-template.csv"
               download
@@ -773,6 +984,11 @@ function ProjectionPanel({
               Download template
             </a>
             .
+          </p>
+          <p className="mt-2 max-w-xl text-xs leading-5 text-[#60727d]">
+            Aggregate fantasy points remain usable, but custom-scoring support is
+            labeled limited unless the source format is declared or a complete
+            stat line is included.
           </p>
         </div>
         <label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#b9ff38] px-4 text-xs font-black uppercase tracking-[0.08em] text-[#071019] hover:bg-[#cbff6e]">
@@ -862,8 +1078,22 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
   const [primary, ...alternatives] = result.recommendations.slice(0, 3);
   if (!primary) {
     return (
-      <div className="mt-6 rounded-xl border border-dashed border-[#344a57] bg-[#071019] p-5 text-sm text-[#82939d]">
-        The mapped CSV does not contain an available QB, RB, WR, or TE to score.
+      <div className="mt-6 rounded-xl border border-[#5a4630] bg-[#251d12] p-5">
+        <p className="text-sm font-black text-[#f0c777]">
+          {result.status === 'data_required'
+            ? 'Additional format data required'
+            : result.status === 'unsupported'
+              ? 'Recommendation mode unavailable'
+              : 'No eligible players to score'}
+        </p>
+        <ul className="mt-3 space-y-2 text-xs leading-5 text-[#c7ad7c]">
+          {(result.messages.length > 0
+            ? result.messages
+            : ['The mapped CSV does not contain an eligible available player.']
+          ).map((message) => (
+            <li key={message}>· {message}</li>
+          ))}
+        </ul>
       </div>
     );
   }
@@ -876,17 +1106,31 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
             Draft engine · Live recommendation
           </p>
           <p className="mt-1 text-xs text-[#71838e]">
-            {result.userDraftSlot
-              ? `Draft slot ${result.userDraftSlot} · next selection at pick ${result.nextUserPick}`
-              : `Draft slot unavailable · estimating next selection at pick ${result.nextUserPick}`}
+            {result.nextUserPick !== null
+              ? `${result.userDraftSlot ? `Draft slot ${result.userDraftSlot} · ` : ''}next selection at pick ${result.nextUserPick}`
+              : 'Turn-based next selection is unavailable for this format'}
           </p>
         </div>
         <span className="w-fit rounded-full border border-[#2d414d] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#8fa0aa]">
-          {result.picksUntilNextUserPick} picks away
+          {result.picksUntilNextUserPick === null
+            ? 'No snake estimate'
+            : `${result.picksUntilNextUserPick} picks away`}
         </span>
       </div>
 
       <div className="p-5 sm:p-6">
+        {result.messages.length > 0 && (
+          <details className="mb-5 rounded-xl border border-[#5a4630] bg-[#251d12] p-4">
+            <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.12em] text-[#f0c777]">
+              {result.status === 'limited' ? 'Limited support · review assumptions' : 'Model notes'}
+            </summary>
+            <ul className="mt-3 space-y-1 text-xs leading-5 text-[#c7ad7c]">
+              {result.messages.map((message) => (
+                <li key={message}>· {message}</li>
+              ))}
+            </ul>
+          </details>
+        )}
         <ActionBadge recommendation={primary} />
         <div className="mt-4 flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
           <div>
@@ -908,30 +1152,38 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
           </div>
         </div>
 
-        <div className="mt-6 rounded-xl border border-[#2a3d48] bg-[#0c1822] p-4">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm font-bold">Available at your next selection</p>
-            <p
-              className={`text-xl font-black ${
-                primary.availableNextPickProbability <= 45
-                  ? 'text-[#ff7a59]'
-                  : 'text-[#d5a858]'
-              }`}
-            >
-              {Math.round(primary.availableNextPickProbability)}%
-            </p>
+        {primary.availableNextPickProbability !== null && (
+          <div className="mt-6 rounded-xl border border-[#2a3d48] bg-[#0c1822] p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold">Available at your next selection</p>
+                <p className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
+                  {displayEnum(primary.nextPickConfidence)} confidence · imported ADP
+                </p>
+              </div>
+              <p
+                className={`text-xl font-black ${
+                  primary.availableNextPickProbability <= 45
+                    ? 'text-[#ff7a59]'
+                    : 'text-[#d5a858]'
+                }`}
+              >
+                {primary.nextPickConfidence === 'high' ? '' : '≈'}
+                {Math.round(primary.availableNextPickProbability)}%
+              </p>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#263844]">
+              <div
+                className={`h-full rounded-full ${
+                  primary.availableNextPickProbability <= 45
+                    ? 'bg-[#ff7a59]'
+                    : 'bg-[#d5a858]'
+                }`}
+                style={{ width: `${primary.availableNextPickProbability}%` }}
+              />
+            </div>
           </div>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#263844]">
-            <div
-              className={`h-full rounded-full ${
-                primary.availableNextPickProbability <= 45
-                  ? 'bg-[#ff7a59]'
-                  : 'bg-[#d5a858]'
-              }`}
-              style={{ width: `${primary.availableNextPickProbability}%` }}
-            />
-          </div>
-        </div>
+        )}
 
         <ul className="mt-5 grid gap-3 text-sm text-[#c0cad0] sm:grid-cols-2">
           {primary.reasons.map((reason) => (
@@ -942,7 +1194,7 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
           ))}
         </ul>
 
-        <ScoreBreakdown recommendation={primary} />
+        <ModelInspector recommendation={primary} context={result.context} />
 
         {alternatives.length > 0 && (
           <div className="mt-6 grid gap-3 border-t border-[#20313d] pt-5 sm:grid-cols-2">
@@ -962,9 +1214,16 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <ActionBadge recommendation={recommendation} compact />
                   <p className="text-xs font-bold text-[#8fa0aa]">
-                    {Math.round(recommendation.availableNextPickProbability)}% next pick
+                    {recommendation.availableNextPickProbability === null
+                      ? 'No next-pick estimate'
+                      : `${recommendation.nextPickConfidence === 'high' ? '' : '≈'}${Math.round(recommendation.availableNextPickProbability)}% next pick`}
                   </p>
                 </div>
+                <ModelInspector
+                  recommendation={recommendation}
+                  context={result.context}
+                  compact
+                />
               </div>
             ))}
           </div>
@@ -1002,10 +1261,14 @@ function ActionBadge({
   );
 }
 
-function ScoreBreakdown({
+function ModelInspector({
   recommendation,
+  context,
+  compact = false,
 }: {
   recommendation: DraftRecommendation;
+  context: LeagueContext;
+  compact?: boolean;
 }) {
   const components = [
     ['VORP', recommendation.components.vorp, '30%'],
@@ -1018,9 +1281,11 @@ function ScoreBreakdown({
   ] as const;
 
   return (
-    <details className="mt-6 rounded-xl border border-[#20313d] bg-[#0c1822] p-4">
+    <details
+      className={`${compact ? 'mt-4 bg-[#071019]' : 'mt-6 bg-[#0c1822]'} rounded-xl border border-[#20313d] p-4`}
+    >
       <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.13em] text-[#8fa0aa]">
-        Why this score
+        Model inspector
       </summary>
       <div className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
         {components.map(([label, value, weight]) => (
@@ -1038,7 +1303,72 @@ function ScoreBreakdown({
           </div>
         ))}
       </div>
+      <div className="mt-5 grid gap-3 border-t border-[#20313d] pt-4 text-xs sm:grid-cols-2">
+        <InspectorGroup
+          label="Raw model inputs"
+          rows={[
+            ['Projected points', recommendation.raw.projectedPoints.toFixed(1)],
+            ['Provider points', recommendation.raw.sourceProjectedPoints.toFixed(1)],
+            ['Replacement level', recommendation.raw.replacementProjection.toFixed(1)],
+            ['Replacement demand', `Player ${recommendation.raw.replacementDemand}`],
+            ['VORP', recommendation.raw.vorp.toFixed(1)],
+            ['Imported ADP', recommendation.projection.adp.toFixed(1)],
+            ['Tier', String(recommendation.tier)],
+            ['Roster need', recommendation.raw.rosterNeed.toFixed(1)],
+            [
+              'Next-pick probability',
+              recommendation.availableNextPickProbability === null
+                ? 'Unavailable'
+                : `${recommendation.availableNextPickProbability.toFixed(1)}% (${recommendation.nextPickConfidence})`,
+            ],
+          ]}
+        />
+        <InspectorGroup
+          label="League context"
+          rows={[
+            ['League type', displayEnum(context.leagueType.value)],
+            ['Draft context', displayEnum(context.draftContext.value)],
+            ['Draft order', displayEnum(context.draftType.value)],
+            ['Lineup', displayEnum(context.lineupType.value)],
+            ['Scoring', displayEnum(context.scoring.value.profile)],
+            [
+              'Roster',
+              `${context.roster.value.QB}QB · ${context.roster.value.RB}RB · ${context.roster.value.WR}WR · ${context.roster.value.TE}TE · ${context.roster.value.FLEX}FLEX · ${context.roster.value.SUPER_FLEX}SF`,
+            ],
+            [
+              'Scoring applied',
+              recommendation.raw.scoringAdjusted
+                ? 'Recalculated from stat line'
+                : 'Provider aggregate points',
+            ],
+          ]}
+        />
+      </div>
     </details>
+  );
+}
+
+function InspectorGroup({
+  label,
+  rows,
+}: {
+  label: string;
+  rows: Array<readonly [string, string]>;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#60727d]">
+        {label}
+      </p>
+      <dl className="space-y-1.5">
+        {rows.map(([name, value]) => (
+          <div key={name} className="flex justify-between gap-3">
+            <dt className="text-[#71838e]">{name}</dt>
+            <dd className="text-right font-bold text-[#c6d0d5]">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 

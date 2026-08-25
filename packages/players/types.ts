@@ -17,6 +17,8 @@ export interface CanonicalPlayer {
   position: Position;
   team: string | null;
   status: string | null;
+  age: number | null;
+  yearsExperience: number | null;
   externalIds: {
     sleeper?: string;
     gsis?: string;

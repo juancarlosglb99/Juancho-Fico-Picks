@@ -11,6 +11,7 @@
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "test": "vitest run --config vitest.config.ts",
+    "test:smoke": "vitest run --config vitest.smoke.config.ts",
     "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {

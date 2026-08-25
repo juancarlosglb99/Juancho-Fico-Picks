@@ -19,9 +19,13 @@ projection source into canonical Juancho-Fico player records.
    positional-demand estimates for whether a player will make it back.
 6. **Draft Now / Wait recommendations** — live primary and alternative picks,
    transparent reasons, component scores and the next user selection.
+7. **Format hardening** — normalized LeagueContext, Superflex/2QB replacement,
+   3RR and traded picks, scoring-aware stat lines, confidence labels, honest
+   dynasty/keeper/auction boundaries and a model inspector.
 
 Lineup, waiver, trade, browser-extension and AI explanation features remain
-future milestones.
+future milestones. See [the format audit](docs/format-audit.md) for the exact
+support matrix and data limitations.
 
 ## Development
 
@@ -48,7 +52,12 @@ Nico Collins,245.7,25.4,24,WR
 ```
 
 An optional `sleeper_id` column produces an exact match and is preferred when
-available. See `data/projections/example.csv` for a complete example.
+available. Optional `adp_format` and `projection_scoring` columns declare source
+compatibility. Optional `pass_yd`, `pass_td`, `pass_int`, `rush_yd`, `rush_td`,
+`rec`, `rec_yd`, `rec_td`, and `fum_lost` columns let the engine recalculate a
+complete position-relevant stat line with the imported league's scoring. Blank
+position-relevant values are treated as incomplete, not zero. See
+`data/projections/example.csv` for an example.
 
 The app also exposes a downloadable starter file at
 `/projection-template.csv`.
@@ -67,8 +76,9 @@ Every factor is normalized to a 0–100 scale before weighting:
 | ADP value | 5% |
 | Positional scarcity | 5% |
 
-The result is deterministic for a given draft state and projection file. The
-score is decision support, not a promise of fantasy results.
+The result is deterministic for a given draft state, normalized LeagueContext,
+and projection file. Low-confidence or format-mismatched ADP is downweighted.
+The score is decision support, not a promise of fantasy results.
 
 ## Structure
 
@@ -78,6 +88,8 @@ packages/sleeper/          Public Sleeper API client and normalization
 packages/players/          Canonical player model and external-ID indexes
 packages/projections/      Replaceable projection-provider contracts and CSV
 packages/engine/draft/     Draft state, availability, tiers and recommendations
+packages/engine/context/   Sleeper normalization and league scoring
+packages/dynasty/          Replaceable dynasty value-provider contract
 tests/                     Deterministic unit tests
 ```
 

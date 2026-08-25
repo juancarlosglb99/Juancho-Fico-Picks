@@ -1,5 +1,24 @@
 import type { Position } from '../players/types';
 
+export type AdpFormat =
+  | 'redraft_1qb'
+  | 'redraft_superflex'
+  | 'dynasty_startup'
+  | 'dynasty_rookie'
+  | 'unknown';
+
+export interface ProjectionStatLine {
+  passingYards?: number;
+  passingTouchdowns?: number;
+  interceptions?: number;
+  rushingYards?: number;
+  rushingTouchdowns?: number;
+  receptions?: number;
+  receivingYards?: number;
+  receivingTouchdowns?: number;
+  fumblesLost?: number;
+}
+
 export interface ProjectionRecord {
   sourceRow: number;
   playerName: string;
@@ -8,6 +27,9 @@ export interface ProjectionRecord {
   projection: number;
   adp: number;
   rank: number;
+  adpFormat?: AdpFormat;
+  projectionScoring?: string;
+  stats?: ProjectionStatLine;
 }
 
 export interface MappedProjection extends ProjectionRecord {

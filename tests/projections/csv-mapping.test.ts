@@ -45,6 +45,24 @@ describe('projection CSV provider', () => {
       parseProjectionCsv('player,projection,adp,position\nNico Collins,240,25,WR'),
     ).toThrow(ProjectionCsvError);
   });
+
+  it('parses format metadata and granular stats when supplied', () => {
+    const [record] = parseProjectionCsv(
+      'player,projection,adp,rank,position,adp_format,projection_scoring,rush_yd,rush_td,rec,rec_yd,rec_td,fum_lost\nNico Collins,245.7,25.4,24,WR,redraft_1qb,full_ppr,0,0,82,1210,8,1',
+    );
+    expect(record).toMatchObject({
+      adpFormat: 'redraft_1qb',
+      projectionScoring: 'full_ppr',
+      stats: {
+        rushingYards: 0,
+        rushingTouchdowns: 0,
+        receptions: 82,
+        receivingYards: 1210,
+        receivingTouchdowns: 8,
+        fumblesLost: 1,
+      },
+    });
+  });
 });
 
 describe('projection player mapping', () => {
