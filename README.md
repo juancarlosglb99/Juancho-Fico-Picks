@@ -13,9 +13,15 @@ projection source into canonical Juancho-Fico player records.
    five-second refresh while a draft is live.
 3. **Projection mapping** — CSV provider, canonical player IDs, exact Sleeper-ID
    matching, normalized name/position matching and an unmatched-row review.
+4. **Draft scoring engine** — normalized projection, VORP, scarcity, tier urgency,
+   roster fit and ADP-value factors with a deterministic weighted score.
+5. **Next-pick probability** — snake-draft turn detection plus ADP, variance and
+   positional-demand estimates for whether a player will make it back.
+6. **Draft Now / Wait recommendations** — live primary and alternative picks,
+   transparent reasons, component scores and the next user selection.
 
-The recommendation algorithm, next-pick probability, extension and AI features
-are intentionally deferred.
+Lineup, waiver, trade, browser-extension and AI explanation features remain
+future milestones.
 
 ## Development
 
@@ -44,6 +50,26 @@ Nico Collins,245.7,25.4,24,WR
 An optional `sleeper_id` column produces an exact match and is preferred when
 available. See `data/projections/example.csv` for a complete example.
 
+The app also exposes a downloadable starter file at
+`/projection-template.csv`.
+
+## Draft score
+
+Every factor is normalized to a 0–100 scale before weighting:
+
+| Factor | Weight |
+| --- | ---: |
+| Value over replacement (VORP) | 30% |
+| Risk the player is gone by the next pick | 20% |
+| Tier urgency | 15% |
+| Raw projection | 15% |
+| Roster fit | 10% |
+| ADP value | 5% |
+| Positional scarcity | 5% |
+
+The result is deterministic for a given draft state and projection file. The
+score is decision support, not a promise of fantasy results.
+
 ## Structure
 
 ```text
@@ -51,7 +77,7 @@ app/                       Web application
 packages/sleeper/          Public Sleeper API client and normalization
 packages/players/          Canonical player model and external-ID indexes
 packages/projections/      Replaceable projection-provider contracts and CSV
-packages/engine/draft/     Draft state and player availability
+packages/engine/draft/     Draft state, availability, tiers and recommendations
 tests/                     Deterministic unit tests
 ```
 

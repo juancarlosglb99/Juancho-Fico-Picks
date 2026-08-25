@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { deriveDraftBoardState } from '@/packages/engine/draft/state';
-import type { DraftBoardState } from '@/packages/engine/draft/types';
+import { generateDraftRecommendations } from '@/packages/engine/draft/recommendations';
+import type {
+  DraftBoardState,
+  DraftRecommendation,
+  DraftRecommendationResult,
+} from '@/packages/engine/draft/types';
 import { buildCanonicalPlayerMap } from '@/packages/players/player-map';
 import type { CanonicalPlayerMap } from '@/packages/players/types';
 import { CsvProjectionProvider } from '@/packages/projections/providers/csv';
@@ -278,6 +283,27 @@ export function Dashboard() {
       }));
   }, [draftWorkspace, projectionMapping]);
 
+  const recommendationResult = useMemo(() => {
+    if (
+      !draftWorkspace ||
+      !leagueWorkspace ||
+      !projectionMapping ||
+      !user ||
+      draftWorkspace.draft.status === 'complete'
+    ) {
+      return null;
+    }
+    return generateDraftRecommendations({
+      draft: draftWorkspace.draft,
+      picks: draftWorkspace.picks,
+      rosters: leagueWorkspace.rosters,
+      board: draftWorkspace.board,
+      players: draftWorkspace.players,
+      projections: projectionMapping.mapped,
+      userId: user.user_id,
+    });
+  }, [draftWorkspace, leagueWorkspace, projectionMapping, user]);
+
   function reset() {
     setUser(null);
     setSeason(null);
@@ -381,6 +407,7 @@ export function Dashboard() {
                     busy={busy === 'projections'}
                     onImport={importProjections}
                     available={projectedAvailable}
+                    recommendationResult={recommendationResult}
                   />
                 )}
               </div>
@@ -713,6 +740,7 @@ function ProjectionPanel({
   busy,
   onImport,
   available,
+  recommendationResult,
 }: {
   mapping: ProjectionMappingResult | null;
   filename: string | null;
@@ -722,6 +750,7 @@ function ProjectionPanel({
     projection: ProjectionMappingResult['mapped'][number];
     player: CanonicalPlayerMap['players'][number] | undefined;
   }>;
+  recommendationResult: DraftRecommendationResult | null;
 }) {
   return (
     <section className="rounded-2xl border border-[#263845] bg-[#0c1822] p-5 sm:p-6">
@@ -735,7 +764,15 @@ function ProjectionPanel({
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-[#82939d]">
             Required columns: player, projection, adp, rank, position. Add
-            sleeper_id for exact matching.
+            sleeper_id for exact matching.{' '}
+            <a
+              href="/projection-template.csv"
+              download
+              className="font-bold text-[#b9ff38] underline decoration-[#b9ff38]/35 underline-offset-4"
+            >
+              Download template
+            </a>
+            .
           </p>
         </div>
         <label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#b9ff38] px-4 text-xs font-black uppercase tracking-[0.08em] text-[#071019] hover:bg-[#cbff6e]">
@@ -777,6 +814,10 @@ function ProjectionPanel({
             </details>
           )}
 
+          {recommendationResult && (
+            <RecommendationPanel result={recommendationResult} />
+          )}
+
           <div className="mt-6 overflow-hidden rounded-xl border border-[#20313d]">
             <div className="grid grid-cols-[minmax(0,1fr)_70px_78px_64px] bg-[#13232c] px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] text-[#71838e]">
               <span>Best available</span>
@@ -814,6 +855,190 @@ function ProjectionPanel({
         </>
       )}
     </section>
+  );
+}
+
+function RecommendationPanel({ result }: { result: DraftRecommendationResult }) {
+  const [primary, ...alternatives] = result.recommendations.slice(0, 3);
+  if (!primary) {
+    return (
+      <div className="mt-6 rounded-xl border border-dashed border-[#344a57] bg-[#071019] p-5 text-sm text-[#82939d]">
+        The mapped CSV does not contain an available QB, RB, WR, or TE to score.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-2xl border border-[#354853] bg-[#071019]">
+      <div className="flex flex-col justify-between gap-3 border-b border-[#20313d] px-5 py-4 sm:flex-row sm:items-center">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#b9ff38]">
+            Draft engine · Live recommendation
+          </p>
+          <p className="mt-1 text-xs text-[#71838e]">
+            {result.userDraftSlot
+              ? `Draft slot ${result.userDraftSlot} · next selection at pick ${result.nextUserPick}`
+              : `Draft slot unavailable · estimating next selection at pick ${result.nextUserPick}`}
+          </p>
+        </div>
+        <span className="w-fit rounded-full border border-[#2d414d] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#8fa0aa]">
+          {result.picksUntilNextUserPick} picks away
+        </span>
+      </div>
+
+      <div className="p-5 sm:p-6">
+        <ActionBadge recommendation={primary} />
+        <div className="mt-4 flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+          <div>
+            <h3 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+              {primary.player.name}
+            </h3>
+            <p className="mt-1 text-sm font-bold text-[#82939d]">
+              {primary.player.position} · {primary.player.team || 'FA'} · Tier{' '}
+              {primary.tier}
+            </p>
+          </div>
+          <div className="sm:text-right">
+            <p className="text-5xl font-black tracking-[-0.07em] text-[#b9ff38]">
+              {primary.score.toFixed(1)}
+            </p>
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#60727d]">
+              Draft score
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-xl border border-[#2a3d48] bg-[#0c1822] p-4">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm font-bold">Available at your next selection</p>
+            <p
+              className={`text-xl font-black ${
+                primary.availableNextPickProbability <= 45
+                  ? 'text-[#ff7a59]'
+                  : 'text-[#d5a858]'
+              }`}
+            >
+              {Math.round(primary.availableNextPickProbability)}%
+            </p>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#263844]">
+            <div
+              className={`h-full rounded-full ${
+                primary.availableNextPickProbability <= 45
+                  ? 'bg-[#ff7a59]'
+                  : 'bg-[#d5a858]'
+              }`}
+              style={{ width: `${primary.availableNextPickProbability}%` }}
+            />
+          </div>
+        </div>
+
+        <ul className="mt-5 grid gap-3 text-sm text-[#c0cad0] sm:grid-cols-2">
+          {primary.reasons.map((reason) => (
+            <li key={reason} className="flex gap-2">
+              <span className="text-[#b9ff38]">+</span>
+              <span>{reason}</span>
+            </li>
+          ))}
+        </ul>
+
+        <ScoreBreakdown recommendation={primary} />
+
+        {alternatives.length > 0 && (
+          <div className="mt-6 grid gap-3 border-t border-[#20313d] pt-5 sm:grid-cols-2">
+            {alternatives.map((recommendation) => (
+              <div key={recommendation.player.id} className="rounded-xl bg-[#13232c] p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="truncate font-black">{recommendation.player.name}</p>
+                    <p className="mt-1 text-xs text-[#71838e]">
+                      {recommendation.player.position} · Tier {recommendation.tier}
+                    </p>
+                  </div>
+                  <p className="text-xl font-black text-[#dfe6e9]">
+                    {recommendation.score.toFixed(1)}
+                  </p>
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <ActionBadge recommendation={recommendation} compact />
+                  <p className="text-xs font-bold text-[#8fa0aa]">
+                    {Math.round(recommendation.availableNextPickProbability)}% next pick
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ActionBadge({
+  recommendation,
+  compact = false,
+}: {
+  recommendation: DraftRecommendation;
+  compact?: boolean;
+}) {
+  const draftNow = recommendation.action === 'DRAFT_NOW';
+  return (
+    <span
+      className={`inline-flex w-fit items-center gap-2 rounded-full font-black uppercase tracking-[0.13em] ${
+        compact ? 'px-2.5 py-1 text-[9px]' : 'px-3 py-1.5 text-[10px]'
+      } ${
+        draftNow
+          ? 'bg-[#ff7a59]/15 text-[#ff9a80]'
+          : 'bg-[#d5a858]/15 text-[#e5bd70]'
+      }`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${
+          draftNow ? 'bg-[#ff7a59]' : 'bg-[#d5a858]'
+        }`}
+      />
+      {draftNow ? 'Draft now' : 'Wait'}
+    </span>
+  );
+}
+
+function ScoreBreakdown({
+  recommendation,
+}: {
+  recommendation: DraftRecommendation;
+}) {
+  const components = [
+    ['VORP', recommendation.components.vorp, '30%'],
+    ['Next-pick risk', recommendation.components.nextPickRisk, '20%'],
+    ['Tier urgency', recommendation.components.tierUrgency, '15%'],
+    ['Projection', recommendation.components.projection, '15%'],
+    ['Roster fit', recommendation.components.rosterFit, '10%'],
+    ['ADP value', recommendation.components.adpValue, '5%'],
+    ['Scarcity', recommendation.components.scarcity, '5%'],
+  ] as const;
+
+  return (
+    <details className="mt-6 rounded-xl border border-[#20313d] bg-[#0c1822] p-4">
+      <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.13em] text-[#8fa0aa]">
+        Why this score
+      </summary>
+      <div className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+        {components.map(([label, value, weight]) => (
+          <div key={label}>
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.1em]">
+              <span className="text-[#7f919c]">{label} · {weight}</span>
+              <span>{Math.round(value)}</span>
+            </div>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#263844]">
+              <div
+                className="h-full rounded-full bg-[#b9ff38]"
+                style={{ width: `${value}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }
 

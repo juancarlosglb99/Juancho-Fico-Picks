@@ -77,6 +77,7 @@ export interface SleeperDraft {
     slots_wr?: number;
     slots_te?: number;
     slots_flex?: number;
+    slots_super_flex?: number;
     slots_bn?: number;
     slots_k?: number;
     slots_def?: number;
