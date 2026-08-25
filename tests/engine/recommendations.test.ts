@@ -282,4 +282,46 @@ describe('availability and unsupported-mode safeguards', () => {
     expect(result.recommendations[0].components.nextPickRisk).toBeGreaterThan(25);
     expect(result.recommendations[0].components.nextPickRisk).toBeLessThan(75);
   });
+
+  it('pulls both ADP value and next-pick risk toward neutral when source confidence is weak', () => {
+    const exactProjections = makeProjections(players).map((projection) => ({
+      ...projection,
+      adpMatchLevel: 'exact' as const,
+      adpSourceConfidence: 'high' as const,
+      adpSource: 'Exact ADP',
+      adpMatchReasons: ['Exact test format.'],
+    }));
+    const target = exactProjections.find(
+      (projection) => projection.playerName === 'RB Player 1',
+    )!;
+    target.adp = 40;
+    const weakProjections = exactProjections.map((projection) => ({
+      ...projection,
+      adpMatchLevel: 'weak' as const,
+      adpSourceConfidence: 'low' as const,
+      adpSource: 'Weak ADP',
+      adpMatchReasons: ['Format mismatch.'],
+    }));
+
+    const exact = scenario({ projections: exactProjections }).result.recommendations.find(
+      (item) => item.player.name === 'RB Player 1',
+    )!;
+    const weak = scenario({ projections: weakProjections }).result.recommendations.find(
+      (item) => item.player.name === 'RB Player 1',
+    )!;
+
+    expect(Math.abs(weak.components.adpValue - 50)).toBeLessThan(
+      Math.abs(exact.components.adpValue - 50),
+    );
+    expect(Math.abs(weak.components.nextPickRisk - 50)).toBeLessThan(
+      Math.abs(exact.components.nextPickRisk - 50),
+    );
+    expect(weak.nextPickConfidence).toBe('low');
+    expect(weak.nextPickExplanation).toMatchObject({
+      adpSource: 'Weak ADP',
+      adpMatchLevel: 'weak',
+      adpMatchReasons: ['Format mismatch.'],
+    });
+    expect(weak.nextPickExplanation.interveningTeamsWithNeed).toBeGreaterThan(0);
+  });
 });

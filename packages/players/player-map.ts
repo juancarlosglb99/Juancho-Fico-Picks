@@ -28,6 +28,7 @@ export function normalizePosition(position?: string | null): Position {
   if (!position) return 'UNKNOWN';
   const upper = position.toUpperCase() as Position;
   if (upper === 'DST') return 'DEF';
+  if (upper === 'PK') return 'K';
   return POSITIONS.has(upper) ? upper : 'UNKNOWN';
 }
 

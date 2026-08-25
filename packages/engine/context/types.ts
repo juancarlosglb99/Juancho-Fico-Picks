@@ -85,6 +85,8 @@ export interface NormalizedDraftState {
   currentRound: number;
   userDraftSlot: number | null;
   userRosterId: number | null;
+  currentSelection: DraftSelectionContext | null;
+  isUserOnClock: boolean;
   nextUserPick: number | null;
   picksBeforeNextSelection: number | null;
   interveningSelections: DraftSelectionContext[];

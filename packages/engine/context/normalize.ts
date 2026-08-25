@@ -356,6 +356,16 @@ function normalizeDraftState(
     userDraftSlot,
     { userRosterId, slotToRosterId, tradedPicks },
   );
+  const currentSelection =
+    draftType === 'auction' || draftType === 'unknown'
+      ? null
+      : selectionOwner(
+          board.currentOverallPick,
+          board.teams,
+          draftType,
+          slotToRosterId,
+          tradedPicks,
+        );
   const interveningSelections: DraftSelectionContext[] = [];
   if (nextUserPick !== null && draftType !== 'auction' && draftType !== 'unknown') {
     for (let overallPick = board.currentOverallPick; overallPick < nextUserPick; overallPick += 1) {
@@ -376,9 +386,14 @@ function normalizeDraftState(
       currentRound: board.currentRound,
       userDraftSlot,
       userRosterId,
+      currentSelection,
+      isUserOnClock:
+        draft.status === 'drafting' &&
+        userRosterId !== null &&
+        currentSelection?.ownerRosterId === userRosterId,
       nextUserPick,
       picksBeforeNextSelection:
-        nextUserPick === null ? null : Math.max(0, nextUserPick - board.currentOverallPick),
+        nextUserPick === null ? null : interveningSelections.length,
       interveningSelections,
       draftedPlayerIds: [...board.draftedSleeperIds],
       keeperPlayerIds: picks.filter((pick) => pick.is_keeper).map((pick) => pick.player_id),

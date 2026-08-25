@@ -1,6 +1,34 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  automaticAdpCacheKey,
+  fetchAutomaticAdp,
+  mapAdpSnapshot,
+  planAutomaticAdp,
+  projectionCacheKey,
+} from '@/packages/adp/automatic';
+import { isAdpSourceSnapshot } from '@/packages/adp/providers/fantasy-football-calculator';
+import {
+  loadWithLastGood,
+  readLastGood,
+  writeLastGood,
+} from '@/packages/data/cache';
+import {
+  dataFreshness,
+  formatDataAge,
+  sourceAgeMs,
+} from '@/packages/data/freshness';
+import {
+  composeProjectionAndAdp,
+  createCsvProjectionSnapshot,
+  isProjectionSnapshot,
+} from '@/packages/data/projections';
+import type {
+  AdpSnapshot,
+  CacheDisposition,
+  ProjectionSnapshot,
+} from '@/packages/data/types';
 import { normalizeLeagueContext } from '@/packages/engine/context/normalize';
 import type {
   DraftContext,
@@ -11,6 +39,10 @@ import type {
 } from '@/packages/engine/context/types';
 import type { NormalizedDraftType } from '@/packages/engine/draft/next-pick-probability';
 import { deriveDraftBoardState } from '@/packages/engine/draft/state';
+import {
+  getRosterPositionCounts,
+  getStarterTargets,
+} from '@/packages/engine/draft/roster-fit';
 import { generateDraftRecommendations } from '@/packages/engine/draft/recommendations';
 import type {
   DraftBoardState,
@@ -36,6 +68,7 @@ import type {
   SleeperTradedPick,
   SleeperUser,
 } from '@/packages/sleeper/types';
+import { deriveDraftExperienceState } from '@/packages/ui/draft-experience';
 
 interface LeagueWorkspace {
   league: SleeperLeague;
@@ -113,11 +146,15 @@ export function Dashboard() {
     useState<LeagueWorkspace | null>(null);
   const [draftWorkspace, setDraftWorkspace] =
     useState<DraftWorkspace | null>(null);
-  const [projectionMapping, setProjectionMapping] =
-    useState<ProjectionMappingResult | null>(null);
-  const [projectionFilename, setProjectionFilename] = useState<string | null>(
-    null,
-  );
+  const [projectionSnapshot, setProjectionSnapshot] =
+    useState<ProjectionSnapshot | null>(null);
+  const [adpSnapshot, setAdpSnapshot] = useState<AdpSnapshot | null>(null);
+  const [adpDisposition, setAdpDisposition] =
+    useState<CacheDisposition | null>(null);
+  const [adpRefreshError, setAdpRefreshError] = useState<string | null>(null);
+  const [adpBusy, setAdpBusy] = useState(false);
+  const [adpRefreshNonce, setAdpRefreshNonce] = useState(0);
+  const [lastForcedAdpNonce, setLastForcedAdpNonce] = useState(0);
   const [busy, setBusy] = useState<BusyState>(null);
   const [error, setError] = useState<string | null>(null);
   const [contextOverrides, setContextOverrides] =
@@ -127,8 +164,9 @@ export function Dashboard() {
     async (draftId: string, workspace: LeagueWorkspace) => {
       setBusy('draft');
       setError(null);
-      setProjectionMapping(null);
-      setProjectionFilename(null);
+      setProjectionSnapshot(null);
+      setAdpSnapshot(null);
+      setAdpRefreshError(null);
       setContextOverrides({});
 
       try {
@@ -145,6 +183,26 @@ export function Dashboard() {
           workspace.rosters,
           players,
         );
+        const cachedProjections = readLastGood({
+          storage: window.localStorage,
+          key: projectionCacheKey(draft.season),
+          validate: isProjectionSnapshot,
+        });
+        if (cachedProjections) {
+          const records = cachedProjections.value.records.filter((record) =>
+            players.byId.has(record.playerId),
+          );
+          if (records.length > 0) {
+            setProjectionSnapshot({
+              ...cachedProjections.value,
+              records,
+              resolution: {
+                ...cachedProjections.value.resolution,
+                matched: records.length,
+              },
+            });
+          }
+        }
         setDraftWorkspace({
           draft,
           picks,
@@ -167,7 +225,8 @@ export function Dashboard() {
       setBusy('league');
       setError(null);
       setDraftWorkspace(null);
-      setProjectionMapping(null);
+      setProjectionSnapshot(null);
+      setAdpSnapshot(null);
       setContextOverrides({});
 
       try {
@@ -280,14 +339,21 @@ export function Dashboard() {
     try {
       const provider = new CsvProjectionProvider(await file.text());
       const records = await provider.getRecords();
-      setProjectionMapping(
-        mapProjectionRecords(records, draftWorkspace.players),
-      );
-      setProjectionFilename(file.name);
+      const mapping = mapProjectionRecords(records, draftWorkspace.players);
+      const snapshot = createCsvProjectionSnapshot({
+        mapping,
+        filename: file.name,
+        season: draftWorkspace.draft.season,
+      });
+      setProjectionSnapshot(snapshot);
+      writeLastGood({
+        storage: window.localStorage,
+        key: projectionCacheKey(draftWorkspace.draft.season),
+        value: snapshot,
+        savedAt: new Date(),
+      });
     } catch (nextError) {
       setError(formatError(nextError));
-      setProjectionMapping(null);
-      setProjectionFilename(null);
     } finally {
       setBusy(null);
       event.target.value = '';
@@ -295,11 +361,11 @@ export function Dashboard() {
   }
 
   const projectedAvailable = useMemo(() => {
-    if (!draftWorkspace || !projectionMapping) return [];
+    if (!draftWorkspace || !projectionSnapshot) return [];
     const availableIds = new Set(
       draftWorkspace.board.availablePlayers.map((player) => player.id),
     );
-    return projectionMapping.mapped
+    return composeProjectionAndAdp(projectionSnapshot, adpSnapshot)
       .filter((projection) => availableIds.has(projection.playerId))
       .sort((a, b) => a.rank - b.rank)
       .slice(0, 12)
@@ -307,9 +373,9 @@ export function Dashboard() {
         projection,
         player: draftWorkspace.players.byId.get(projection.playerId),
       }));
-  }, [draftWorkspace, projectionMapping]);
+  }, [draftWorkspace, projectionSnapshot, adpSnapshot]);
 
-  const recommendationResult = useMemo(() => {
+  const leagueContext = useMemo(() => {
     if (!draftWorkspace || !leagueWorkspace || !user) return null;
     return normalizeLeagueContext({
       league: leagueWorkspace.league,
@@ -324,25 +390,99 @@ export function Dashboard() {
     });
   }, [draftWorkspace, leagueWorkspace, user, contextOverrides]);
 
+  const automaticAdpPlan = useMemo(() => {
+    if (!leagueContext || !season) return null;
+    return planAutomaticAdp(leagueContext, season);
+  }, [leagueContext, season]);
+
+  useEffect(() => {
+    if (!automaticAdpPlan || !draftWorkspace || !leagueContext) {
+      let cancelled = false;
+      void Promise.resolve().then(() => {
+        if (cancelled) return;
+        setAdpSnapshot(null);
+        setAdpDisposition(null);
+        setAdpBusy(false);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    const controller = new AbortController();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setAdpBusy(true);
+      setAdpRefreshError(null);
+    });
+    void loadWithLastGood({
+      storage: window.localStorage,
+      key: automaticAdpCacheKey(automaticAdpPlan.request),
+      validate: isAdpSourceSnapshot,
+      fetchFresh: () =>
+        fetchAutomaticAdp(automaticAdpPlan.request, controller.signal),
+      refreshIntervalMs: 12 * 60 * 60 * 1000,
+      forceRefresh: adpRefreshNonce > lastForcedAdpNonce,
+    })
+      .then((result) => {
+        if (cancelled) return;
+        setAdpSnapshot(
+          mapAdpSnapshot(result.value, draftWorkspace.players, leagueContext),
+        );
+        setAdpDisposition(result.disposition);
+        setAdpRefreshError(result.refreshError);
+      })
+      .catch((nextError) => {
+        if (cancelled || controller.signal.aborted) return;
+        setAdpSnapshot(null);
+        setAdpDisposition(null);
+        setAdpRefreshError(formatError(nextError));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setAdpBusy(false);
+          setLastForcedAdpNonce(adpRefreshNonce);
+        }
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [
+    automaticAdpPlan,
+    draftWorkspace,
+    leagueContext,
+    adpRefreshNonce,
+    lastForcedAdpNonce,
+  ]);
+
+  const projectionMapping = useMemo<ProjectionMappingResult | null>(() => {
+    if (!projectionSnapshot) return null;
+    return {
+      mapped: projectionSnapshot.records,
+      unmatched: projectionSnapshot.unmatched,
+    };
+  }, [projectionSnapshot]);
+
   const draftRecommendations = useMemo(() => {
     if (
       !draftWorkspace ||
       !leagueWorkspace ||
-      !projectionMapping ||
-      !recommendationResult ||
+      !projectionSnapshot ||
+      !leagueContext ||
       draftWorkspace.draft.status === 'complete'
     ) {
       return null;
     }
     return generateDraftRecommendations({
-      context: recommendationResult,
+      context: leagueContext,
       picks: draftWorkspace.picks,
       rosters: leagueWorkspace.rosters,
       board: draftWorkspace.board,
       players: draftWorkspace.players,
-      projections: projectionMapping.mapped,
+      projections: composeProjectionAndAdp(projectionSnapshot, adpSnapshot),
     });
-  }, [draftWorkspace, leagueWorkspace, projectionMapping, recommendationResult]);
+  }, [draftWorkspace, leagueWorkspace, projectionSnapshot, leagueContext, adpSnapshot]);
 
   function reset() {
     setUser(null);
@@ -350,8 +490,10 @@ export function Dashboard() {
     setLeagues([]);
     setLeagueWorkspace(null);
     setDraftWorkspace(null);
-    setProjectionMapping(null);
-    setProjectionFilename(null);
+    setProjectionSnapshot(null);
+    setAdpSnapshot(null);
+    setAdpDisposition(null);
+    setAdpRefreshError(null);
     setContextOverrides({});
     setError(null);
     setUsername('');
@@ -429,14 +571,49 @@ export function Dashboard() {
           ) : busy === 'league' && !leagueWorkspace ? (
             <LoadingPanel label="Loading league settings and rosters…" />
           ) : leagueWorkspace ? (
-            <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.42fr)]">
-              <div className="space-y-6">
-                <LeagueOverview
-                  workspace={leagueWorkspace}
-                  context={recommendationResult}
-                  overrides={contextOverrides}
-                  onOverridesChange={setContextOverrides}
-                />
+            <div className="mt-8 space-y-6">
+              <LeagueOverview
+                workspace={leagueWorkspace}
+                context={leagueContext}
+                overrides={contextOverrides}
+                onOverridesChange={setContextOverrides}
+              />
+              {draftWorkspace && leagueContext && (
+                <>
+                  <DraftStatusStrip
+                    draftWorkspace={draftWorkspace}
+                    context={leagueContext}
+                  />
+                  {draftWorkspace.draft.status === 'complete' ? (
+                    <DraftCompleteState draftWorkspace={draftWorkspace} />
+                  ) : draftRecommendations ? (
+                    <RecommendationPanel result={draftRecommendations} />
+                  ) : (
+                    <RecommendationDataEmptyState
+                      adp={adpSnapshot}
+                      adpBusy={adpBusy}
+                      automaticAdpAvailable={automaticAdpPlan !== null}
+                      context={leagueContext}
+                      onImport={importProjections}
+                      projectionBusy={busy === 'projections'}
+                    />
+                  )}
+                  <DataQualityPanel
+                    projections={projectionSnapshot}
+                    adp={adpSnapshot}
+                    adpDisposition={adpDisposition}
+                    adpRefreshError={adpRefreshError}
+                    adpBusy={adpBusy}
+                    automaticAdpAvailable={automaticAdpPlan !== null}
+                    onRetryAdp={() => setAdpRefreshNonce((current) => current + 1)}
+                    onImport={importProjections}
+                    projectionBusy={busy === 'projections'}
+                  />
+                </>
+              )}
+
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.38fr)]">
+                <div className="space-y-6">
                 <DraftPanel
                   workspace={leagueWorkspace}
                   draftWorkspace={draftWorkspace}
@@ -449,15 +626,22 @@ export function Dashboard() {
                 {draftWorkspace && (
                   <ProjectionPanel
                     mapping={projectionMapping}
-                    filename={projectionFilename}
+                    filename={projectionSnapshot?.filename ?? null}
                     busy={busy === 'projections'}
                     onImport={importProjections}
                     available={projectedAvailable}
-                    recommendationResult={draftRecommendations}
+                  />
+                )}
+                </div>
+                {draftWorkspace && leagueContext && (
+                  <DraftContextPanel
+                    workspace={leagueWorkspace}
+                    draftWorkspace={draftWorkspace}
+                    context={leagueContext}
+                    userId={user.user_id}
                   />
                 )}
               </div>
-              <RosterPanel workspace={leagueWorkspace} userId={user.user_id} />
             </div>
           ) : null}
         </section>
@@ -492,7 +676,8 @@ function Landing({
         </h1>
         <p className="mt-7 max-w-xl text-base leading-7 text-[#aab7bf] sm:text-lg">
           Connect your Sleeper league to load its scoring, rosters, drafts, and
-          picks. Then import your projections into one clean player map.
+          picks. Current ADP loads automatically, while your last valid projection
+          file stays ready on this device.
         </p>
 
         <form
@@ -639,44 +824,34 @@ function LeagueOverview({
   onOverridesChange: (value: LeagueContextOverrides) => void;
 }) {
   const { league } = workspace;
+  const quarterbackFormat = context
+    ? context.roster.value.SUPER_FLEX > 0 || context.roster.value.QB >= 2
+      ? 'Superflex / 2QB'
+      : '1QB'
+    : 'Loading';
   return (
-    <section className="rounded-2xl border border-[#263845] bg-[#0c1822] p-5 sm:p-6">
+    <section className="rounded-2xl border border-[#263845] bg-[#0c1822] p-5">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#71838e]">
-            League imported
-          </p>
-          <h2 className="mt-2 text-2xl font-black tracking-[-0.03em]">
+          <h2 className="text-2xl font-black tracking-[-0.03em]">
             {league.name}
           </h2>
+          <p className="mt-2 text-sm font-semibold text-[#8fa0aa]">
+            {context
+              ? `${context.teams.value}-team · ${displayEnum(context.leagueType.value)} · ${displayEnum(context.scoring.value.profile)} · ${quarterbackFormat}`
+              : 'Normalizing league settings…'}
+          </p>
         </div>
         <span className="w-fit rounded-full bg-[#172832] px-3 py-1.5 text-xs font-bold capitalize text-[#b9ff38]">
           {league.status.replace('_', ' ')}
         </span>
       </div>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Teams" value={String(league.total_rosters)} />
-        <Metric
-          label="Format"
-          value={
-            context
-              ? `${displayEnum(context.leagueType.value)} · ${displayEnum(context.draftType.value)}`
-              : 'Loading'
-          }
-        />
-        <Metric label="Scoring" value={scoringSummary(context)} />
-        <Metric
-          label="Starting lineup"
-          value={formatRosterPositions(league.roster_positions) || 'Custom'}
-        />
-      </div>
-
       {context && (
         <>
           {context.warnings.length > 0 && (
             <div className="mt-4 rounded-xl border border-[#5a4630] bg-[#251d12] p-4">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#f0c777]">
-                Format review
+                Needs attention
               </p>
               <ul className="mt-2 space-y-1 text-xs leading-5 text-[#c7ad7c]">
                 {context.warnings.map((warning) => (
@@ -688,8 +863,20 @@ function LeagueOverview({
 
           <details className="mt-4 rounded-xl border border-[#263845] bg-[#071019] p-4">
             <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.13em] text-[#8fa0aa]">
-              Review detected format
+              Review league settings
             </summary>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Metric label="Teams" value={String(league.total_rosters)} />
+              <Metric
+                label="Format"
+                value={`${displayEnum(context.leagueType.value)} · ${displayEnum(context.draftType.value)}`}
+              />
+              <Metric label="Scoring" value={scoringSummary(context)} />
+              <Metric
+                label="Starting lineup"
+                value={formatRosterPositions(league.roster_positions) || 'Custom'}
+              />
+            </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
                 League type
@@ -788,6 +975,387 @@ function LeagueOverview({
         </>
       )}
     </section>
+  );
+}
+
+function DraftStatusStrip({
+  draftWorkspace,
+  context,
+}: {
+  draftWorkspace: DraftWorkspace;
+  context: LeagueContext;
+}) {
+  const experience = deriveDraftExperienceState({
+    draft: draftWorkspace.draft,
+    recommendation: null,
+    isUserOnClock: context.draftState.value.isUserOnClock,
+  });
+  const statusLabel =
+    experience === 'on_clock'
+      ? 'You are on the clock'
+      : draftWorkspace.draft.status === 'pre_draft'
+        ? 'Draft upcoming'
+        : draftWorkspace.draft.status === 'complete'
+          ? 'Draft complete'
+          : 'Live draft';
+  return (
+    <section className="flex flex-col justify-between gap-4 rounded-2xl border border-[#263845] bg-[#071019] p-5 sm:flex-row sm:items-center">
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#71838e]">
+          {draftWorkspace.draft.status === 'complete'
+            ? `${draftWorkspace.board.picksMade} selections made`
+            : `Round ${draftWorkspace.board.currentRound} · Pick ${draftWorkspace.board.pickInRound}`}
+        </p>
+        <p className="mt-1 text-xl font-black tracking-[-0.03em]">{statusLabel}</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
+        {context.draftState.value.nextUserPick !== null && (
+          <span className="rounded-full border border-[#2a3c49] px-3 py-2 text-[#b8c3c9]">
+            Next selection · Pick {context.draftState.value.nextUserPick}
+          </span>
+        )}
+        <span className="flex items-center gap-2 rounded-full bg-[#13232c] px-3 py-2 text-[#b9ff38]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#b9ff38]" />
+          Synced {draftWorkspace.syncedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+        </span>
+      </div>
+    </section>
+  );
+}
+
+function compactTimestamp(timestamp: string | null | undefined): string {
+  if (!timestamp) return 'update time unavailable';
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return 'update time unavailable';
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function DataQualityPanel({
+  projections,
+  adp,
+  adpDisposition,
+  adpRefreshError,
+  adpBusy,
+  automaticAdpAvailable,
+  onRetryAdp,
+  onImport,
+  projectionBusy,
+}: {
+  projections: ProjectionSnapshot | null;
+  adp: AdpSnapshot | null;
+  adpDisposition: CacheDisposition | null;
+  adpRefreshError: string | null;
+  adpBusy: boolean;
+  automaticAdpAvailable: boolean;
+  onRetryAdp: () => void;
+  onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  projectionBusy: boolean;
+}) {
+  const projectionFreshness = projections
+    ? dataFreshness(projections.provenance)
+    : null;
+  const adpFreshness = adp ? dataFreshness(adp.provenance) : null;
+  return (
+    <section className="rounded-2xl border border-[#263845] bg-[#0c1822] p-4 sm:p-5">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#b9ff38]">
+            Data {projections && (adp || projections.records.some((item) => item.adp)) ? '✓' : 'readiness'}
+          </p>
+          <div className="mt-2 flex flex-col gap-1 text-xs text-[#9aa9b1] sm:flex-row sm:flex-wrap sm:gap-x-5">
+            <p>
+              <span className="font-bold text-[#d9e0e3]">Projections:</span>{' '}
+              {projections
+                ? `${projections.provenance.sourceLabel} · ${projections.resolution.matched}/${projections.resolution.total} matched`
+                : 'Not loaded'}
+            </p>
+            <p>
+              <span className="font-bold text-[#d9e0e3]">ADP:</span>{' '}
+              {adp
+                ? `${adp.provenance.sourceLabel} · ${adp.context.teams}-team · ${displayEnum(adp.compatibility.level)} match`
+                : adpBusy
+                  ? 'Refreshing automatic source…'
+                  : projections
+                    ? 'CSV fallback'
+                    : 'Waiting for league data'}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {automaticAdpAvailable && (
+            <button
+              type="button"
+              onClick={onRetryAdp}
+              disabled={adpBusy}
+              className="rounded-lg border border-[#2a3c49] px-3 py-2 text-xs font-bold text-[#c2ccd1] hover:border-[#52646f] disabled:opacity-50"
+            >
+              {adpBusy ? 'Refreshing ADP' : 'Refresh ADP'}
+            </button>
+          )}
+          <label className="cursor-pointer rounded-lg bg-[#b9ff38] px-3 py-2 text-xs font-black text-[#071019] hover:bg-[#cbff6e]">
+            {projectionBusy ? 'Importing…' : projections ? 'Replace projections' : 'Import projections'}
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="sr-only"
+              onChange={onImport}
+              disabled={projectionBusy}
+            />
+          </label>
+        </div>
+      </div>
+
+      {(projectionFreshness === 'stale' || adpFreshness === 'stale' || adpRefreshError) && (
+        <div className="mt-4 rounded-lg border border-[#5a4630] bg-[#251d12] px-3 py-2 text-xs text-[#d6b679]">
+          {projectionFreshness === 'stale' && projections && (
+            <p>Projection data is {formatDataAge(sourceAgeMs(projections.provenance))} old. Import a current file before drafting.</p>
+          )}
+          {adpFreshness === 'stale' && adp && (
+            <p>ADP is {formatDataAge(sourceAgeMs(adp.provenance))} old, so availability confidence is reduced.</p>
+          )}
+          {adpRefreshError && (
+            <p>
+              ADP refresh failed. {adpDisposition === 'fallback_cache' && adp
+                ? `Using the last valid snapshot from ${compactTimestamp(adp.provenance.sourceUpdatedAt ?? adp.provenance.fetchedAt)}.`
+                : 'CSV ADP remains available as a fallback.'}
+            </p>
+          )}
+        </div>
+      )}
+
+      <details className="mt-3 text-xs text-[#71838e]">
+        <summary className="cursor-pointer font-bold text-[#8fa0aa]">Source details</summary>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg bg-[#071019] p-3">
+            <p className="font-black text-[#c6d0d5]">Projections</p>
+            {projections ? (
+              <div className="mt-2 space-y-1">
+                <p>Imported: {compactTimestamp(projections.provenance.fetchedAt)}</p>
+                <p>Scoring: {displayEnum(projections.scoringFormat)}</p>
+                <p>Complete stat lines: {projections.completeStatLines}/{projections.records.length}</p>
+                <p>Unresolved or ambiguous: {projections.resolution.ambiguous + projections.resolution.unresolved}</p>
+              </div>
+            ) : (
+              <p className="mt-2">No valid projection snapshot is loaded.</p>
+            )}
+          </div>
+          <div className="rounded-lg bg-[#071019] p-3">
+            <p className="font-black text-[#c6d0d5]">ADP</p>
+            {adp ? (
+              <div className="mt-2 space-y-1">
+                <p>Updated: {compactTimestamp(adp.provenance.sourceUpdatedAt ?? adp.provenance.fetchedAt)}</p>
+                <p>Format: {displayEnum(adp.context.leagueFormat)} · {displayEnum(adp.context.scoringFormat)}</p>
+                <p>Sample: {adp.context.sampleSize?.toLocaleString() ?? 'Unavailable'} drafts</p>
+                <p>Matched: {adp.resolution.matched}/{adp.resolution.total}</p>
+                <p>Confidence: {displayEnum(adp.compatibility.confidence)}</p>
+                <p>{adp.compatibility.reasons.join(' ')}</p>
+                {adp.provenance.attributionUrl && (
+                  <a
+                    className="font-bold text-[#b9ff38] underline underline-offset-2"
+                    href={adp.provenance.attributionUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {adp.provenance.attributionLabel}
+                  </a>
+                )}
+              </div>
+            ) : (
+              <p className="mt-2">Automatic ADP is unavailable; the projection CSV’s ADP columns are used.</p>
+            )}
+          </div>
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function RecommendationDataEmptyState({
+  adp,
+  adpBusy,
+  automaticAdpAvailable,
+  context,
+  onImport,
+  projectionBusy,
+}: {
+  adp: AdpSnapshot | null;
+  adpBusy: boolean;
+  automaticAdpAvailable: boolean;
+  context: LeagueContext;
+  onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  projectionBusy: boolean;
+}) {
+  const dynasty = context.leagueType.value === 'dynasty';
+  const auction = context.draftType.value === 'auction';
+  const unresolved = context.leagueType.value === 'unknown';
+  if (dynasty || auction || unresolved) {
+    const title = dynasty
+      ? 'Dynasty recommendations need a licensed dynasty value source.'
+      : auction
+        ? 'Snake-style recommendations are unavailable for auctions.'
+        : 'Confirm the league type before recommendations can run.';
+    const body = dynasty
+      ? 'Redraft ADP and projections are intentionally not used as dynasty or rookie values.'
+      : auction
+        ? 'Budget, nomination, and inflation modeling are outside the current draft engine.'
+        : 'Open Review league settings and choose the correct league type; the engine will not guess.';
+    return (
+      <section className="rounded-2xl border border-[#5a4630] bg-[#251d12] p-7 sm:p-9">
+        <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#f0c777]">
+          Recommendation unavailable
+        </p>
+        <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">{title}</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-[#c7ad7c]">{body}</p>
+      </section>
+    );
+  }
+  return (
+    <section className="rounded-2xl border border-dashed border-[#41535e] bg-[#0c1822] p-7 sm:p-9">
+      <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#b9ff38]">Recommendation readiness</p>
+      <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">Draft recommendations need projection data.</h2>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-[#8fa0aa]">
+        {adp
+          ? `Current ${adp.context.teams}-team ADP is ready. Import a 2026 projection CSV once; the last valid file will stay cached on this device for future drafts.`
+          : adpBusy
+            ? 'Automatic ADP is loading. Projection import remains available now.'
+            : automaticAdpAvailable
+              ? 'Automatic ADP will retry independently. Your CSV can supply both projections and fallback ADP.'
+              : 'Automatic ADP is not available for this format. Your CSV can supply both projections and fallback ADP.'}
+      </p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <label className="cursor-pointer rounded-xl bg-[#b9ff38] px-5 py-3 text-xs font-black uppercase tracking-[0.08em] text-[#071019] hover:bg-[#cbff6e]">
+          {projectionBusy ? 'Importing…' : 'Import projection CSV'}
+          <input type="file" accept=".csv,text/csv" className="sr-only" onChange={onImport} disabled={projectionBusy} />
+        </label>
+        <a
+          href="/projection-template.csv"
+          download
+          className="rounded-xl border border-[#2a3c49] px-5 py-3 text-xs font-black uppercase tracking-[0.08em] text-[#c2ccd1] hover:border-[#52646f]"
+        >
+          Download template
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function DraftCompleteState({ draftWorkspace }: { draftWorkspace: DraftWorkspace }) {
+  return (
+    <section className="rounded-2xl border border-[#263845] bg-[#0c1822] p-7">
+      <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#b9ff38]">Draft complete</p>
+      <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">All {draftWorkspace.board.picksMade} selections are final.</h2>
+      <p className="mt-3 text-sm text-[#8fa0aa]">Draft-now advice is disabled. Your roster and selection history remain available below for review.</p>
+    </section>
+  );
+}
+
+function DraftContextPanel({
+  workspace,
+  draftWorkspace,
+  context,
+  userId,
+}: {
+  workspace: LeagueWorkspace;
+  draftWorkspace: DraftWorkspace;
+  context: LeagueContext;
+  userId: string;
+}) {
+  const userRosterId = context.draftState.value.userRosterId;
+  const userCounts = userRosterId === null
+    ? {}
+    : getRosterPositionCounts(
+        userRosterId,
+        draftWorkspace.picks,
+        workspace.rosters,
+        draftWorkspace.players,
+      );
+  const targets = getStarterTargets(context.roster.value);
+  const ownerByRoster = new Map(
+    workspace.rosterViews.map((view) => [view.roster.roster_id, view]),
+  );
+  const intervening = context.draftState.value.interveningSelections.slice(0, 8);
+  const rosterPlayerIds = new Set<string>();
+  for (const pick of draftWorkspace.picks) {
+    if (Number(pick.roster_id) === userRosterId) rosterPlayerIds.add(pick.player_id);
+  }
+  const storedRoster = workspace.rosters.find((roster) => roster.roster_id === userRosterId);
+  for (const playerId of storedRoster?.players ?? []) rosterPlayerIds.add(playerId);
+  const myPlayers = [...rosterPlayerIds]
+    .map((playerId) => draftWorkspace.players.bySleeperId.get(playerId))
+    .filter(Boolean);
+
+  return (
+    <aside className="h-fit rounded-2xl border border-[#263845] bg-[#0c1822] p-5 xl:sticky xl:top-24">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#71838e]">My roster</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {(['QB', 'RB', 'WR', 'TE'] as const).map((position) => (
+          <span key={position} className="rounded-lg bg-[#13232c] px-2.5 py-2 text-xs font-bold">
+            {position} {userCounts[position] ?? 0}/{targets[position]}
+          </span>
+        ))}
+      </div>
+      {myPlayers.length > 0 ? (
+        <div className="mt-4 space-y-2">
+          {myPlayers.slice(0, 10).map((player) => (
+            <div key={player!.id} className="flex justify-between gap-3 rounded-lg bg-[#071019] px-3 py-2 text-xs">
+              <span className="truncate font-bold">{player!.name}</span>
+              <span className="text-[#71838e]">{player!.position}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-xs leading-5 text-[#71838e]">Your roster is empty. This space will fill with your selections instead of listing every empty team.</p>
+      )}
+
+      <div className="mt-6 border-t border-[#20313d] pt-5">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#71838e]">Before your next pick</p>
+        {intervening.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {intervening.map((selection) => {
+              const view = selection.ownerRosterId === null
+                ? null
+                : ownerByRoster.get(selection.ownerRosterId) ?? null;
+              const counts = selection.ownerRosterId === null
+                ? {}
+                : getRosterPositionCounts(
+                    selection.ownerRosterId,
+                    draftWorkspace.picks,
+                    workspace.rosters,
+                    draftWorkspace.players,
+                  );
+              const needs = (['QB', 'RB', 'WR', 'TE'] as const)
+                .filter((position) => (counts[position] ?? 0) < targets[position])
+                .slice(0, 3);
+              return (
+                <div key={selection.overallPick} className="rounded-lg bg-[#13232c] p-3">
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <span className="truncate font-bold">{view?.teamName ?? `Roster ${selection.ownerRosterId ?? 'unknown'}`}</span>
+                    <span className="text-[#71838e]">Pick {selection.overallPick}</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-[#8fa0aa]">
+                    {needs.length > 0 ? `Needs ${needs.join(' · ')}` : 'Starter needs currently filled'}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-3 text-xs leading-5 text-[#71838e]">No intervening snake selections are available for this draft state.</p>
+        )}
+      </div>
+
+      <details className="mt-5 border-t border-[#20313d] pt-4 text-xs">
+        <summary className="cursor-pointer font-bold text-[#8fa0aa]">All league rosters</summary>
+        <div className="mt-3 space-y-2">
+          {workspace.rosterViews.map((view) => (
+            <div key={view.roster.roster_id} className="flex justify-between gap-3 text-[#71838e]">
+              <span className={view.roster.owner_id === userId ? 'font-bold text-[#b9ff38]' : ''}>{view.teamName}</span>
+              <span>{view.roster.players?.length ?? 0} players</span>
+            </div>
+          ))}
+        </div>
+      </details>
+    </aside>
   );
 }
 
@@ -949,7 +1517,6 @@ function ProjectionPanel({
   busy,
   onImport,
   available,
-  recommendationResult,
 }: {
   mapping: ProjectionMappingResult | null;
   filename: string | null;
@@ -959,7 +1526,6 @@ function ProjectionPanel({
     projection: ProjectionMappingResult['mapped'][number];
     player: CanonicalPlayerMap['players'][number] | undefined;
   }>;
-  recommendationResult: DraftRecommendationResult | null;
 }) {
   return (
     <section className="rounded-2xl border border-[#263845] bg-[#0c1822] p-5 sm:p-6">
@@ -1028,10 +1594,6 @@ function ProjectionPanel({
                 ))}
               </ul>
             </details>
-          )}
-
-          {recommendationResult && (
-            <RecommendationPanel result={recommendationResult} />
           )}
 
           <div className="mt-6 overflow-hidden rounded-xl border border-[#20313d]">
@@ -1103,7 +1665,7 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
       <div className="flex flex-col justify-between gap-3 border-b border-[#20313d] px-5 py-4 sm:flex-row sm:items-center">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#b9ff38]">
-            Draft engine · Live recommendation
+            Best pick
           </p>
           <p className="mt-1 text-xs text-[#71838e]">
             {result.nextUserPick !== null
@@ -1156,7 +1718,9 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
           <div className="mt-6 rounded-xl border border-[#2a3d48] bg-[#0c1822] p-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-bold">Available at your next selection</p>
+                <p className="text-sm font-bold">
+                  {primary.nextPickConfidence === 'high' ? 'Available' : 'Estimated available'} at your next selection
+                </p>
                 <p className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
                   {displayEnum(primary.nextPickConfidence)} confidence · imported ADP
                 </p>
@@ -1182,6 +1746,19 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
                 style={{ width: `${primary.availableNextPickProbability}%` }}
               />
             </div>
+            <details className="mt-3 border-t border-[#20313d] pt-3 text-xs text-[#71838e]">
+              <summary className="cursor-pointer font-bold text-[#9aa9b1]">How this estimate works</summary>
+              <ul className="mt-2 space-y-1.5 leading-5">
+                <li>· {primary.nextPickExplanation.picksBeforeNextSelection ?? 'Unknown'} picks before your next selection</li>
+                <li>· {primary.nextPickExplanation.interveningTeamsWithNeed} intervening teams currently need {primary.player.position}</li>
+                <li>· Player ADP: {primary.nextPickExplanation.playerAdp.toFixed(1)} · current selection: {primary.nextPickExplanation.currentSelection}</li>
+                <li>· ADP source: {primary.nextPickExplanation.adpSource}</li>
+                <li>· League match: {displayEnum(primary.nextPickExplanation.adpMatchLevel)} · {displayEnum(primary.nextPickConfidence)} confidence</li>
+                {primary.nextPickExplanation.adpMatchReasons.map((reason) => (
+                  <li key={reason}>· {reason}</li>
+                ))}
+              </ul>
+            </details>
           </div>
         )}
 
@@ -1369,57 +1946,5 @@ function InspectorGroup({
         ))}
       </dl>
     </div>
-  );
-}
-
-function RosterPanel({
-  workspace,
-  userId,
-}: {
-  workspace: LeagueWorkspace;
-  userId: string;
-}) {
-  return (
-    <aside className="h-fit rounded-2xl border border-[#263845] bg-[#0c1822] p-5 sm:p-6 xl:sticky xl:top-24">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-[#71838e]">
-        Imported rosters
-      </p>
-      <h2 className="mt-2 text-2xl font-black tracking-[-0.03em]">
-        {workspace.rosterViews.length} teams
-      </h2>
-      <div className="mt-5 space-y-2">
-        {workspace.rosterViews.map((view) => {
-          const isUser = view.roster.owner_id === userId;
-          const points =
-            (view.roster.settings?.fpts ?? 0) +
-            (view.roster.settings?.fpts_decimal ?? 0) / 100;
-          return (
-            <div
-              key={view.roster.roster_id}
-              className={`flex items-center justify-between gap-4 rounded-xl border p-3 ${
-                isUser
-                  ? 'border-[#b9ff38]/40 bg-[#b9ff38]/5'
-                  : 'border-transparent bg-[#13232c]'
-              }`}
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold">
-                  {view.teamName} {isUser && <span className="text-[#b9ff38]">· You</span>}
-                </p>
-                <p className="mt-1 text-xs text-[#71838e]">
-                  {view.roster.players?.length ?? 0} players
-                </p>
-              </div>
-              <div className="text-right text-xs">
-                <p className="font-bold">
-                  {view.roster.settings?.wins ?? 0}-{view.roster.settings?.losses ?? 0}
-                </p>
-                <p className="mt-1 text-[#71838e]">{points.toFixed(1)} pts</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </aside>
   );
 }

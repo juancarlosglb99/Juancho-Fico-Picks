@@ -173,6 +173,39 @@ describe('LeagueContext roster and scoring normalization', () => {
 });
 
 describe('LeagueContext draft state', () => {
+  it.each([
+    { label: 'early', slot: 1, picksMade: 0, nextPick: 24, intervening: 22 },
+    { label: 'middle', slot: 6, picksMade: 5, nextPick: 19, intervening: 12 },
+    { label: 'late turn', slot: 12, picksMade: 11, nextPick: 13, intervening: 0 },
+  ])(
+    'models an on-clock user in the $label slot and finds the following snake turn',
+    ({ slot, picksMade, nextPick, intervening }) => {
+      const picks = Array.from({ length: picksMade }, (_, index) => ({
+        player_id: `drafted-${index + 1}`,
+        picked_by: `user-${index + 1}`,
+        roster_id: String(index + 1),
+        round: 1,
+        draft_slot: index + 1,
+        pick_no: index + 1,
+        metadata: {},
+      }));
+      const { context } = makeContext({
+        league: makeLeague(),
+        draft: makeDraft(),
+        picks,
+        rosters: makeRosters(),
+        players,
+        userId: `user-${slot}`,
+      });
+
+      expect(context.draftState.value.currentSelection?.ownerRosterId).toBe(slot);
+      expect(context.draftState.value.isUserOnClock).toBe(true);
+      expect(context.draftState.value.nextUserPick).toBe(nextPick);
+      expect(context.draftState.value.picksBeforeNextSelection).toBe(intervening);
+      expect(context.draftState.value.interveningSelections).toHaveLength(intervening);
+    },
+  );
+
   it('tracks keeper picks and uses traded-pick ownership for the next selection', () => {
     const league = makeLeague({ teams: 4 });
     const draft = makeDraft({ teams: 4, rounds: 10 });

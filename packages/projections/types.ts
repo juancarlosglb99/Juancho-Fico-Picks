@@ -36,6 +36,19 @@ export interface MappedProjection extends ProjectionRecord {
   playerId: string;
   matchMethod: 'sleeper-id' | 'name-position' | 'unique-name';
   matchConfidence: 1 | 0.95 | 0.8;
+  projectionSource?: string;
+  projectionFetchedAt?: string;
+  projectionSourceUpdatedAt?: string | null;
+  projectionSourceConfidence?: 'high' | 'medium' | 'low';
+  adpSource?: string;
+  adpFetchedAt?: string;
+  adpSourceUpdatedAt?: string | null;
+  adpTeams?: number;
+  adpScoringFormat?: string;
+  adpSampleSize?: number | null;
+  adpSourceConfidence?: 'high' | 'medium' | 'low';
+  adpMatchLevel?: 'exact' | 'approximate' | 'weak';
+  adpMatchReasons?: string[];
 }
 
 export interface UnmatchedProjection extends ProjectionRecord {

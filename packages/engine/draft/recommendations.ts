@@ -50,6 +50,8 @@ interface RawCandidate {
   tier: number;
   playersRemainingInTier: number;
   gapAfterTier: number;
+  interveningTeamsWithNeed: number;
+  interveningDemand: number;
 }
 
 const CORE_POSITIONS = new Set<Position>(['QB', 'RB', 'WR', 'TE']);
@@ -175,6 +177,14 @@ function nextPickConfidence(
   context: LeagueContext,
 ): Confidence {
   if (context.draftState.value.nextUserPick === null) return 'low';
+  if (projection.adpMatchLevel) {
+    if (projection.adpMatchLevel === 'weak') return 'low';
+    const sourceConfidence = projection.adpSourceConfidence ?? 'low';
+    if (projection.adpMatchLevel === 'approximate' && sourceConfidence === 'high') {
+      return 'medium';
+    }
+    return sourceConfidence;
+  }
   if (projection.adpFormat !== expectedAdpFormat(context)) return 'low';
   if (context.lineupType.value !== 'classic') return 'low';
   if (
@@ -477,6 +487,15 @@ export function generateDraftRecommendations({
       },
       0,
     );
+    const interveningTeamsWithNeed = new Set(
+      context.draftState.value.interveningSelections
+        .filter((selection) => {
+          if (selection.ownerRosterId === null) return false;
+          const count = rosterCounts.get(selection.ownerRosterId)?.[projection.position] ?? 0;
+          return count < baseTarget;
+        })
+        .map((selection) => selection.ownerRosterId),
+    ).size;
     const confidence = nextPickConfidence(source, context);
     const nextUserPick = context.draftState.value.nextUserPick;
     const probability =
@@ -516,6 +535,8 @@ export function generateDraftRecommendations({
         tier: tierInfo.tier,
         playersRemainingInTier,
         gapAfterTier: tierInfo.gapAfterTier,
+        interveningTeamsWithNeed,
+        interveningDemand,
       },
     ];
   });
@@ -557,7 +578,12 @@ export function generateDraftRecommendations({
           1,
         ),
         rosterFit: candidate.rosterFit,
-        adpValue: round(clamp(50 + candidate.adpDelta * 3), 1),
+        adpValue: round(
+          50 +
+            (clamp(50 + candidate.adpDelta * 3) - 50) *
+              confidenceWeight(candidate.nextPickConfidence),
+          1,
+        ),
         nextPickRisk: round(50 + (rawNextPickRisk - 50) * reliability, 1),
       };
       const score = scoreCandidate(components);
@@ -593,6 +619,22 @@ export function generateDraftRecommendations({
           replacementDemand: candidate.replacementDemand,
           rosterNeed: candidate.rosterFit,
           scoringAdjusted: candidate.scoring.adjustedForLeagueScoring,
+          interveningTeamsWithNeed: candidate.interveningTeamsWithNeed,
+          interveningDemand: round(candidate.interveningDemand, 1),
+        },
+        nextPickExplanation: {
+          picksBeforeNextSelection: context.draftState.value.picksBeforeNextSelection,
+          interveningTeamsWithNeed: candidate.interveningTeamsWithNeed,
+          playerAdp: candidate.sourceProjection.adp,
+          currentSelection: board.currentOverallPick,
+          adpSource: candidate.sourceProjection.adpSource ?? 'Imported CSV',
+          adpMatchLevel: candidate.sourceProjection.adpMatchLevel ??
+            (candidate.nextPickConfidence === 'high' ? 'exact' : 'approximate'),
+          adpMatchReasons: candidate.sourceProjection.adpMatchReasons ?? [
+            candidate.nextPickConfidence === 'high'
+              ? 'The imported ADP format matches this league.'
+              : 'The imported ADP context is incomplete or differs from this league.',
+          ],
         },
         reasons: buildReasons(candidate),
       };

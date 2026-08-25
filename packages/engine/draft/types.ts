@@ -37,6 +37,8 @@ export interface DraftScoreRawValues {
   replacementDemand: number;
   rosterNeed: number;
   scoringAdjusted: boolean;
+  interveningTeamsWithNeed: number;
+  interveningDemand: number;
 }
 
 export interface DraftRecommendation {
@@ -52,6 +54,15 @@ export interface DraftRecommendation {
   playersRemainingInTier: number;
   components: DraftScoreComponents;
   raw: DraftScoreRawValues;
+  nextPickExplanation: {
+    picksBeforeNextSelection: number | null;
+    interveningTeamsWithNeed: number;
+    playerAdp: number;
+    currentSelection: number;
+    adpSource: string;
+    adpMatchLevel: 'exact' | 'approximate' | 'weak';
+    adpMatchReasons: string[];
+  };
   reasons: string[];
 }
 
