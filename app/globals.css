@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+:root {
+  --background: #071019;
+  --foreground: #f7f8f2;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
