@@ -14,10 +14,12 @@ CSV projections are an optional advanced override.
    automatic pick-by-pick sync while a draft is live.
 3. **Projection mapping** — CSV provider, canonical player IDs, exact Sleeper-ID
    matching, normalized name/position matching and an unmatched-row review.
-4. **Draft scoring engine** — normalized projection, VORP, scarcity, tier urgency,
-   roster fit and ADP-value factors with a deterministic weighted score.
-5. **Next-pick probability** — snake-draft turn detection plus ADP, variance and
-   positional-demand estimates for whether a player will make it back.
+4. **Draft scoring engine** — deterministic scoring anchored on what a player
+   adds to a starting lineup, superseded in milestone 11 by roster-completion
+   planning.
+5. **Next-pick probability** — snake-draft turn detection plus draft-room rank,
+   variance and positional-demand estimates for whether a player will make it
+   back.
 6. **Draft Now / Wait recommendations** — live primary and alternative picks,
    transparent reasons, component scores and the next user selection.
 7. **Format hardening** — normalized LeagueContext, Superflex/2QB replacement,
@@ -34,6 +36,10 @@ CSV projections are an optional advanced override.
     opponent archetypes, probabilistic room-rank/market/need behavior, complete
     draft continuations, candidate comparisons, wait probabilities, and
     final-roster outcome scoring.
+11. **Roster construction** — lineup-anchored value, positional saturation,
+    roster-completion planning, emergent build classification, positional-run
+    detection, opponent-roster-aware availability, and an autodraft acceptance
+    harness that plays whole drafts on recommendation #1.
 
 Lineup, waiver, trade, browser-extension and AI explanation features remain
 future milestones. See [the format audit](docs/format-audit.md) for the exact
@@ -134,7 +140,14 @@ The latest valid custom override is stored locally by season and restored on
 the same browser, so a user does not need to repeat the import for every draft
 session. A failed replacement import never clears the last valid snapshot.
 
-## Automatic ADP
+## Automatic ADP (reference only)
+
+Market ADP is shown for context and is **not** part of the recommendation
+decision path. Availability and value both read First Seed's Sleeper draft-room
+rank, which describes the room you are actually drafting in; ADP from a
+different format was a poor substitute and is no longer trusted with the
+decision. It remains useful for spotting where the wider market disagrees with
+your board.
 
 Eligible redraft snake/linear/3RR leagues automatically request current ADP
 through the server-side `/api/adp` route. The provider is Fantasy Football
@@ -150,22 +163,60 @@ weak. Automatic redraft ADP is not applied to dynasty or auction drafts.
 
 ## Draft score
 
-Every factor is normalized to a 0–100 scale before weighting:
+Juancho does not rank players. It ranks **the roster you end up with**.
 
-| Factor | Weight |
-| --- | ---: |
-| Value over replacement (VORP) | 30% |
-| Risk the player is gone by the next pick | 20% |
-| Tier urgency | 15% |
-| Raw projection | 15% |
-| Roster fit | 10% |
-| ADP value | 5% |
-| Positional scarcity | 5% |
+For each candidate it completes the draft from that pick — taking your
+remaining selections in order while the room in front of you keeps taking the
+consensus board — and scores the finished team. Points only count if they can
+reach a starting lineup, so a second quarterback in a 1QB league is worth
+roughly nothing no matter how many points he projects, while a fourth running
+back still has a flex slot and an injury to walk into.
 
-The live recommendation result is deterministic for a given draft state,
-normalized LeagueContext, and source snapshots. Low-confidence or
-format-mismatched ADP is downweighted.
-The score is decision support, not a promise of fantasy results.
+Several behaviours that would otherwise need their own rules fall out of this:
+
+| Behaviour | Why it happens |
+| --- | --- |
+| Positional saturation | A player who cannot enter your lineup does not improve the finished roster. |
+| Tier cliffs | If the last useful tight end goes before your next pick, every plan that waited inherits a worse one. |
+| Opportunity cost | Spending a pick on a position you have costs whatever would have filled an empty slot. |
+| Early-investment payoff | An elite quarterback in round 3 leaves nothing for a second one to improve. |
+
+Bench value is discounted by how likely a player is to ever start. A position
+with one starting slot can use exactly one backup; the third has no path into
+the lineup in any week and is scored at zero.
+
+### Draft now or wait
+
+Both options are played out the same way, which is what makes the answer
+trustworthy:
+
+- **Take him now** — and the alternative either survives to your next pick or
+  does not, weighted by how likely that is.
+- **Wait** — take the alternative, and *he* either survives or does not.
+
+Whichever finishes with the better roster is the recommendation. A player who is
+coming back is never urgent, however good he is, and the headline pick never
+tells you to wait on itself. When you pick back-to-back at the turn, nobody
+selects in between and availability is reported as exactly 100%.
+
+Availability is estimated from First Seed's Sleeper draft-room rank and from the
+actual rosters of the teams picking before you: a quarterback is far likelier to
+survive a stretch of teams that all already have one. Market ADP is displayed
+for reference but does not drive recommendations.
+
+The result is deterministic for a given draft state, normalized LeagueContext
+and source snapshots. The score is decision support, not a promise of fantasy
+results.
+
+### Checking it still drafts well
+
+The engine is held to one standard: if you follow recommendation #1 every round,
+you should finish with a team you would have built yourself. `npm test` plays
+complete drafts from early, middle and late seats across 10-team, 12-team and
+Superflex leagues and fails if any required starting slot is left empty or any
+position is hoarded. It also finishes drafts it did not choose to start —
+RB-heavy, Zero-RB, Hero-RB, early TE, early QB — and benchmarks the result
+against rank-only and need-then-rank baselines using the same roster evaluation.
 
 ## Structure
 
@@ -177,7 +228,7 @@ packages/projections/      Replaceable projection-provider contracts and CSV
 packages/adp/              Automatic ADP planning, providers and canonical mapping
 packages/first-seed/       JuiceSheets, room-rank and signal providers/mapping
 packages/data/             Snapshots, provenance, freshness and last-good cache
-packages/engine/draft/     Draft state, availability, tiers and recommendations
+packages/engine/draft/     Lineup value, roster planning, strategy and recommendations
 packages/engine/mock/      Opponent behavior, Monte Carlo, and backtesting
 packages/engine/context/   Sleeper normalization and league scoring
 packages/dynasty/          Replaceable dynasty value-provider contract
