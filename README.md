@@ -40,6 +40,9 @@ CSV projections are an optional advanced override.
     roster-completion planning, emergent build classification, positional-run
     detection, opponent-roster-aware availability, and an autodraft acceptance
     harness that plays whole drafts on recommendation #1.
+12. **Measured quality and speed** — a permanent regression corpus of real
+    mocks pinned to the data they were drafted on, roster and decision quality
+    scoring, and pick-to-advice latency measured against the live API.
 
 Lineup, waiver, trade, browser-extension and AI explanation features remain
 future milestones. See [the format audit](docs/format-audit.md) for the exact
@@ -61,6 +64,59 @@ npm run test:smoke
 npm run lint
 npm run build
 ```
+
+## Measuring whether it is any good
+
+Two things decide whether this is worth using: the team you end up with, and how
+quickly the advice reacts. Both are measured rather than asserted.
+
+### Save every mock you draft
+
+```bash
+npm run capture -- "https://sleeper.com/draft/nfl/1234567890123456789" "yourusername"
+```
+
+That freezes the draft into `data/regression/mocks/` — the whole board, the
+format, your seat, what the engine recommended and what its strategy state was
+at every one of your selections, what you actually took, and the finished
+roster. The First Seed projections, the Sleeper draft-room ranks and the player
+pool are pinned alongside it, so the case replays identically in six weeks when
+the weekly data has moved on. Snapshots are shared between drafts captured in
+the same week rather than copied into each case.
+
+Every saved mock is replayed by `npm test`. Each one has to field a legal
+starting lineup, avoid hoarding a position it cannot start, produce no
+unexplained contradictions, stay at least as good as the roster recorded when it
+was captured, and answer every pick inside the compute budget. The suite prints
+a line per case:
+
+```text
+[corpus] 1 saved mock
+  1398412036827783168 seat 1 10-team standard: starting 1667.5 (+0 vs baseline) ·
+  unfilled 0 · unusable 1 · meanRegret 4.5 · compute p50 6.1ms max 8.3ms ·
+  RB6 WR4 QB2 TE1 K1 DEF1
+```
+
+`npm run test:regression` runs only the corpus.
+
+### Reaction time
+
+The live screen shows how long a pick takes to become advice, split into
+noticing it and thinking about it, against a one-second budget. The same
+measurement runs against the live API in `npm run test:smoke`:
+
+| Part | Cost |
+| --- | ---: |
+| Poll interval | 800ms |
+| Sleeper round trip | ~50ms |
+| Rebuild board, context and every recommendation | ~15ms |
+| **Typical pick to advice** | **~460ms** |
+| Worst observed | ~870ms |
+
+Rebuilding the recommendations is a rounding error next to waiting for the next
+poll, so the polling interval is the budget. Traded picks are read every twenty
+seconds instead of every poll — they almost never change, and a mock draft has
+none — which leaves the request budget for the picks that actually move.
 
 ## Attaching to a mock or live draft
 

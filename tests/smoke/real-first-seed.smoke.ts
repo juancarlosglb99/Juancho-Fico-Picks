@@ -106,7 +106,16 @@ describe('live First Seed structured sheets', () => {
     expect(roomRankings.resolution.matched).toBeGreaterThanOrEqual(180);
     expect(adp.resolution.matched).toBeGreaterThanOrEqual(80);
     expect(result.recommendations.length).toBeGreaterThan(0);
-    expect(result.recommendations[0].projection.projectionSource).toContain('First Seed');
+    // Every skill-position recommendation must trace back to First Seed. Kicker
+    // and defense stand-ins deliberately do not, because no provider publishes
+    // them, and they say so in their own source label.
+    const skillRecommendations = result.recommendations.filter((recommendation) =>
+      ['QB', 'RB', 'WR', 'TE'].includes(recommendation.player.position),
+    );
+    expect(skillRecommendations.length).toBeGreaterThan(0);
+    for (const recommendation of skillRecommendations.slice(0, 10)) {
+      expect(recommendation.projection.projectionSource).toContain('First Seed');
+    }
     expect(result.recommendations.some((recommendation) => recommendation.draftRoomRank !== null))
       .toBe(true);
     expect(result.recommendations.some((recommendation) => recommendation.marketAdp !== null))

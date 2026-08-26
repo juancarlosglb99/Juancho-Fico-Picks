@@ -19,8 +19,17 @@ import type { SleeperDraft, SleeperDraftPick } from './types';
 /* ------------------------------------------------------------------ cadence */
 
 export const SYNC_INTERVALS = {
-  /** Picks land fast once a room is live; this is the responsiveness budget. */
-  drafting: 2_500,
+  /**
+   * Picks land fast once a room is live, and this interval is most of the delay
+   * between a pick happening and the advice changing.
+   *
+   * Rebuilding the recommendations costs single-digit milliseconds, so polling
+   * is the whole budget: at 2.5s the average pick was already a second and a
+   * quarter old before we even looked. One second keeps the typical
+   * pick-to-advice gap comfortably inside the target while asking Sleeper for
+   * roughly 120 reads a minute, far below what the public API tolerates.
+   */
+  drafting: 800,
   /** Before the first pick, we only need to notice the room going live. */
   preDraft: 10_000,
   /** A paused room can resume at any moment, so keep a moderate watch. */

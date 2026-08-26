@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   automaticAdpCacheKey,
   fetchAutomaticAdp,
@@ -102,6 +102,12 @@ import {
 import { parseSleeperDraftRef, sleeperDraftUrl } from '@/packages/sleeper/draft-ref';
 import type { SyncState } from '@/packages/sleeper/live-sync';
 import { useLiveDraftSync, type LiveDraftSnapshot } from './use-live-draft-sync';
+import {
+  LatencyRecorder,
+  buildLatencySample,
+  measure,
+  type LatencySummary,
+} from '@/packages/engine/perf/latency';
 
 interface LeagueWorkspace {
   league: SleeperLeague;
@@ -111,6 +117,8 @@ interface LeagueWorkspace {
 }
 
 interface DraftWorkspace {
+  /** Milliseconds spent deriving the board, for the latency readout. */
+  boardMs: number;
   draft: SleeperDraft;
   picks: SleeperDraftPick[];
   tradedPicks: SleeperTradedPick[];
@@ -453,6 +461,17 @@ export function Dashboard() {
    * the drafted player leaves the board, the roster, the recommendations and the
    * availability probabilities together, with no refresh step in between.
    */
+  /**
+   * Reaction time, measured rather than assumed.
+   *
+   * The gap between a pick landing in Sleeper and the advice changing on screen
+   * is one of the two things this product is judged on, so each derivation is
+   * timed and the total is reported against a one-second budget.
+   */
+  const latencyRef = useRef<LatencyRecorder | null>(null);
+  if (latencyRef.current === null) latencyRef.current = new LatencyRecorder();
+  const [latency, setLatency] = useState<LatencySummary | null>(null);
+
   const draftWorkspace = useMemo<DraftWorkspace | null>(() => {
     if (!attachmentBundle) return null;
 
@@ -471,18 +490,22 @@ export function Dashboard() {
       rosters: attachmentBundle.rosters,
     });
 
-    return {
-      draft: source.draft,
-      picks: source.picks,
-      tradedPicks: source.tradedPicks,
-      players: attachmentBundle.players,
-      attachment,
-      board: deriveDraftBoardState(
+    const { value: board, ms } = measure(() =>
+      deriveDraftBoardState(
         source.draft,
         source.picks,
         attachment.rosters,
         attachmentBundle.players,
       ),
+    );
+    return {
+      boardMs: ms,
+      draft: source.draft,
+      picks: source.picks,
+      tradedPicks: source.tradedPicks,
+      players: attachmentBundle.players,
+      attachment,
+      board,
       syncedAt: new Date(source.fetchedAt),
     };
   }, [attachmentBundle, liveSnapshot]);
@@ -612,22 +635,26 @@ export function Dashboard() {
       }));
   }, [draftWorkspace, projectionSnapshot, adpSnapshot]);
 
-  const leagueContext = useMemo(() => {
+  const leagueContextTimed = useMemo(() => {
     if (!draftWorkspace || !user) return null;
     // The attachment supplies the league and rosters for BOTH a real league
     // draft and a mock, so this path no longer depends on a league workspace.
-    return normalizeLeagueContext({
-      league: draftWorkspace.attachment.league,
-      draft: draftWorkspace.draft,
-      drafts: leagueWorkspace?.drafts ?? [draftWorkspace.draft],
-      picks: draftWorkspace.picks,
-      tradedPicks: draftWorkspace.tradedPicks,
-      rosters: draftWorkspace.attachment.rosters,
-      board: draftWorkspace.board,
-      userId: user.user_id,
-      overrides: contextOverrides,
-    });
+    const { value, ms } = measure(() =>
+      normalizeLeagueContext({
+        league: draftWorkspace.attachment.league,
+        draft: draftWorkspace.draft,
+        drafts: leagueWorkspace?.drafts ?? [draftWorkspace.draft],
+        picks: draftWorkspace.picks,
+        tradedPicks: draftWorkspace.tradedPicks,
+        rosters: draftWorkspace.attachment.rosters,
+        board: draftWorkspace.board,
+        userId: user.user_id,
+        overrides: contextOverrides,
+      }),
+    );
+    return { value, ms };
   }, [draftWorkspace, leagueWorkspace, user, contextOverrides]);
+  const leagueContext = leagueContextTimed?.value ?? null;
 
   const automaticAdpPlan = useMemo(() => {
     if (!leagueContext || !season) return null;
@@ -854,7 +881,7 @@ export function Dashboard() {
     };
   }, [projectionSnapshot]);
 
-  const draftRecommendations = useMemo(() => {
+  const draftRecommendationsTimed = useMemo(() => {
     if (
       !draftWorkspace ||
       !projectionSnapshot ||
@@ -863,15 +890,18 @@ export function Dashboard() {
     ) {
       return null;
     }
-    return generateDraftRecommendations({
-      context: leagueContext,
-      picks: draftWorkspace.picks,
-      rosters: draftWorkspace.attachment.rosters,
-      board: draftWorkspace.board,
-      players: draftWorkspace.players,
-      projections: composeProjectionAndAdp(projectionSnapshot, adpSnapshot),
-      roomRankings: roomRankingSnapshot,
-    });
+    const { value, ms } = measure(() =>
+      generateDraftRecommendations({
+        context: leagueContext,
+        picks: draftWorkspace.picks,
+        rosters: draftWorkspace.attachment.rosters,
+        board: draftWorkspace.board,
+        players: draftWorkspace.players,
+        projections: composeProjectionAndAdp(projectionSnapshot, adpSnapshot),
+        roomRankings: roomRankingSnapshot,
+      }),
+    );
+    return { value, ms };
   }, [
     draftWorkspace,
     projectionSnapshot,
@@ -879,6 +909,32 @@ export function Dashboard() {
     adpSnapshot,
     roomRankingSnapshot,
   ]);
+  const draftRecommendations = draftRecommendationsTimed?.value ?? null;
+
+  /**
+   * One sample per pick that actually moved the board.
+   *
+   * `last_picked` is Sleeper's own timestamp for the selection, so this measures
+   * how stale our advice was, not merely how long our own code took.
+   */
+  useEffect(() => {
+    if (!liveSnapshot || !draftWorkspace || !draftRecommendationsTimed) return;
+    const recorder = latencyRef.current;
+    if (!recorder) return;
+    recorder.record(
+      buildLatencySample({
+        overallPick: draftWorkspace.board.currentOverallPick,
+        pickedAt: liveSnapshot.draft.last_picked,
+        fetchedAt: liveSnapshot.fetchedAt,
+        computeMs:
+          draftWorkspace.boardMs +
+          (leagueContextTimed?.ms ?? 0) +
+          draftRecommendationsTimed.ms,
+      }),
+    );
+    setLatency(recorder.summary());
+    // Keyed on the snapshot: a new snapshot is exactly one board change.
+  }, [liveSnapshot, draftWorkspace, leagueContextTimed, draftRecommendationsTimed]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1141,6 +1197,7 @@ export function Dashboard() {
                     }
                     onRefresh={syncNow}
                     syncState={syncState}
+                    latency={latency}
                   />
                 )}
                 {draftWorkspace && (
@@ -2295,6 +2352,48 @@ function ContextSource({
   );
 }
 
+/**
+ * How quickly a pick in the room becomes advice on screen.
+ *
+ * Split the way the delay is actually caused: waiting to notice the pick, then
+ * rebuilding the recommendations. Only the second half is ours, and it is the
+ * small half - which is worth showing rather than hiding behind one number.
+ */
+function ReactionTime({ latency }: { latency: LatencySummary | null }) {
+  if (!latency || latency.total.count === 0) return null;
+  const within = latency.withinBudget;
+  const good = within !== null && within >= 90;
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 rounded-xl border border-[#20313d] bg-[#0c1822] px-4 py-3 text-[11px]">
+      <span className="font-black uppercase tracking-[0.12em] text-[#60727d]">
+        Reaction time
+      </span>
+      <span className="text-[#8fa0aa]">
+        pick to advice{' '}
+        <span className={`font-black ${good ? 'text-[#b9ff38]' : 'text-[#ffb27a]'}`}>
+          {formatMs(latency.total.p50Ms)}
+        </span>{' '}
+        median · {formatMs(latency.total.p95Ms)} p95
+      </span>
+      <span className="text-[#71838e]">
+        noticing {formatMs(latency.detection.p50Ms)} · thinking{' '}
+        {formatMs(latency.compute.p50Ms)}
+      </span>
+      {within !== null && (
+        <span className={good ? 'text-[#b9ff38]' : 'text-[#ffb27a]'}>
+          {within}% under {latency.budgetMs / 1000}s
+        </span>
+      )}
+      <span className="text-[#4d5d67]">{latency.samples} picks</span>
+    </div>
+  );
+}
+
+function formatMs(value: number | null): string {
+  if (value === null) return '—';
+  return value >= 1000 ? `${(value / 1000).toFixed(2)}s` : `${Math.round(value)}ms`;
+}
+
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-[#071019] p-4">
@@ -2375,6 +2474,7 @@ function DraftPanel({
   onSelectDraft,
   onRefresh,
   syncState,
+  latency,
 }: {
   workspace: LeagueWorkspace;
   draftWorkspace: DraftWorkspace | null;
@@ -2382,6 +2482,7 @@ function DraftPanel({
   onSelectDraft: (draftId: string) => void;
   onRefresh: () => void;
   syncState: SyncState;
+  latency: LatencySummary | null;
 }) {
   if (workspace.drafts.length === 0) {
     return (
@@ -2442,6 +2543,8 @@ function DraftPanel({
               value={draftWorkspace.board.availablePlayers.length.toLocaleString()}
             />
           </div>
+
+          <ReactionTime latency={latency} />
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#20313d] pt-5">
             <SyncStatusPill

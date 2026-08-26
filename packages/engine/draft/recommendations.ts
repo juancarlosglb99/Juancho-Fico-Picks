@@ -23,6 +23,7 @@ import {
 } from './room-behavior';
 import { getRosterPositionCounts } from './roster-fit';
 import { buildProjectionTiers } from './tiers';
+import { buildFillerCandidates } from './late-round-fillers';
 import {
   DRAFT_NOW_THRESHOLD,
   DRAFT_SCORE_SHAPE,
@@ -408,12 +409,49 @@ export function generateDraftRecommendations({
 
   const availableIds = new Set(board.availablePlayers.map((player) => player.id));
   const allowKickersAndDefense = board.currentRound >= Math.max(1, board.rounds - 2);
-  const candidates = valued.filter(
+  const projectedCandidates = valued.filter(
     ({ scored }) =>
       availableIds.has(scored.playerId) &&
       (CORE_POSITIONS.has(scored.position) ||
         (allowKickersAndDefense && ['K', 'DEF'].includes(scored.position))),
   );
+
+  /*
+   * Nobody projects kickers or defenses, so in a league that starts them the
+   * engine could never recommend one and finished with a lineup it could not
+   * legally field. Stand-ins are offered in the closing rounds, and only while
+   * the slot is still empty.
+   */
+  const preliminaryRosterId = context.draftState.value.userRosterId;
+  const heldPositions =
+    preliminaryRosterId === null
+      ? {}
+      : getRosterPositionCounts(
+          preliminaryRosterId,
+          picks,
+          rosters,
+          players,
+          context.draftState.value.slotToRosterId,
+        );
+  const fillerProjections = buildFillerCandidates({
+    board,
+    slots: lineupSlotsFor(context.roster.value),
+    heldPositions,
+    alreadyProjected: new Set(valued.map((item) => item.scored.playerId)),
+  });
+  const fillerValued: ValuedProjection[] = fillerProjections.map((projection) => ({
+    source: projection,
+    scored: projection,
+    scoring: {
+      points: projection.projection,
+      adjustedForLeagueScoring: false,
+      source: 'provider-aggregate',
+      limitations: [
+        'Kicker and defense values are nominal; no provider projects these positions.',
+      ],
+    } satisfies ScoredProjection,
+  }));
+  const candidates = [...projectedCandidates, ...fillerValued];
   if (candidates.length === 0) {
     return {
       ...unavailableResult(context, status, messages),
@@ -421,7 +459,7 @@ export function generateDraftRecommendations({
     };
   }
 
-  const scoredProjections = valued.map((item) => item.scored);
+  const scoredProjections = [...valued, ...fillerValued].map((item) => item.scored);
   const leagueRankByPlayer = new Map(
     [...scoredProjections]
       .sort((a, b) => b.projection - a.projection || a.playerName.localeCompare(b.playerName))
@@ -456,7 +494,9 @@ export function generateDraftRecommendations({
 
   /* ------------------------------------------------------- roster-aware inputs */
 
-  const valuedById = new Map(valued.map((item) => [item.scored.playerId, item]));
+  const valuedById = new Map(
+    [...valued, ...fillerValued].map((item) => [item.scored.playerId, item]),
+  );
   const slots = lineupSlotsFor(context.roster.value);
   const slotToRosterId = context.draftState.value.slotToRosterId ?? draftSlotMap(rosters);
   const projectionByPlayerId = new Map(scoredProjections.map((item) => [item.playerId, item]));

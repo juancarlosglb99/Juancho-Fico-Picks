@@ -8,6 +8,10 @@ import {
   type DraftSnapshot,
 } from '@/packages/sleeper/draft-follower';
 import { INITIAL_SYNC_STATE, type SyncState } from '@/packages/sleeper/live-sync';
+import type { SleeperTradedPick } from '@/packages/sleeper/types';
+
+/** How long a traded-pick reading stays good enough to reuse. */
+const TRADED_PICK_REFRESH_MS = 20_000;
 
 export type LiveDraftSnapshot = DraftSnapshot;
 
@@ -64,15 +68,29 @@ export function useLiveDraftSync(draftId: string | null): LiveDraftSync {
       return;
     }
 
+    /*
+     * Traded picks barely change, and asking for them every second is a third
+     * of our request budget spent on an answer that is almost always identical.
+     * A mock draft has none at all. Reading them occasionally leaves room to
+     * poll the picks - the thing that actually moves - more often.
+     */
+    let tradedPicks: SleeperTradedPick[] = [];
+    let tradedPicksReadAt = 0;
+
     const follower = createDraftFollower(
       draftId,
       {
         fetchSnapshot: async (id, signal) => {
-          const [draft, picks, tradedPicks] = await Promise.all([
+          const stale = Date.now() - tradedPicksReadAt > TRADED_PICK_REFRESH_MS;
+          const [draft, picks, freshTradedPicks] = await Promise.all([
             sleeperClient.getDraft(id, signal),
             sleeperClient.getDraftPicks(id, signal),
-            sleeperClient.getDraftTradedPicks(id, signal),
+            stale ? sleeperClient.getDraftTradedPicks(id, signal) : Promise.resolve(null),
           ]);
+          if (freshTradedPicks !== null) {
+            tradedPicks = freshTradedPicks;
+            tradedPicksReadAt = Date.now();
+          }
           return { draft, picks, tradedPicks };
         },
         now: () => Date.now(),

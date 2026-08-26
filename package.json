@@ -12,7 +12,9 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "test": "vitest run --config vitest.config.ts",
     "test:smoke": "vitest run --config vitest.smoke.config.ts",
-    "test:watch": "vitest --config vitest.config.ts"
+    "test:watch": "vitest --config vitest.config.ts",
+    "capture": "node scripts/capture.mjs",
+    "test:regression": "vitest run --config vitest.config.ts tests/regression"
   },
   "dependencies": {
     "next": "^16.3.3",
