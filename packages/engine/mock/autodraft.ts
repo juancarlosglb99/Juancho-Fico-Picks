@@ -46,6 +46,15 @@ export interface AutodraftSpec {
   userSlot: number;
   userId: string;
   seed?: number;
+  /**
+   * Forces the shape of our opening, one position per early selection.
+   *
+   * Used to check the engine can FINISH a roster it did not choose to start:
+   * a Zero-RB opening, a Hero-RB opening, an early tight end. The best
+   * available player at the named position is taken; once the list runs out the
+   * engine takes over completely.
+   */
+  forcedOpeningPositions?: Position[];
 }
 
 /** One selection, with the reasoning captured when it was Juancho's pick. */
@@ -115,6 +124,7 @@ export function autodraftWithRecommendationOne(spec: AutodraftSpec): AutodraftRe
     userSlot,
     userId,
     seed = 20260826,
+    forcedOpeningPositions = [],
   } = spec;
 
   const random = mulberry32(seed);
@@ -152,6 +162,7 @@ export function autodraftWithRecommendationOne(spec: AutodraftSpec): AutodraftRe
   );
 
   let context: LeagueContext | null = null;
+  let userSelectionIndex = 0;
 
   for (let overallPick = 1; overallPick <= totalPicks; overallPick += 1) {
     const slot = slotForOverallPick(overallPick, teams, type);
@@ -166,6 +177,18 @@ export function autodraftWithRecommendationOne(spec: AutodraftSpec): AutodraftRe
     let rosterBefore: Partial<Record<Position, number>> | undefined;
 
     if (isUser) {
+      const forcedPosition = forcedOpeningPositions[userSelectionIndex];
+      userSelectionIndex += 1;
+      if (forcedPosition) {
+        chosen =
+          [...available.values()]
+            .filter((projection) => projection.position === forcedPosition)
+            .sort((a, b) => b.projection - a.projection)[0] ?? null;
+        rosterBefore = { ...rosterCounts };
+      }
+    }
+
+    if (isUser && !chosen) {
       // Rebuild exactly what the live app would have in front of it.
       const board = deriveDraftBoardState(draft, picks, rosters, players);
       context = normalizeLeagueContext({
@@ -208,7 +231,7 @@ export function autodraftWithRecommendationOne(spec: AutodraftSpec): AutodraftRe
           action: recommendation.action,
         }));
       }
-    } else {
+    } else if (!isUser) {
       const candidates: OpponentCandidate[] = [...available.values()].map(
         (projection) => ({
           projection,

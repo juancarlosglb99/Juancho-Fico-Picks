@@ -313,7 +313,9 @@ function buildStrategicReasons({
     reasons.push(
       components.opportunityCost > DRAFT_NOW_THRESHOLD
         ? `Waiting costs about ${components.opportunityCost.toFixed(1)} pts of final roster`
-        : `About ${Math.round(probability)}% likely to still be there next turn`,
+        : probability >= 99.5
+          ? `You pick again right away, so he is not going anywhere`
+          : `About ${Math.round(probability)}% likely to still be there next turn`,
     );
   }
 
@@ -612,6 +614,12 @@ export function generateDraftRecommendations({
     if (nextUserPick === null) {
       return { value: null, confidence: 'low', teamsWithNeed, demand };
     }
+    // Back-to-back selections at the turn: nobody picks in between, so everyone
+    // on the board is available, exactly and with certainty. Estimating this is
+    // both unnecessary and misleading.
+    if (interveningTeams.length === 0) {
+      return { value: 100, confidence: 'high', teamsWithNeed, demand };
+    }
     const source = projectionByPlayerId.get(candidate.playerId);
     const room = roomByPlayerId.get(candidate.playerId);
     const confidence: Confidence = room
@@ -782,11 +790,14 @@ export function generateDraftRecommendations({
     const { value: probability, confidence, teamsWithNeed } = probabilityOf(candidate);
     const decision = decisions.get(candidate.playerId);
     const opportunityCost = decision?.edge ?? round(plan.total - bestPlanValue, 1);
+    const backToBack = context.draftState.value.picksBeforeNextSelection === 0;
     const exceptional =
       decision?.exceptional ??
-      (index === 0 && probability !== null && probability >= 90
-        ? 'He is likely to come back, but nothing else on the board improves the expected final roster more, so he is still the pick.'
-        : null);
+      (index === 0 && backToBack
+        ? 'You pick again immediately, so both of your targets should still be there. This is simply the better one to take first.'
+        : index === 0 && probability !== null && probability >= 90
+          ? 'He is likely to come back, but nothing else on the board improves the expected final roster more, so he is still the pick.'
+          : null);
 
     const planDelta = round(plan.total - bestPlanValue, 1);
     const score = round(

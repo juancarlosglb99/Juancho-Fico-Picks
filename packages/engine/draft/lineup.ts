@@ -170,14 +170,27 @@ export function benchUsabilityFactor({
     : 0;
   const startingFootprint = dedicated + flexAccess + superFlexAccess;
 
-  // A single-slot position (QB in 1QB, TE) has almost no path into the lineup
-  // for a second body, and none at all for a third.
   if (startingFootprint <= 0) return 0;
 
-  const base = startingFootprint <= 1.2 ? 0.1 : startingFootprint <= 2.2 ? 0.2 : 0.3;
-  const decay = startingFootprint <= 1.2 ? 0.18 : 0.42;
+  /*
+   * A position with a single starting slot - quarterback in 1QB, tight end -
+   * can use exactly one backup. The third one has no path into the lineup at
+   * all: both players ahead of him would have to be unavailable in the same
+   * week, and even then he replaces a player we would have started anyway. He
+   * is worth nothing, and saying so is what stops the model from collecting
+   * them purely because the position posts big raw numbers.
+   *
+   * Positions with several slots are different. Another running back or
+   * receiver always has some path in, through a flex slot, a bye or an injury,
+   * so their value decays without ever reaching zero.
+   */
+  const singleSlot = startingFootprint <= 1.5;
+  if (singleSlot && depthIndexAtPosition >= 1) return 0;
+
+  const base = singleSlot ? 0.06 : startingFootprint <= 2.2 ? 0.2 : 0.3;
+  const decay = singleSlot ? 0.18 : 0.42;
   const factor = base * decay ** depthIndexAtPosition;
-  return factor < 0.004 ? 0 : Math.round(factor * 1000) / 1000;
+  return factor < 0.002 ? 0 : Math.round(factor * 1000) / 1000;
 }
 
 /**
