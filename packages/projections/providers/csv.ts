@@ -12,6 +12,7 @@ const HEADER_ALIASES = {
   playerName: ['player', 'name', 'player_name', 'full_name'],
   sleeperId: ['sleeper_id', 'sleeperid'],
   position: ['position', 'pos'],
+  team: ['team', 'nfl_team'],
   projection: ['projection', 'projected_points', 'points', 'fpts'],
   adp: ['adp', 'average_draft_position'],
   rank: ['rank', 'overall_rank', 'ecr'],
@@ -124,8 +125,9 @@ export function parseProjectionCsv(input: string): ProjectionRecord[] {
     playerName: requiredColumn(headers, HEADER_ALIASES.playerName, 'player'),
     position: requiredColumn(headers, HEADER_ALIASES.position, 'position'),
     projection: requiredColumn(headers, HEADER_ALIASES.projection, 'projection'),
-    adp: requiredColumn(headers, HEADER_ALIASES.adp, 'adp'),
-    rank: requiredColumn(headers, HEADER_ALIASES.rank, 'rank'),
+    adp: findColumn(headers, HEADER_ALIASES.adp),
+    rank: findColumn(headers, HEADER_ALIASES.rank),
+    team: findColumn(headers, HEADER_ALIASES.team),
     sleeperId: findColumn(headers, HEADER_ALIASES.sleeperId),
     adpFormat: findColumn(headers, HEADER_ALIASES.adpFormat),
     projectionScoring: findColumn(headers, HEADER_ALIASES.projectionScoring),
@@ -188,13 +190,24 @@ export function parseProjectionCsv(input: string): ProjectionRecord[] {
           ? row[columns.sleeperId]
           : undefined,
       position: normalizePosition(row[columns.position]),
+      ...(columns.team >= 0
+        ? {
+            team: row[columns.team]
+              ? row[columns.team].trim().toUpperCase()
+              : null,
+          }
+        : {}),
       projection: parseNumber(
         row[columns.projection],
         'Projection',
         sourceRow,
       ),
-      adp: parseNumber(row[columns.adp], 'ADP', sourceRow),
-      rank: parseNumber(row[columns.rank], 'Rank', sourceRow),
+      ...(columns.adp >= 0 && row[columns.adp]
+        ? { adp: parseNumber(row[columns.adp], 'ADP', sourceRow) }
+        : {}),
+      ...(columns.rank >= 0 && row[columns.rank]
+        ? { rank: parseNumber(row[columns.rank], 'Rank', sourceRow) }
+        : {}),
       ...(columns.adpFormat >= 0 && row[columns.adpFormat]
         ? { adpFormat: normalizeAdpFormat(row[columns.adpFormat]) }
         : {}),

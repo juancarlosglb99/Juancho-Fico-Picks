@@ -46,13 +46,13 @@ describe('projection snapshots and source composition', () => {
     expect(snapshot.completeStatLines).toBe(1);
     expect(snapshot.records[0]).toMatchObject({
       projectionSource: 'CSV · projections.csv',
-      adpSource: 'CSV · projections.csv',
-      adpMatchLevel: 'approximate',
     });
+    expect(snapshot.records[0].adp).toBeUndefined();
+    expect(snapshot.records[0].adpSource).toBeUndefined();
     expect(isProjectionSnapshot(snapshot)).toBe(true);
   });
 
-  it('uses matched automatic ADP while retaining CSV fallback for unresolved players', () => {
+  it('uses matched automatic ADP without replacing Juancho projection rank', () => {
     const snapshot = createCsvProjectionSnapshot({
       mapping: { mapped: makeProjections(players).slice(0, 2), unmatched: [] },
       filename: 'projections.csv',
@@ -110,14 +110,14 @@ describe('projection snapshots and source composition', () => {
     const composed = composeProjectionAndAdp(snapshot, adp);
     expect(composed[0]).toMatchObject({
       adp: 7.5,
-      rank: 8,
+      rank: 1,
       adpSource: 'Fantasy Football Calculator',
       adpTeams: 12,
       adpSampleSize: 400,
       adpMatchLevel: 'exact',
     });
-    expect(composed[1].adp).toBe(snapshot.records[1].adp);
-    expect(composed[1].adpSource).toBe('CSV · projections.csv');
+    expect(composed[1].adp).toBeUndefined();
+    expect(composed[1].adpSource).toBeUndefined();
     expect(composeProjectionAndAdp(snapshot, null)).toEqual(snapshot.records);
   });
 

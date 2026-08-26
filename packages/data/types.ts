@@ -3,6 +3,7 @@ import type { Position } from '../players/types';
 import type {
   AdpFormat,
   MappedProjection,
+  ProjectionRecord,
   UnmatchedProjection,
 } from '../projections/types';
 
@@ -102,6 +103,96 @@ export interface ProjectionSnapshot {
   unmatched: UnmatchedProjection[];
   resolution: ResolutionSummary;
   completeStatLines: number;
+}
+
+export interface ProjectionSourceSnapshot {
+  kind: 'projection-source';
+  provenance: SourceProvenance;
+  sheet: string;
+  scoringFormat: ScoringProfile;
+  records: ProjectionRecord[];
+}
+
+export type DraftRoomPlatform = 'sleeper' | 'espn' | 'yahoo' | 'cbs';
+
+export interface DraftRoomRankingContext {
+  platform: DraftRoomPlatform;
+  scoringFormat: ScoringProfile;
+  qbFormat: AdpQbFormat;
+  sheet: string;
+}
+
+export interface RawDraftRoomRankingRecord {
+  sourceRow: number;
+  playerName: string;
+  position: Position;
+  team: string | null;
+  rank: number;
+  /** Upstream-derived fields retained as provenance, never treated as Juancho ranks. */
+  upstreamMarketAdp: number | null;
+  upstreamExpertRank: number | null;
+  firstSeedValueDelta: number | null;
+  firstSeedLandmineScore: number | null;
+}
+
+export interface DraftRoomRankingSourceSnapshot {
+  kind: 'draft-room-ranking-source';
+  provenance: SourceProvenance;
+  context: DraftRoomRankingContext;
+  records: RawDraftRoomRankingRecord[];
+}
+
+export interface MappedDraftRoomRankingRecord extends RawDraftRoomRankingRecord {
+  playerId: string;
+  resolutionMethod: PlayerResolutionMethod;
+  resolutionConfidence: 1 | 0.95 | 0.8;
+}
+
+export interface UnresolvedDraftRoomRankingRecord extends RawDraftRoomRankingRecord {
+  reason: 'ambiguous-name' | 'player-not-found';
+}
+
+export interface DraftRoomRankingSnapshot {
+  kind: 'draft-room-ranking';
+  provenance: SourceProvenance;
+  context: DraftRoomRankingContext;
+  records: MappedDraftRoomRankingRecord[];
+  unresolved: UnresolvedDraftRoomRankingRecord[];
+  resolution: ResolutionSummary;
+  compatibility: FormatCompatibility;
+}
+
+export type PlayerSignalType =
+  | 'injury'
+  | 'role'
+  | 'depth_chart'
+  | 'riser'
+  | 'faller'
+  | 'value'
+  | 'risk'
+  | 'market_movement'
+  | 'other';
+
+export interface PlayerSignal {
+  playerId: string;
+  type: PlayerSignalType;
+  observedAt: string;
+  source: string;
+  sourceUrl: string;
+  summary: string;
+  confidence: SourceConfidence;
+}
+
+export interface PlayerSignalSnapshot {
+  kind: 'player-signals';
+  provenance: SourceProvenance;
+  records: PlayerSignal[];
+}
+
+export interface PlayerSignalProvider {
+  readonly id: string;
+  readonly label: string;
+  getSnapshot(): Promise<PlayerSignalSnapshot>;
 }
 
 export interface ProjectionSnapshotProvider {

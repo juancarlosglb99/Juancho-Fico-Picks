@@ -24,9 +24,11 @@ export interface ProjectionRecord {
   playerName: string;
   sleeperId?: string;
   position: Position;
+  team?: string | null;
   projection: number;
-  adp: number;
-  rank: number;
+  /** Legacy CSV fields are accepted, but automatic market/ranking providers win. */
+  adp?: number;
+  rank?: number;
   adpFormat?: AdpFormat;
   projectionScoring?: string;
   stats?: ProjectionStatLine;

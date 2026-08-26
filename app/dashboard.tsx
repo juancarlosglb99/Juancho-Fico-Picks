@@ -27,6 +27,7 @@ import {
 import type {
   AdpSnapshot,
   CacheDisposition,
+  DraftRoomRankingSnapshot,
   ProjectionSnapshot,
 } from '@/packages/data/types';
 import { normalizeLeagueContext } from '@/packages/engine/context/normalize';
@@ -49,6 +50,30 @@ import type {
   DraftRecommendation,
   DraftRecommendationResult,
 } from '@/packages/engine/draft/types';
+import {
+  runMonteCarloCandidateComparison,
+  simulateMockDraft,
+} from '@/packages/engine/mock/simulation';
+import {
+  MONTE_CARLO_MODEL_VERSION,
+  OPPONENT_MODEL_VERSION,
+  type MockDraftResult,
+  type MonteCarloComparison,
+} from '@/packages/engine/mock/types';
+import {
+  fetchFirstSeedProjections,
+  fetchFirstSeedRoomRankings,
+  firstSeedProjectionCacheKey,
+  firstSeedRoomRankingCacheKey,
+  planAutomaticFirstSeed,
+} from '@/packages/first-seed/automatic';
+import {
+  isDraftRoomRankingSourceSnapshot,
+  isProjectionSourceSnapshot,
+  mapFirstSeedDraftRoomRankingSnapshot,
+  mapFirstSeedProjectionSnapshot,
+} from '@/packages/first-seed/mapping';
+import { FIRST_SEED_REFRESH_INTERVAL_MS } from '@/packages/first-seed/providers';
 import { buildCanonicalPlayerMap } from '@/packages/players/player-map';
 import type { CanonicalPlayerMap } from '@/packages/players/types';
 import { CsvProjectionProvider } from '@/packages/projections/providers/csv';
@@ -87,6 +112,8 @@ interface DraftWorkspace {
 }
 
 type BusyState = 'connecting' | 'league' | 'draft' | 'projections' | null;
+type DraftExperienceMode = 'live' | 'mock';
+type ProjectionMode = 'automatic' | 'custom' | null;
 
 function formatError(error: unknown): string {
   if (error instanceof SleeperApiError && error.status === 404) {
@@ -148,6 +175,20 @@ export function Dashboard() {
     useState<DraftWorkspace | null>(null);
   const [projectionSnapshot, setProjectionSnapshot] =
     useState<ProjectionSnapshot | null>(null);
+  const [projectionMode, setProjectionMode] = useState<ProjectionMode>(null);
+  const [projectionDisposition, setProjectionDisposition] =
+    useState<CacheDisposition | null>(null);
+  const [projectionRefreshError, setProjectionRefreshError] = useState<string | null>(null);
+  const [projectionBusy, setProjectionBusy] = useState(false);
+  const [projectionRefreshNonce, setProjectionRefreshNonce] = useState(0);
+  const [lastForcedProjectionNonce, setLastForcedProjectionNonce] = useState(0);
+  const [roomRankingSnapshot, setRoomRankingSnapshot] =
+    useState<DraftRoomRankingSnapshot | null>(null);
+  const [roomDisposition, setRoomDisposition] = useState<CacheDisposition | null>(null);
+  const [roomRefreshError, setRoomRefreshError] = useState<string | null>(null);
+  const [roomBusy, setRoomBusy] = useState(false);
+  const [roomRefreshNonce, setRoomRefreshNonce] = useState(0);
+  const [lastForcedRoomNonce, setLastForcedRoomNonce] = useState(0);
   const [adpSnapshot, setAdpSnapshot] = useState<AdpSnapshot | null>(null);
   const [adpDisposition, setAdpDisposition] =
     useState<CacheDisposition | null>(null);
@@ -159,12 +200,24 @@ export function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [contextOverrides, setContextOverrides] =
     useState<LeagueContextOverrides>({});
+  const [draftExperienceMode, setDraftExperienceMode] =
+    useState<DraftExperienceMode>('live');
+  const [mockResult, setMockResult] = useState<MockDraftResult | null>(null);
+  const [mockComparison, setMockComparison] =
+    useState<MonteCarloComparison | null>(null);
+  const [mockBusy, setMockBusy] = useState(false);
 
   const loadDraft = useCallback(
     async (draftId: string, workspace: LeagueWorkspace) => {
       setBusy('draft');
       setError(null);
       setProjectionSnapshot(null);
+      setProjectionMode(null);
+      setProjectionDisposition(null);
+      setProjectionRefreshError(null);
+      setRoomRankingSnapshot(null);
+      setRoomDisposition(null);
+      setRoomRefreshError(null);
       setAdpSnapshot(null);
       setAdpRefreshError(null);
       setContextOverrides({});
@@ -193,6 +246,7 @@ export function Dashboard() {
             players.byId.has(record.playerId),
           );
           if (records.length > 0) {
+            setProjectionMode('custom');
             setProjectionSnapshot({
               ...cachedProjections.value,
               records,
@@ -226,6 +280,8 @@ export function Dashboard() {
       setError(null);
       setDraftWorkspace(null);
       setProjectionSnapshot(null);
+      setProjectionMode(null);
+      setRoomRankingSnapshot(null);
       setAdpSnapshot(null);
       setContextOverrides({});
 
@@ -345,6 +401,9 @@ export function Dashboard() {
         filename: file.name,
         season: draftWorkspace.draft.season,
       });
+      setProjectionMode('custom');
+      setProjectionDisposition(null);
+      setProjectionRefreshError(null);
       setProjectionSnapshot(snapshot);
       writeLastGood({
         storage: window.localStorage,
@@ -367,7 +426,7 @@ export function Dashboard() {
     );
     return composeProjectionAndAdp(projectionSnapshot, adpSnapshot)
       .filter((projection) => availableIds.has(projection.playerId))
-      .sort((a, b) => a.rank - b.rank)
+      .sort((a, b) => (a.rank ?? Number.POSITIVE_INFINITY) - (b.rank ?? Number.POSITIVE_INFINITY))
       .slice(0, 12)
       .map((projection) => ({
         projection,
@@ -394,6 +453,12 @@ export function Dashboard() {
     if (!leagueContext || !season) return null;
     return planAutomaticAdp(leagueContext, season);
   }, [leagueContext, season]);
+
+  const automaticFirstSeedPlan = useMemo(
+    () => (leagueContext ? planAutomaticFirstSeed(leagueContext) : null),
+    [leagueContext],
+  );
+  const usesCustomProjections = projectionMode === 'custom';
 
   useEffect(() => {
     if (!automaticAdpPlan || !draftWorkspace || !leagueContext) {
@@ -456,6 +521,151 @@ export function Dashboard() {
     lastForcedAdpNonce,
   ]);
 
+  useEffect(() => {
+    if (
+      usesCustomProjections ||
+      !automaticFirstSeedPlan ||
+      !draftWorkspace
+    ) {
+      let cancelled = false;
+      void Promise.resolve().then(() => {
+        if (!cancelled) setProjectionBusy(false);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    const controller = new AbortController();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setProjectionBusy(true);
+      setProjectionRefreshError(null);
+    });
+    void loadWithLastGood({
+      storage: window.localStorage,
+      key: firstSeedProjectionCacheKey(
+        draftWorkspace.draft.season,
+        automaticFirstSeedPlan.projectionFormat,
+      ),
+      validate: isProjectionSourceSnapshot,
+      fetchFresh: () =>
+        fetchFirstSeedProjections({
+          season: draftWorkspace.draft.season,
+          scoringFormat: automaticFirstSeedPlan.projectionFormat,
+          signal: controller.signal,
+        }),
+      refreshIntervalMs: FIRST_SEED_REFRESH_INTERVAL_MS,
+      forceRefresh: projectionRefreshNonce > lastForcedProjectionNonce,
+    })
+      .then((result) => {
+        if (cancelled) return;
+        setProjectionSnapshot(
+          mapFirstSeedProjectionSnapshot(result.value, draftWorkspace.players),
+        );
+        setProjectionMode('automatic');
+        setProjectionDisposition(result.disposition);
+        setProjectionRefreshError(result.refreshError);
+      })
+      .catch((nextError) => {
+        if (cancelled || controller.signal.aborted) return;
+        setProjectionSnapshot(null);
+        setProjectionMode(null);
+        setProjectionDisposition(null);
+        setProjectionRefreshError(formatError(nextError));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setProjectionBusy(false);
+          setLastForcedProjectionNonce(projectionRefreshNonce);
+        }
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [
+    automaticFirstSeedPlan,
+    draftWorkspace,
+    usesCustomProjections,
+    projectionRefreshNonce,
+    lastForcedProjectionNonce,
+  ]);
+
+  useEffect(() => {
+    if (!automaticFirstSeedPlan || !draftWorkspace || !leagueContext) {
+      let cancelled = false;
+      void Promise.resolve().then(() => {
+        if (cancelled) return;
+        setRoomRankingSnapshot(null);
+        setRoomDisposition(null);
+        setRoomBusy(false);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    const controller = new AbortController();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setRoomBusy(true);
+      setRoomRefreshError(null);
+    });
+    void loadWithLastGood({
+      storage: window.localStorage,
+      key: firstSeedRoomRankingCacheKey(
+        draftWorkspace.draft.season,
+        automaticFirstSeedPlan.roomFormat,
+        automaticFirstSeedPlan.qbFormat,
+      ),
+      validate: isDraftRoomRankingSourceSnapshot,
+      fetchFresh: () =>
+        fetchFirstSeedRoomRankings({
+          season: draftWorkspace.draft.season,
+          scoringFormat: automaticFirstSeedPlan.roomFormat,
+          qbFormat: automaticFirstSeedPlan.qbFormat,
+          signal: controller.signal,
+        }),
+      refreshIntervalMs: FIRST_SEED_REFRESH_INTERVAL_MS,
+      forceRefresh: roomRefreshNonce > lastForcedRoomNonce,
+    })
+      .then((result) => {
+        if (cancelled) return;
+        setRoomRankingSnapshot(
+          mapFirstSeedDraftRoomRankingSnapshot(
+            result.value,
+            draftWorkspace.players,
+            leagueContext,
+          ),
+        );
+        setRoomDisposition(result.disposition);
+        setRoomRefreshError(result.refreshError);
+      })
+      .catch((nextError) => {
+        if (cancelled || controller.signal.aborted) return;
+        setRoomRankingSnapshot(null);
+        setRoomDisposition(null);
+        setRoomRefreshError(formatError(nextError));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setRoomBusy(false);
+          setLastForcedRoomNonce(roomRefreshNonce);
+        }
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [
+    automaticFirstSeedPlan,
+    draftWorkspace,
+    leagueContext,
+    roomRefreshNonce,
+    lastForcedRoomNonce,
+  ]);
+
   const projectionMapping = useMemo<ProjectionMappingResult | null>(() => {
     if (!projectionSnapshot) return null;
     return {
@@ -481,8 +691,74 @@ export function Dashboard() {
       board: draftWorkspace.board,
       players: draftWorkspace.players,
       projections: composeProjectionAndAdp(projectionSnapshot, adpSnapshot),
+      roomRankings: roomRankingSnapshot,
     });
-  }, [draftWorkspace, leagueWorkspace, projectionSnapshot, leagueContext, adpSnapshot]);
+  }, [
+    draftWorkspace,
+    leagueWorkspace,
+    projectionSnapshot,
+    leagueContext,
+    adpSnapshot,
+    roomRankingSnapshot,
+  ]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setMockResult(null);
+      setMockComparison(null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [draftWorkspace?.board.currentOverallPick, projectionSnapshot, adpSnapshot, roomRankingSnapshot]);
+
+  async function runMockDraft() {
+    if (
+      !draftWorkspace ||
+      !leagueWorkspace ||
+      !leagueContext ||
+      !projectionSnapshot ||
+      !draftRecommendations
+    ) return;
+    const candidateIds = draftRecommendations.recommendations
+      .slice(0, 3)
+      .map((recommendation) => recommendation.player.id);
+    if (candidateIds.length === 0) return;
+    setMockBusy(true);
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    try {
+      const simulationInput = {
+        context: leagueContext,
+        draft: draftWorkspace.draft,
+        board: draftWorkspace.board,
+        picks: draftWorkspace.picks,
+        rosters: leagueWorkspace.rosters,
+        players: draftWorkspace.players,
+        projections: composeProjectionAndAdp(projectionSnapshot, adpSnapshot),
+        roomRankings: roomRankingSnapshot,
+      };
+      setMockResult(simulateMockDraft(simulationInput, { seed: Date.now() & 0x7fffffff }));
+      setMockComparison(
+        runMonteCarloCandidateComparison(simulationInput, candidateIds, {
+          simulations: 60,
+        }),
+      );
+    } catch (nextError) {
+      setError(formatError(nextError));
+    } finally {
+      setMockBusy(false);
+    }
+  }
+
+  function restoreAutomaticProjections() {
+    if (!draftWorkspace) return;
+    window.localStorage.removeItem(projectionCacheKey(draftWorkspace.draft.season));
+    setProjectionSnapshot(null);
+    setProjectionMode(null);
+    setProjectionRefreshNonce((current) => current + 1);
+  }
 
   function reset() {
     setUser(null);
@@ -491,10 +767,19 @@ export function Dashboard() {
     setLeagueWorkspace(null);
     setDraftWorkspace(null);
     setProjectionSnapshot(null);
+    setProjectionMode(null);
+    setProjectionDisposition(null);
+    setProjectionRefreshError(null);
+    setRoomRankingSnapshot(null);
+    setRoomDisposition(null);
+    setRoomRefreshError(null);
     setAdpSnapshot(null);
     setAdpDisposition(null);
     setAdpRefreshError(null);
     setContextOverrides({});
+    setDraftExperienceMode('live');
+    setMockResult(null);
+    setMockComparison(null);
     setError(null);
     setUsername('');
   }
@@ -584,8 +869,20 @@ export function Dashboard() {
                     draftWorkspace={draftWorkspace}
                     context={leagueContext}
                   />
+                  <DraftModeToggle
+                    mode={draftExperienceMode}
+                    onChange={setDraftExperienceMode}
+                  />
                   {draftWorkspace.draft.status === 'complete' ? (
                     <DraftCompleteState draftWorkspace={draftWorkspace} />
+                  ) : draftExperienceMode === 'mock' && draftRecommendations ? (
+                    <MockDraftPanel
+                      result={draftRecommendations}
+                      comparison={mockComparison}
+                      mockResult={mockResult}
+                      busy={mockBusy}
+                      onRun={() => void runMockDraft()}
+                    />
                   ) : draftRecommendations ? (
                     <RecommendationPanel result={draftRecommendations} />
                   ) : (
@@ -595,19 +892,32 @@ export function Dashboard() {
                       automaticAdpAvailable={automaticAdpPlan !== null}
                       context={leagueContext}
                       onImport={importProjections}
-                      projectionBusy={busy === 'projections'}
+                      projectionBusy={projectionBusy || busy === 'projections'}
+                      projectionError={projectionRefreshError}
                     />
                   )}
                   <DataQualityPanel
                     projections={projectionSnapshot}
+                    projectionMode={projectionMode}
+                    projectionDisposition={projectionDisposition}
+                    projectionRefreshError={projectionRefreshError}
+                    projectionBusy={projectionBusy || busy === 'projections'}
                     adp={adpSnapshot}
                     adpDisposition={adpDisposition}
                     adpRefreshError={adpRefreshError}
                     adpBusy={adpBusy}
                     automaticAdpAvailable={automaticAdpPlan !== null}
+                    roomRankings={roomRankingSnapshot}
+                    roomDisposition={roomDisposition}
+                    roomRefreshError={roomRefreshError}
+                    roomBusy={roomBusy}
                     onRetryAdp={() => setAdpRefreshNonce((current) => current + 1)}
+                    onRetryFirstSeed={() => {
+                      setProjectionRefreshNonce((current) => current + 1);
+                      setRoomRefreshNonce((current) => current + 1);
+                    }}
                     onImport={importProjections}
-                    projectionBusy={busy === 'projections'}
+                    onRestoreAutomatic={restoreAutomaticProjections}
                   />
                 </>
               )}
@@ -627,8 +937,10 @@ export function Dashboard() {
                   <ProjectionPanel
                     mapping={projectionMapping}
                     filename={projectionSnapshot?.filename ?? null}
-                    busy={busy === 'projections'}
+                    busy={projectionBusy || busy === 'projections'}
                     onImport={importProjections}
+                    onRestoreAutomatic={restoreAutomaticProjections}
+                    projectionMode={projectionMode}
                     available={projectedAvailable}
                   />
                 )}
@@ -676,8 +988,8 @@ function Landing({
         </h1>
         <p className="mt-7 max-w-xl text-base leading-7 text-[#aab7bf] sm:text-lg">
           Connect your Sleeper league to load its scoring, rosters, drafts, and
-          picks. Current ADP loads automatically, while your last valid projection
-          file stays ready on this device.
+          picks. Weekly First Seed projections, Sleeper draft-room rankings, and
+          current market ADP load automatically—no CSV required.
         </p>
 
         <form
@@ -1030,37 +1342,173 @@ function compactTimestamp(timestamp: string | null | undefined): string {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function DraftModeToggle({
+  mode,
+  onChange,
+}: {
+  mode: DraftExperienceMode;
+  onChange: (mode: DraftExperienceMode) => void;
+}) {
+  return (
+    <div className="flex w-fit rounded-xl border border-[#263845] bg-[#0c1822] p-1">
+      {(['live', 'mock'] as const).map((candidate) => (
+        <button
+          key={candidate}
+          type="button"
+          onClick={() => onChange(candidate)}
+          className={`rounded-lg px-4 py-2 text-xs font-black uppercase tracking-[0.12em] ${
+            mode === candidate
+              ? 'bg-[#b9ff38] text-[#071019]'
+              : 'text-[#8fa0aa] hover:text-white'
+          }`}
+        >
+          {candidate === 'live' ? 'Live Draft' : 'Mock Draft'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MockDraftPanel({
+  result,
+  comparison,
+  mockResult,
+  busy,
+  onRun,
+}: {
+  result: DraftRecommendationResult;
+  comparison: MonteCarloComparison | null;
+  mockResult: MockDraftResult | null;
+  busy: boolean;
+  onRun: () => void;
+}) {
+  const names = new Map(
+    result.recommendations.map((recommendation) => [
+      recommendation.player.id,
+      recommendation.player.name,
+    ]),
+  );
+  return (
+    <section className="rounded-2xl border border-[#354853] bg-[#071019] p-5 sm:p-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#b9ff38]">
+            Market-behavior simulation
+          </p>
+          <h2 className="mt-2 text-3xl font-black tracking-[-0.04em]">Test the next decision.</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#82939d]">
+            Opponents follow a mix of Sleeper room order, current ADP, roster needs,
+            scarcity, positional runs, and controlled randomness. They never see
+            Juancho&apos;s projection rank.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onRun}
+          disabled={busy}
+          className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#b9ff38] px-4 text-xs font-black uppercase tracking-[0.08em] text-[#071019] disabled:opacity-50"
+        >
+          {busy && <LoadingMark />}
+          {busy ? 'Simulating' : comparison ? 'Run again' : 'Run 60 simulations'}
+        </button>
+      </div>
+
+      {comparison ? (
+        <div className="mt-6 grid gap-3 lg:grid-cols-3">
+          {comparison.candidates.map((candidate, index) => (
+            <div key={candidate.playerId} className="rounded-xl border border-[#263845] bg-[#0c1822] p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[#71838e]">
+                {index === 0 ? 'Best simulated roster' : `Candidate ${index + 1}`}
+              </p>
+              <p className="mt-2 truncate text-lg font-black">
+                {names.get(candidate.playerId) ?? candidate.playerId}
+              </p>
+              <dl className="mt-4 space-y-2 text-xs">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#71838e]">Avg. roster score</dt>
+                  <dd className="font-black text-[#b9ff38]">{candidate.averageRosterScore.toFixed(1)}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#71838e]">25th–75th percentile</dt>
+                  <dd className="font-bold">{candidate.rosterScoreP25.toFixed(1)}–{candidate.rosterScoreP75.toFixed(1)}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#71838e]">Still there next pick</dt>
+                  <dd className="font-bold">
+                    {candidate.availableNextPickProbability === null
+                      ? 'Unavailable'
+                      : `${candidate.availableNextPickProbability.toFixed(1)}%`}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6 rounded-xl border border-dashed border-[#344a57] p-6 text-sm text-[#82939d]">
+          Run a mock to compare the top three live recommendations across complete draft continuations.
+        </div>
+      )}
+
+      <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#60727d]">
+        Models {OPPONENT_MODEL_VERSION} · {MONTE_CARLO_MODEL_VERSION}
+        {mockResult ? ` · latest continuation score ${mockResult.rosterScore.toFixed(1)}` : ''}
+      </p>
+    </section>
+  );
+}
+
 function DataQualityPanel({
   projections,
+  projectionMode,
+  projectionDisposition,
+  projectionRefreshError,
+  projectionBusy,
   adp,
   adpDisposition,
   adpRefreshError,
   adpBusy,
   automaticAdpAvailable,
+  roomRankings,
+  roomDisposition,
+  roomRefreshError,
+  roomBusy,
   onRetryAdp,
+  onRetryFirstSeed,
   onImport,
-  projectionBusy,
+  onRestoreAutomatic,
 }: {
   projections: ProjectionSnapshot | null;
+  projectionMode: ProjectionMode;
+  projectionDisposition: CacheDisposition | null;
+  projectionRefreshError: string | null;
+  projectionBusy: boolean;
   adp: AdpSnapshot | null;
   adpDisposition: CacheDisposition | null;
   adpRefreshError: string | null;
   adpBusy: boolean;
   automaticAdpAvailable: boolean;
+  roomRankings: DraftRoomRankingSnapshot | null;
+  roomDisposition: CacheDisposition | null;
+  roomRefreshError: string | null;
+  roomBusy: boolean;
   onRetryAdp: () => void;
+  onRetryFirstSeed: () => void;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  projectionBusy: boolean;
+  onRestoreAutomatic: () => void;
 }) {
   const projectionFreshness = projections
     ? dataFreshness(projections.provenance)
     : null;
   const adpFreshness = adp ? dataFreshness(adp.provenance) : null;
+  const roomFreshness = roomRankings ? dataFreshness(roomRankings.provenance) : null;
+  const ready = Boolean(projections && adp && roomRankings);
   return (
     <section className="rounded-2xl border border-[#263845] bg-[#0c1822] p-4 sm:p-5">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#b9ff38]">
-            Data {projections && (adp || projections.records.some((item) => item.adp)) ? '✓' : 'readiness'}
+            {ready ? 'Data Ready ✓' : 'Data readiness'}
           </p>
           <div className="mt-2 flex flex-col gap-1 text-xs text-[#9aa9b1] sm:flex-row sm:flex-wrap sm:gap-x-5">
             <p>
@@ -1068,6 +1516,14 @@ function DataQualityPanel({
               {projections
                 ? `${projections.provenance.sourceLabel} · ${projections.resolution.matched}/${projections.resolution.total} matched`
                 : 'Not loaded'}
+            </p>
+            <p>
+              <span className="font-bold text-[#d9e0e3]">Sleeper room:</span>{' '}
+              {roomRankings
+                ? `${roomRankings.resolution.matched}/${roomRankings.resolution.total} matched · ${displayEnum(roomRankings.compatibility.level)}`
+                : roomBusy
+                  ? 'Refreshing First Seed source…'
+                  : 'Not loaded'}
             </p>
             <p>
               <span className="font-bold text-[#d9e0e3]">ADP:</span>{' '}
@@ -1092,8 +1548,25 @@ function DataQualityPanel({
               {adpBusy ? 'Refreshing ADP' : 'Refresh ADP'}
             </button>
           )}
+          <button
+            type="button"
+            onClick={onRetryFirstSeed}
+            disabled={projectionBusy || roomBusy || projectionMode === 'custom'}
+            className="rounded-lg border border-[#2a3c49] px-3 py-2 text-xs font-bold text-[#c2ccd1] hover:border-[#52646f] disabled:opacity-50"
+          >
+            {projectionBusy || roomBusy ? 'Refreshing First Seed' : 'Refresh First Seed'}
+          </button>
+          {projectionMode === 'custom' && (
+            <button
+              type="button"
+              onClick={onRestoreAutomatic}
+              className="rounded-lg border border-[#2a3c49] px-3 py-2 text-xs font-bold text-[#c2ccd1] hover:border-[#52646f]"
+            >
+              Restore automatic
+            </button>
+          )}
           <label className="cursor-pointer rounded-lg bg-[#b9ff38] px-3 py-2 text-xs font-black text-[#071019] hover:bg-[#cbff6e]">
-            {projectionBusy ? 'Importing…' : projections ? 'Replace projections' : 'Import projections'}
+            {projectionBusy ? 'Loading…' : projectionMode === 'custom' ? 'Replace override' : 'Custom override'}
             <input
               type="file"
               accept=".csv,text/csv"
@@ -1105,38 +1578,48 @@ function DataQualityPanel({
         </div>
       </div>
 
-      {(projectionFreshness === 'stale' || adpFreshness === 'stale' || adpRefreshError) && (
+      {(projectionFreshness === 'stale' || adpFreshness === 'stale' || roomFreshness === 'stale' || projectionRefreshError || roomRefreshError || adpRefreshError) && (
         <div className="mt-4 rounded-lg border border-[#5a4630] bg-[#251d12] px-3 py-2 text-xs text-[#d6b679]">
           {projectionFreshness === 'stale' && projections && (
-            <p>Projection data is {formatDataAge(sourceAgeMs(projections.provenance))} old. Import a current file before drafting.</p>
+            <p>Projection data was updated {formatDataAge(sourceAgeMs(projections.provenance))}. Refresh the source before drafting.</p>
           )}
           {adpFreshness === 'stale' && adp && (
-            <p>ADP is {formatDataAge(sourceAgeMs(adp.provenance))} old, so availability confidence is reduced.</p>
+            <p>ADP was updated {formatDataAge(sourceAgeMs(adp.provenance))}, so availability confidence is reduced.</p>
           )}
           {adpRefreshError && (
             <p>
               ADP refresh failed. {adpDisposition === 'fallback_cache' && adp
                 ? `Using the last valid snapshot from ${compactTimestamp(adp.provenance.sourceUpdatedAt ?? adp.provenance.fetchedAt)}.`
-                : 'CSV ADP remains available as a fallback.'}
+                : 'No last-known-good ADP snapshot was available.'}
             </p>
+          )}
+          {projectionRefreshError && (
+            <p>Projection refresh failed. {projectionDisposition === 'fallback_cache' && projections ? 'Using the last valid First Seed projection snapshot.' : projectionRefreshError}</p>
+          )}
+          {roomRefreshError && (
+            <p>Room-ranking refresh failed. {roomDisposition === 'fallback_cache' && roomRankings ? 'Using the last valid First Seed room snapshot.' : roomRefreshError}</p>
+          )}
+          {roomFreshness === 'stale' && roomRankings && (
+            <p>Sleeper room order was updated {formatDataAge(sourceAgeMs(roomRankings.provenance))}, so opponent confidence is reduced.</p>
           )}
         </div>
       )}
 
       <details className="mt-3 text-xs text-[#71838e]">
         <summary className="cursor-pointer font-bold text-[#8fa0aa]">Source details</summary>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="mt-3 grid gap-3 lg:grid-cols-3">
           <div className="rounded-lg bg-[#071019] p-3">
             <p className="font-black text-[#c6d0d5]">Projections</p>
             {projections ? (
               <div className="mt-2 space-y-1">
-                <p>Imported: {compactTimestamp(projections.provenance.fetchedAt)}</p>
+                <p>Loaded: {compactTimestamp(projections.provenance.fetchedAt)}</p>
+                <p>Mode: {projectionMode === 'custom' ? 'Custom CSV override' : 'Automatic weekly source'}</p>
                 <p>Scoring: {displayEnum(projections.scoringFormat)}</p>
                 <p>Complete stat lines: {projections.completeStatLines}/{projections.records.length}</p>
                 <p>Unresolved or ambiguous: {projections.resolution.ambiguous + projections.resolution.unresolved}</p>
               </div>
             ) : (
-              <p className="mt-2">No valid projection snapshot is loaded.</p>
+              <p className="mt-2">No valid projection snapshot is loaded yet.</p>
             )}
           </div>
           <div className="rounded-lg bg-[#071019] p-3">
@@ -1161,10 +1644,35 @@ function DataQualityPanel({
                 )}
               </div>
             ) : (
-              <p className="mt-2">Automatic ADP is unavailable; the projection CSV’s ADP columns are used.</p>
+              <p className="mt-2">Automatic market ADP is unavailable.</p>
+            )}
+          </div>
+          <div className="rounded-lg bg-[#071019] p-3">
+            <p className="font-black text-[#c6d0d5]">Sleeper draft-room rank</p>
+            {roomRankings ? (
+              <div className="mt-2 space-y-1">
+                <p>Updated: {compactTimestamp(roomRankings.provenance.sourceUpdatedAt ?? roomRankings.provenance.fetchedAt)}</p>
+                <p>Sheet: {roomRankings.context.sheet}</p>
+                <p>Matched: {roomRankings.resolution.matched}/{roomRankings.resolution.total}</p>
+                <p>Confidence: {displayEnum(roomRankings.compatibility.confidence)}</p>
+                <p>{roomRankings.compatibility.reasons.join(' ')}</p>
+                <a
+                  className="font-bold text-[#b9ff38] underline underline-offset-2"
+                  href={roomRankings.provenance.attributionUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Data by First Seed Sports
+                </a>
+              </div>
+            ) : (
+              <p className="mt-2">Automatic room order is unavailable.</p>
             )}
           </div>
         </div>
+        <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.11em] text-[#60727d]">
+          Juancho model {OPPONENT_MODEL_VERSION} · projections, market ADP, and platform room rank remain separate inputs
+        </p>
       </details>
     </section>
   );
@@ -1177,6 +1685,7 @@ function RecommendationDataEmptyState({
   context,
   onImport,
   projectionBusy,
+  projectionError,
 }: {
   adp: AdpSnapshot | null;
   adpBusy: boolean;
@@ -1184,6 +1693,7 @@ function RecommendationDataEmptyState({
   context: LeagueContext;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
   projectionBusy: boolean;
+  projectionError: string | null;
 }) {
   const dynasty = context.leagueType.value === 'dynasty';
   const auction = context.draftType.value === 'auction';
@@ -1212,19 +1722,25 @@ function RecommendationDataEmptyState({
   return (
     <section className="rounded-2xl border border-dashed border-[#41535e] bg-[#0c1822] p-7 sm:p-9">
       <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#b9ff38]">Recommendation readiness</p>
-      <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">Draft recommendations need projection data.</h2>
+      <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">
+        {projectionBusy ? 'Loading weekly draft intelligence…' : 'Automatic projections are not ready yet.'}
+      </h2>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-[#8fa0aa]">
-        {adp
-          ? `Current ${adp.context.teams}-team ADP is ready. Import a 2026 projection CSV once; the last valid file will stay cached on this device for future drafts.`
-          : adpBusy
-            ? 'Automatic ADP is loading. Projection import remains available now.'
-            : automaticAdpAvailable
-              ? 'Automatic ADP will retry independently. Your CSV can supply both projections and fallback ADP.'
-              : 'Automatic ADP is not available for this format. Your CSV can supply both projections and fallback ADP.'}
+        {projectionError
+          ? `${projectionError} You can retry from Data readiness or use a custom CSV override.`
+          : projectionBusy
+            ? 'First Seed projections and draft-room ranks are loading automatically. No upload is required.'
+            : adpBusy
+              ? 'Market ADP is still loading independently.'
+              : adp
+                ? `Current ${adp.context.teams}-team ADP is ready; the weekly projection source is still resolving.`
+                : automaticAdpAvailable
+                  ? 'Automatic sources will retry independently.'
+                  : 'This format does not currently have a compatible automatic source.'}
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
         <label className="cursor-pointer rounded-xl bg-[#b9ff38] px-5 py-3 text-xs font-black uppercase tracking-[0.08em] text-[#071019] hover:bg-[#cbff6e]">
-          {projectionBusy ? 'Importing…' : 'Import projection CSV'}
+          {projectionBusy ? 'Loading…' : 'Use custom CSV override'}
           <input type="file" accept=".csv,text/csv" className="sr-only" onChange={onImport} disabled={projectionBusy} />
         </label>
         <a
@@ -1516,12 +2032,16 @@ function ProjectionPanel({
   filename,
   busy,
   onImport,
+  onRestoreAutomatic,
+  projectionMode,
   available,
 }: {
   mapping: ProjectionMappingResult | null;
   filename: string | null;
   busy: boolean;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRestoreAutomatic: () => void;
+  projectionMode: ProjectionMode;
   available: Array<{
     projection: ProjectionMappingResult['mapped'][number];
     player: CanonicalPlayerMap['players'][number] | undefined;
@@ -1532,16 +2052,16 @@ function ProjectionPanel({
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#71838e]">
-            Projection provider · CSV
+            Advanced data source · optional override
           </p>
           <h2 className="mt-2 text-2xl font-black tracking-[-0.03em]">
-            Map projections to Sleeper
+            Projection mapping
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-[#82939d]">
-            Required columns: player, projection, adp, rank, position. Add
-            sleeper_id for exact matching. Add adp_format and projection_scoring
-            to verify source compatibility; optional stat columns let the engine
-            recalculate Sleeper scoring.{' '}
+            Automatic weekly First Seed projections require no upload. For a
+            custom override, the only required columns are player, position, and
+            projection. Add sleeper_id for exact matching; rank, adp, scoring
+            metadata, and stat lines are optional.{' '}
             <a
               href="/projection-template.csv"
               download
@@ -1557,17 +2077,28 @@ function ProjectionPanel({
             stat line is included.
           </p>
         </div>
-        <label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#b9ff38] px-4 text-xs font-black uppercase tracking-[0.08em] text-[#071019] hover:bg-[#cbff6e]">
-          {busy && <LoadingMark />}
-          {busy ? 'Mapping' : mapping ? 'Replace CSV' : 'Import CSV'}
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            className="sr-only"
-            onChange={onImport}
-            disabled={busy}
-          />
-        </label>
+        <div className="flex flex-wrap gap-2">
+          {projectionMode === 'custom' && (
+            <button
+              type="button"
+              onClick={onRestoreAutomatic}
+              className="h-11 rounded-xl border border-[#2a3c49] px-4 text-xs font-black uppercase tracking-[0.08em] text-[#c2ccd1]"
+            >
+              Restore automatic
+            </button>
+          )}
+          <label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#b9ff38] px-4 text-xs font-black uppercase tracking-[0.08em] text-[#071019] hover:bg-[#cbff6e]">
+            {busy && <LoadingMark />}
+            {busy ? 'Loading' : projectionMode === 'custom' ? 'Replace CSV' : 'Use custom CSV'}
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="sr-only"
+              onChange={onImport}
+              disabled={busy}
+            />
+          </label>
+        </div>
       </div>
 
       {mapping && (
@@ -1619,7 +2150,7 @@ function ProjectionPanel({
                     {projection.projection.toFixed(1)}
                   </span>
                   <span className="text-right text-[#a2b0b8]">
-                    {projection.adp.toFixed(1)}
+                    {projection.adp?.toFixed(1) ?? '—'}
                   </span>
                   <span className="text-right font-bold">{projection.rank}</span>
                 </div>
@@ -1693,7 +2224,10 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
             </ul>
           </details>
         )}
-        <ActionBadge recommendation={primary} />
+        <div className="flex flex-wrap items-center gap-2">
+          <ActionBadge recommendation={primary} />
+          <MarketEdgeBadge recommendation={primary} />
+        </div>
         <div className="mt-4 flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
           <div>
             <h3 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
@@ -1722,7 +2256,7 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
                   {primary.nextPickConfidence === 'high' ? 'Available' : 'Estimated available'} at your next selection
                 </p>
                 <p className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
-                  {displayEnum(primary.nextPickConfidence)} confidence · imported ADP
+                  {displayEnum(primary.nextPickConfidence)} confidence · market ADP + room rank
                 </p>
               </div>
               <p
@@ -1751,7 +2285,7 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
               <ul className="mt-2 space-y-1.5 leading-5">
                 <li>· {primary.nextPickExplanation.picksBeforeNextSelection ?? 'Unknown'} picks before your next selection</li>
                 <li>· {primary.nextPickExplanation.interveningTeamsWithNeed} intervening teams currently need {primary.player.position}</li>
-                <li>· Player ADP: {primary.nextPickExplanation.playerAdp.toFixed(1)} · current selection: {primary.nextPickExplanation.currentSelection}</li>
+                <li>· Market ADP: {primary.nextPickExplanation.playerAdp?.toFixed(1) ?? 'Unavailable'} · room rank: {primary.nextPickExplanation.draftRoomRank?.toFixed(0) ?? 'Unavailable'} · current selection: {primary.nextPickExplanation.currentSelection}</li>
                 <li>· ADP source: {primary.nextPickExplanation.adpSource}</li>
                 <li>· League match: {displayEnum(primary.nextPickExplanation.adpMatchLevel)} · {displayEnum(primary.nextPickConfidence)} confidence</li>
                 {primary.nextPickExplanation.adpMatchReasons.map((reason) => (
@@ -1789,7 +2323,10 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
                   </p>
                 </div>
                 <div className="mt-4 flex items-center justify-between gap-3">
-                  <ActionBadge recommendation={recommendation} compact />
+                  <div className="flex flex-wrap gap-2">
+                    <ActionBadge recommendation={recommendation} compact />
+                    <MarketEdgeBadge recommendation={recommendation} compact />
+                  </div>
                   <p className="text-xs font-bold text-[#8fa0aa]">
                     {recommendation.availableNextPickProbability === null
                       ? 'No next-pick estimate'
@@ -1834,6 +2371,33 @@ function ActionBadge({
         }`}
       />
       {draftNow ? 'Draft now' : 'Wait'}
+    </span>
+  );
+}
+
+function MarketEdgeBadge({
+  recommendation,
+  compact = false,
+}: {
+  recommendation: DraftRecommendation;
+  compact?: boolean;
+}) {
+  if (recommendation.marketEdge === null || Math.abs(recommendation.marketEdge) < 8) {
+    return null;
+  }
+  const target = recommendation.marketEdge > 0;
+  return (
+    <span
+      className={`inline-flex w-fit rounded-full font-black uppercase tracking-[0.12em] ${
+        compact ? 'px-2.5 py-1 text-[9px]' : 'px-3 py-1.5 text-[10px]'
+      } ${
+        target
+          ? 'bg-[#b9ff38]/12 text-[#b9ff38]'
+          : 'bg-[#ff7a59]/12 text-[#ff9a80]'
+      }`}
+      title={`Juancho rank ${recommendation.juanchoRank}; market ADP ${recommendation.marketAdp?.toFixed(1)}`}
+    >
+      {target ? 'Target' : 'Avoid at cost'} · {Math.abs(Math.round(recommendation.marketEdge))} picks
     </span>
   );
 }
@@ -1889,7 +2453,11 @@ function ModelInspector({
             ['Replacement level', recommendation.raw.replacementProjection.toFixed(1)],
             ['Replacement demand', `Player ${recommendation.raw.replacementDemand}`],
             ['VORP', recommendation.raw.vorp.toFixed(1)],
-            ['Imported ADP', recommendation.projection.adp.toFixed(1)],
+            ['Juancho rank', String(recommendation.juanchoRank)],
+            ['Market ADP', recommendation.marketAdp?.toFixed(1) ?? 'Unavailable'],
+            ['Sleeper room rank', recommendation.draftRoomRank?.toFixed(0) ?? 'Unavailable'],
+            ['External expert rank', recommendation.externalExpertRank?.toFixed(0) ?? 'Unavailable'],
+            ['First Seed value delta', recommendation.firstSeedValueDelta?.toFixed(1) ?? 'Unavailable'],
             ['Tier', String(recommendation.tier)],
             ['Roster need', recommendation.raw.rosterNeed.toFixed(1)],
             [

@@ -77,6 +77,9 @@ export function createCsvProjectionSnapshot({
       ? ([...scoringValues][0] as ProjectionSnapshot['scoringFormat'])
       : 'unknown';
   const fetchedAt = now.toISOString();
+  const ordered = [...mapping.mapped].sort(
+    (a, b) => b.projection - a.projection || a.playerName.localeCompare(b.playerName),
+  );
   return {
     kind: 'projection',
     provenance: {
@@ -89,21 +92,16 @@ export function createCsvProjectionSnapshot({
     },
     filename,
     scoringFormat,
-    records: mapping.mapped.map((record) => ({
+    records: ordered.map((record, index) => ({
       ...record,
+      // Legacy rank/ADP columns remain parse-compatible but do not override
+      // Juancho ordering or the automatic market provider.
+      rank: index + 1,
+      adp: undefined,
       projectionSource: `CSV · ${filename}`,
       projectionFetchedAt: fetchedAt,
       projectionSourceUpdatedAt: null,
       projectionSourceConfidence: 'medium',
-      adpSource: `CSV · ${filename}`,
-      adpFetchedAt: fetchedAt,
-      adpSourceUpdatedAt: null,
-      adpScoringFormat: record.projectionScoring,
-      adpSourceConfidence: record.adpFormat ? 'medium' : 'low',
-      adpMatchLevel: record.adpFormat ? 'approximate' : 'weak',
-      adpMatchReasons: record.adpFormat
-        ? ['CSV-declared ADP format; source freshness and sample size are unavailable.']
-        : ['CSV ADP format, freshness, and sample size are unavailable.'],
     })),
     unmatched: mapping.unmatched,
     resolution: projectionResolution(mapping),
@@ -129,10 +127,8 @@ export function isProjectionSnapshot(value: unknown): value is ProjectionSnapsho
         typeof record.position === 'string' &&
         record.position !== 'UNKNOWN' &&
         Number.isFinite(record.projection) &&
-        Number.isFinite(record.adp) &&
-        record.adp > 0 &&
-        Number.isFinite(record.rank) &&
-        record.rank > 0,
+        (record.rank === undefined ||
+          (Number.isFinite(record.rank) && record.rank > 0)),
     ) &&
     Array.isArray(candidate.unmatched) &&
     !!candidate.provenance &&
@@ -153,7 +149,6 @@ export function composeProjectionAndAdp(
     return {
       ...projection,
       adp: automatic.adp,
-      rank: automatic.rank,
       adpFormat: adp.context.leagueFormat,
       adpSource: adp.provenance.sourceLabel,
       adpFetchedAt: adp.provenance.fetchedAt,

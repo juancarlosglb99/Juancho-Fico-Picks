@@ -1,3 +1,3 @@
-player,projection,adp,rank,position,sleeper_id,adp_format,projection_scoring,pass_yd,pass_td,pass_int,rush_yd,rush_td,rec,rec_yd,rec_td,fum_lost
-Nico Collins,245.7,25.4,24,WR,,redraft_1qb,full_ppr,,,0,0,82,1210,8,1
-Brian Robinson Jr.,210.2,70.1,65,RB,,redraft_1qb,full_ppr,,,,920,8,42,310,2,2
+player,position,team,projection,sleeper_id,projection_scoring,pass_yd,pass_td,pass_int,rush_yd,rush_td,rec,rec_yd,rec_td,fum_lost
+Nico Collins,WR,HOU,245.7,,full_ppr,,,0,0,0,82,1210,8,1
+Brian Robinson Jr.,RB,ATL,210.2,,full_ppr,,,0,920,8,42,310,2,2

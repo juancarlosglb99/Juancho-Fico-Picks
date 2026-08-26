@@ -1,4 +1,8 @@
 import type { CanonicalPlayer, CanonicalPlayerMap, Position } from '../../players/types';
+import type {
+  DraftRoomRankingSnapshot,
+  MappedDraftRoomRankingRecord,
+} from '../../data/types';
 import type { AdpFormat, MappedProjection } from '../../projections/types';
 import type { SleeperDraftPick, SleeperRoster } from '../../sleeper/types';
 import { scoreProjectionForLeague, type ScoredProjection } from '../context/scoring';
@@ -26,6 +30,7 @@ interface RecommendationInput {
   board: DraftBoardState;
   players: CanonicalPlayerMap;
   projections: MappedProjection[];
+  roomRankings?: DraftRoomRankingSnapshot | null;
 }
 
 interface ValuedProjection {
@@ -43,7 +48,9 @@ interface RawCandidate {
   replacementProjection: number;
   replacementDemand: number;
   scarcityGap: number;
-  adpDelta: number;
+  adpDelta: number | null;
+  marketAnchor: number | null;
+  roomRanking: MappedDraftRoomRankingRecord | null;
   rosterFit: number;
   availableNextPickProbability: number | null;
   nextPickConfidence: Confidence;
@@ -143,7 +150,7 @@ function uniqueProjectionRecords(records: MappedProjection[]): MappedProjection[
   const byPlayer = new Map<string, MappedProjection>();
   for (const record of records) {
     const current = byPlayer.get(record.playerId);
-    if (!current || record.rank < current.rank) byPlayer.set(record.playerId, record);
+    if (!current || record.projection > current.projection) byPlayer.set(record.playerId, record);
   }
   return [...byPlayer.values()];
 }
@@ -175,8 +182,17 @@ function expectedAdpFormat(context: LeagueContext): AdpFormat {
 function nextPickConfidence(
   projection: MappedProjection,
   context: LeagueContext,
+  roomRanking?: MappedDraftRoomRankingRecord | null,
+  roomSnapshot?: DraftRoomRankingSnapshot | null,
 ): Confidence {
   if (context.draftState.value.nextUserPick === null) return 'low';
+  if (
+    roomRanking &&
+    roomSnapshot?.compatibility.level !== 'weak' &&
+    roomSnapshot?.compatibility.confidence === 'high'
+  ) {
+    return projection.adpMatchLevel === 'exact' ? 'high' : 'medium';
+  }
   if (projection.adpMatchLevel) {
     if (projection.adpMatchLevel === 'weak') return 'low';
     const sourceConfidence = projection.adpSourceConfidence ?? 'low';
@@ -323,8 +339,11 @@ function buildReasons(candidate: RawCandidate): string[] {
   if (candidate.rosterFit >= 82) {
     reasons.push(`${candidate.player.position} fills an open starting need`);
   }
-  if (candidate.adpDelta >= 5) {
-    reasons.push(`${Math.round(candidate.adpDelta)} picks past imported ADP`);
+  if (candidate.adpDelta !== null && candidate.adpDelta >= 5) {
+    reasons.push(`${Math.round(candidate.adpDelta)} picks past market ADP`);
+  }
+  if (candidate.roomRanking && candidate.roomRanking.rank >= candidate.sourceProjection.rank! + 8) {
+    reasons.push(`Sleeper room order may let this player slide`);
   }
   return reasons.slice(0, 4);
 }
@@ -354,6 +373,7 @@ export function generateDraftRecommendations({
   board,
   players,
   projections: inputProjections,
+  roomRankings = null,
 }: RecommendationInput): DraftRecommendationResult {
   const support = baseSupport(context);
   if (support.status === 'unsupported' || support.status === 'data_required') {
@@ -376,7 +396,7 @@ export function generateDraftRecommendations({
   if (coverage === 'aggregate_unverified') {
     status = 'limited';
     messages.push(
-      'Imported fantasy points are aggregate and their scoring format is unverified; custom Sleeper scoring is not recalculated.',
+      'Fantasy points are aggregate and their scoring format is unverified; custom Sleeper scoring is not recalculated.',
     );
   } else if (coverage === 'mixed') {
     status = 'limited';
@@ -392,7 +412,7 @@ export function generateDraftRecommendations({
     );
     if (!hasMatchingAdp) {
       messages.push(
-        'Superflex/2QB replacement demand is incorporated, but next-pick probability is approximate until Superflex ADP is imported.',
+        'Superflex/2QB replacement demand is incorporated, but next-pick probability is approximate until compatible Superflex ADP is available.',
       );
     }
   }
@@ -413,6 +433,11 @@ export function generateDraftRecommendations({
   }
 
   const scoredProjections = valued.map((item) => item.scored);
+  const leagueRankByPlayer = new Map(
+    [...scoredProjections]
+      .sort((a, b) => b.projection - a.projection || a.playerName.localeCompare(b.playerName))
+      .map((projection, index) => [projection.playerId, index + 1]),
+  );
   const tiers = buildProjectionTiers(scoredProjections);
   const replacements = getReplacementProjections(scoredProjections, context);
   const targets = getStarterTargets(context.roster.value);
@@ -426,6 +451,9 @@ export function generateDraftRecommendations({
       roster.roster_id,
       getRosterPositionCounts(roster.roster_id, picks, rosters, players),
     ]),
+  );
+  const roomByPlayerId = new Map(
+    (roomRankings?.records ?? []).map((record) => [record.playerId, record]),
   );
 
   const availableByPosition = new Map<Position, ValuedProjection[]>();
@@ -496,13 +524,18 @@ export function generateDraftRecommendations({
         })
         .map((selection) => selection.ownerRosterId),
     ).size;
-    const confidence = nextPickConfidence(source, context);
+    const roomRanking = roomByPlayerId.get(projection.playerId) ?? null;
+    const confidence = nextPickConfidence(source, context, roomRanking, roomRankings);
     const nextUserPick = context.draftState.value.nextUserPick;
+    const marketAdp = Number.isFinite(source.adp) ? source.adp! : null;
+    const marketAnchor = roomRanking && marketAdp !== null
+      ? roomRanking.rank * 0.58 + marketAdp * 0.42
+      : roomRanking?.rank ?? marketAdp;
     const probability =
-      nextUserPick === null
+      nextUserPick === null || marketAnchor === null
         ? null
         : probabilityAvailableAtNextPick({
-            adp: source.adp,
+            adp: marketAnchor,
             currentOverallPick: board.currentOverallPick,
             nextUserPick,
             interveningDemand,
@@ -519,7 +552,9 @@ export function generateDraftRecommendations({
         replacementProjection,
         replacementDemand: calculateReplacementDemand(projection.position, context),
         scarcityGap: round(scarcityGap, 1),
-        adpDelta: round(board.currentOverallPick - source.adp, 1),
+        adpDelta: marketAdp === null ? null : round(board.currentOverallPick - marketAdp, 1),
+        marketAnchor,
+        roomRanking,
         rosterFit:
           context.lineupType.value !== 'classic' || userRosterId === null
             ? 50
@@ -578,12 +613,14 @@ export function generateDraftRecommendations({
           1,
         ),
         rosterFit: candidate.rosterFit,
-        adpValue: round(
-          50 +
-            (clamp(50 + candidate.adpDelta * 3) - 50) *
-              confidenceWeight(candidate.nextPickConfidence),
-          1,
-        ),
+        adpValue: candidate.adpDelta === null
+          ? 50
+          : round(
+              50 +
+                (clamp(50 + candidate.adpDelta * 3) - 50) *
+                  confidenceWeight(candidate.nextPickConfidence),
+              1,
+            ),
         nextPickRisk: round(50 + (rawNextPickRisk - 50) * reliability, 1),
       };
       const score = scoreCandidate(components);
@@ -601,6 +638,14 @@ export function generateDraftRecommendations({
         player: candidate.player,
         projection: candidate.projection,
         score,
+        juanchoRank: leagueRankByPlayer.get(candidate.player.id) ?? candidate.projection.rank ?? 0,
+        marketAdp: Number.isFinite(candidate.sourceProjection.adp)
+          ? candidate.sourceProjection.adp!
+          : null,
+        draftRoomRank: candidate.roomRanking?.rank ?? null,
+        externalExpertRank: candidate.roomRanking?.upstreamExpertRank ?? null,
+        firstSeedValueDelta: candidate.roomRanking?.firstSeedValueDelta ?? null,
+        marketEdge: null,
         action,
         availableNextPickProbability: candidate.availableNextPickProbability,
         nextPickConfidence: candidate.nextPickConfidence,
@@ -625,21 +670,36 @@ export function generateDraftRecommendations({
         nextPickExplanation: {
           picksBeforeNextSelection: context.draftState.value.picksBeforeNextSelection,
           interveningTeamsWithNeed: candidate.interveningTeamsWithNeed,
-          playerAdp: candidate.sourceProjection.adp,
+          playerAdp: Number.isFinite(candidate.sourceProjection.adp)
+            ? candidate.sourceProjection.adp!
+            : null,
+          draftRoomRank: candidate.roomRanking?.rank ?? null,
           currentSelection: board.currentOverallPick,
-          adpSource: candidate.sourceProjection.adpSource ?? 'Imported CSV',
+          adpSource: candidate.sourceProjection.adpSource ?? 'Market source unavailable',
           adpMatchLevel: candidate.sourceProjection.adpMatchLevel ??
             (candidate.nextPickConfidence === 'high' ? 'exact' : 'approximate'),
           adpMatchReasons: candidate.sourceProjection.adpMatchReasons ?? [
             candidate.nextPickConfidence === 'high'
-              ? 'The imported ADP format matches this league.'
-              : 'The imported ADP context is incomplete or differs from this league.',
+              ? 'The market ADP format matches this league.'
+              : 'The market ADP context is incomplete or differs from this league.',
           ],
         },
         reasons: buildReasons(candidate),
       };
     })
-    .sort((a, b) => b.score - a.score || a.projection.rank - b.projection.rank);
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        (a.projection.rank ?? Number.POSITIVE_INFINITY) -
+          (b.projection.rank ?? Number.POSITIVE_INFINITY),
+    )
+    .map((recommendation) => ({
+      ...recommendation,
+      marketEdge:
+        recommendation.marketAdp === null
+          ? null
+          : Math.round((recommendation.marketAdp - recommendation.juanchoRank) * 10) / 10,
+    }));
 
   return {
     recommendations,

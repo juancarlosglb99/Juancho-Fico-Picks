@@ -26,10 +26,10 @@ export function normalizePlayerName(name: string): string {
 
 export function normalizePosition(position?: string | null): Position {
   if (!position) return 'UNKNOWN';
-  const upper = position.toUpperCase() as Position;
+  const upper = position.toUpperCase();
   if (upper === 'DST') return 'DEF';
   if (upper === 'PK') return 'K';
-  return POSITIONS.has(upper) ? upper : 'UNKNOWN';
+  return POSITIONS.has(upper as Position) ? (upper as Position) : 'UNKNOWN';
 }
 
 function canonicalizeSleeperPlayer(

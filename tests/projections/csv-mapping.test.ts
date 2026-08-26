@@ -42,8 +42,18 @@ describe('projection CSV provider', () => {
 
   it('rejects a CSV that is missing a required field', () => {
     expect(() =>
-      parseProjectionCsv('player,projection,adp,position\nNico Collins,240,25,WR'),
+      parseProjectionCsv('player,projection\nNico Collins,240'),
     ).toThrow(ProjectionCsvError);
+  });
+
+  it('accepts the minimum player, position, and projection schema', () => {
+    expect(parseProjectionCsv('player,position,projection\nNico Collins,WR,240'))
+      .toEqual([{
+        sourceRow: 2,
+        playerName: 'Nico Collins',
+        position: 'WR',
+        projection: 240,
+      }]);
   });
 
   it('parses format metadata and granular stats when supplied', () => {

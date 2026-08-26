@@ -2,9 +2,9 @@
 
 Sleeper-first fantasy football draft intelligence. The current product slice
 connects a public Sleeper username, imports active-season leagues and rosters,
-synchronizes draft picks, derives the available player pool, automatically loads
-format-aware current ADP, and maps a persistent CSV projection source into
-canonical Juancho-Fico player records.
+synchronizes draft picks, derives the available player pool, and automatically
+loads First Seed projections, current market ADP, and Sleeper draft-room ranks.
+CSV projections are an optional advanced override.
 
 ## Included milestones
 
@@ -27,6 +27,13 @@ canonical Juancho-Fico player records.
    ADP, source provenance, league-format compatibility, freshness, last-known-good
    caching, canonical match coverage, a compact data-quality view, and a
    recommendation-first live draft screen.
+9. **First Seed automatic data** — weekly JuiceSheets aggregate projections and
+   platform-specific Abusing Draft Rankings snapshots with independent
+   provenance, format selection, canonical mapping, and last-known-good caches.
+10. **Mock Draft / Monte Carlo** — deterministic model versions, heterogeneous
+    opponent archetypes, probabilistic room-rank/market/need behavior, complete
+    draft continuations, candidate comparisons, wait probabilities, and
+    final-roster outcome scoring.
 
 Lineup, waiver, trade, browser-extension and AI explanation features remain
 future milestones. See [the format audit](docs/format-audit.md) for the exact
@@ -49,18 +56,33 @@ npm run lint
 npm run build
 ```
 
-## Projection CSV
+## Automatic projections and room order
+
+Supported redraft and keeper snake/linear/3RR leagues automatically select
+First Seed JuiceSheets Standard, Half-PPR, or PPR aggregate projections. Sleeper
+mock opponents also receive the matching Sleeper draft-room order, including the
+dedicated Superflex tab. The two datasets refresh at most every four days in the
+browser, are validated before persistence, and fall back to the last valid
+snapshot after a transient or malformed refresh.
+
+Projection, market ADP, platform room rank, First Seed value/expert fields, and
+Juancho-Fico rank remain independent. They are never averaged into one opaque
+ranking. Selected projection and draft-room data are attributed to
+[First Seed Sports](https://firstseedsports.com/).
+
+## Optional projection CSV override
 
 Required columns:
 
 ```csv
-player,projection,adp,rank,position
-Nico Collins,245.7,25.4,24,WR
+player,position,projection
+Nico Collins,WR,245.7
 ```
 
 An optional `sleeper_id` column produces an exact match and is preferred when
-available. Optional `adp_format` and `projection_scoring` columns declare source
-compatibility. Optional `pass_yd`, `pass_td`, `pass_int`, `rush_yd`, `rush_td`,
+available. Legacy `rank` and `adp` columns are accepted but do not override
+Juancho-Fico rank or automatic market ADP. Optional `projection_scoring` declares
+source compatibility. Optional `pass_yd`, `pass_td`, `pass_int`, `rush_yd`, `rush_td`,
 `rec`, `rec_yd`, `rec_td`, and `fum_lost` columns let the engine recalculate a
 complete position-relevant stat line with the imported league's scoring. Blank
 position-relevant values are treated as incomplete, not zero. See
@@ -69,7 +91,7 @@ position-relevant values are treated as incomplete, not zero. See
 The app also exposes a downloadable starter file at
 `/projection-template.csv`.
 
-The latest valid projection import is stored locally by season and restored on
+The latest valid custom override is stored locally by season and restored on
 the same browser, so a user does not need to repeat the import for every draft
 session. A failed replacement import never clears the last valid snapshot.
 
@@ -101,8 +123,9 @@ Every factor is normalized to a 0–100 scale before weighting:
 | ADP value | 5% |
 | Positional scarcity | 5% |
 
-The result is deterministic for a given draft state, normalized LeagueContext,
-and projection file. Low-confidence or format-mismatched ADP is downweighted.
+The live recommendation result is deterministic for a given draft state,
+normalized LeagueContext, and source snapshots. Low-confidence or
+format-mismatched ADP is downweighted.
 The score is decision support, not a promise of fantasy results.
 
 ## Structure
@@ -113,8 +136,10 @@ packages/sleeper/          Public Sleeper API client and normalization
 packages/players/          Canonical player model and external-ID indexes
 packages/projections/      Replaceable projection-provider contracts and CSV
 packages/adp/              Automatic ADP planning, providers and canonical mapping
+packages/first-seed/       JuiceSheets, room-rank and signal providers/mapping
 packages/data/             Snapshots, provenance, freshness and last-good cache
 packages/engine/draft/     Draft state, availability, tiers and recommendations
+packages/engine/mock/      Opponent behavior, Monte Carlo, and backtesting
 packages/engine/context/   Sleeper normalization and league scoring
 packages/dynasty/          Replaceable dynasty value-provider contract
 tests/                     Deterministic unit tests

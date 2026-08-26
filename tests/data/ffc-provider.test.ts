@@ -124,7 +124,7 @@ describe('Fantasy Football Calculator ADP provider', () => {
 
     await provider.getSnapshot(request);
 
-    const [url] = fetcher.mock.calls[0];
+    const [[url]] = fetcher.mock.calls as unknown as Array<[RequestInfo | URL]>;
     expect(String(url)).toBe(
       'https://fantasyfootballcalculator.com/api/v1/adp/ppr?teams=12&year=2026',
     );

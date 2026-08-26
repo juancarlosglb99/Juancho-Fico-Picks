@@ -1,5 +1,6 @@
 import type { CanonicalPlayer } from '../../players/types';
 import type { MappedProjection } from '../../projections/types';
+import type { DraftRoomRankingSnapshot } from '../../data/types';
 import type { Confidence, LeagueContext } from '../context/types';
 
 export interface DraftBoardState {
@@ -32,7 +33,7 @@ export interface DraftScoreRawValues {
   sourceProjectedPoints: number;
   vorp: number;
   scarcityGap: number;
-  adpDelta: number;
+  adpDelta: number | null;
   replacementProjection: number;
   replacementDemand: number;
   rosterNeed: number;
@@ -45,6 +46,12 @@ export interface DraftRecommendation {
   player: CanonicalPlayer;
   projection: MappedProjection;
   score: number;
+  juanchoRank: number;
+  marketAdp: number | null;
+  draftRoomRank: number | null;
+  externalExpertRank: number | null;
+  firstSeedValueDelta: number | null;
+  marketEdge: number | null;
   action: RecommendationAction;
   availableNextPickProbability: number | null;
   nextPickConfidence: Confidence;
@@ -57,7 +64,8 @@ export interface DraftRecommendation {
   nextPickExplanation: {
     picksBeforeNextSelection: number | null;
     interveningTeamsWithNeed: number;
-    playerAdp: number;
+    playerAdp: number | null;
+    draftRoomRank: number | null;
     currentSelection: number;
     adpSource: string;
     adpMatchLevel: 'exact' | 'approximate' | 'weak';
@@ -80,6 +88,10 @@ export interface DraftRecommendationResult {
   picksUntilNextUserPick: number | null;
   userDraftSlot: number | null;
   userRosterId: number | null;
+}
+
+export interface RecommendationMarketInputs {
+  roomRankings?: DraftRoomRankingSnapshot | null;
 }
 
 export const DRAFT_SCORE_WEIGHTS = {
