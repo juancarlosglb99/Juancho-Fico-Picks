@@ -70,6 +70,10 @@ export interface DeviationParty {
 export interface DeviationRecord {
   overallPick: number;
   round: number;
+  /** Our roster going into this pick, by position. */
+  rosterBefore: Partial<Record<Position, number>>;
+  /** How many of the teams picking before us still need each position. */
+  opponentNeedBefore: Partial<Record<Position, number>>;
   /** Best player still on the board by First Seed rank. */
   firstSeedBest: DeviationParty | null;
   /** What Juancho actually recommended. */
@@ -137,6 +141,8 @@ export function auditPick({
   overallPick,
   round,
   recommendations,
+  rosterBefore,
+  opponentNeedBefore,
   firstSeedBestId,
   firstSeedBestName,
   firstSeedBestRank,
@@ -144,6 +150,8 @@ export function auditPick({
 }: {
   overallPick: number;
   round: number;
+  rosterBefore: Partial<Record<Position, number>>;
+  opponentNeedBefore: Partial<Record<Position, number>>;
   recommendations: DraftRecommendation[];
   firstSeedBestId: string | null;
   firstSeedBestName?: string;
@@ -171,6 +179,8 @@ export function auditPick({
     return {
       overallPick,
       round,
+      rosterBefore,
+      opponentNeedBefore,
       firstSeedBest:
         firstSeedBestId === null
           ? null
@@ -203,6 +213,8 @@ export function auditPick({
     return {
       overallPick,
       round,
+      rosterBefore,
+      opponentNeedBefore,
       firstSeedBest,
       juancho,
       rankGap: 0,
@@ -232,6 +244,8 @@ export function auditPick({
   return {
     overallPick,
     round,
+    rosterBefore,
+    opponentNeedBefore,
     firstSeedBest,
     juancho,
     rankGap,

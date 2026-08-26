@@ -49,6 +49,7 @@ export interface BaselineResult {
  * The room's real picks are kept exactly as they happened, so both strategies
  * face the identical board.
  */
+
 export function draftByFirstSeedOnly(input: FirstSeedBaselineInput): BaselineResult {
   const {
     regression,
@@ -93,6 +94,26 @@ export function draftByFirstSeedOnly(input: FirstSeedBaselineInput): BaselineRes
     const oursBefore = ordered
       .filter((pick) => pick.draft_slot === regression.userSlot && pick.pick_no < overallPick)
       .map((pick, index) => ({ ...pick, player_id: takenByUs[index] ?? pick.player_id }));
+    /*
+     * Both ways of resolving this counterfactual are biased, so neither absolute
+     * delta is load-bearing.
+     *
+     * The room's selections are held at what really happened, so a player OUR
+     * seat originally drafted is never taken by anybody else and stays available
+     * to a strategy that defers on him - which flatters deferring.
+     *
+     * Absorbing those players instead was tried and is worse. These mocks were
+     * drafted by following Juancho, so its replay reproduces the real picks and
+     * loses nothing, while the control surrenders exactly the players it was
+     * competing for: the First Seed baseline went from a sane roster to five
+     * tight ends, not because rank-drafting fails but because every running back
+     * it wanted had been removed.
+     *
+     * Fixing this properly needs a simulated room rather than a replayed one. In
+     * the meantime the per-pick deviation audit carries the weight: it compares
+     * two choices at the SAME board state with the same simulation, so it is
+     * unaffected by either bias.
+     */
     const picksBefore = [...roomBefore, ...oursBefore].sort((a, b) => a.pick_no - b.pick_no);
     const board = deriveDraftBoardState(draft, picksBefore, rosters, players);
     const round = ordered.find((pick) => pick.pick_no === overallPick)!.round;

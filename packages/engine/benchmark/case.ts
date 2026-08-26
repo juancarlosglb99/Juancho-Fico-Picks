@@ -146,6 +146,7 @@ export interface ReplayResult {
  * as it happened, so the engine faces the board a person actually faced rather
  * than a board of its own making.
  */
+
 export function replayRegressionCase(input: ReplayInput): ReplayResult {
   const { regression, players, league, draft, rosters, projections, roomRankings } = input;
   const ordered = [...regression.picks].sort((a, b) => a.pick_no - b.pick_no);
@@ -191,6 +192,26 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
     const oursBefore = ordered
       .filter((pick) => pick.draft_slot === regression.userSlot && pick.pick_no < overallPick)
       .map((pick, index) => ({ ...pick, player_id: takenByUs[index] ?? pick.player_id }));
+    /*
+     * Both ways of resolving this counterfactual are biased, so neither absolute
+     * delta is load-bearing.
+     *
+     * The room's selections are held at what really happened, so a player OUR
+     * seat originally drafted is never taken by anybody else and stays available
+     * to a strategy that defers on him - which flatters deferring.
+     *
+     * Absorbing those players instead was tried and is worse. These mocks were
+     * drafted by following Juancho, so its replay reproduces the real picks and
+     * loses nothing, while the control surrenders exactly the players it was
+     * competing for: the First Seed baseline went from a sane roster to five
+     * tight ends, not because rank-drafting fails but because every running back
+     * it wanted had been removed.
+     *
+     * Fixing this properly needs a simulated room rather than a replayed one. In
+     * the meantime the per-pick deviation audit carries the weight: it compares
+     * two choices at the SAME board state with the same simulation, so it is
+     * unaffected by either bias.
+     */
     const picksBefore = [...roomBefore, ...oursBefore].sort((a, b) => a.pick_no - b.pick_no);
 
     const board = deriveDraftBoardState(draft, picksBefore, rosters, players);
@@ -237,9 +258,24 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
         firstSeedBestId = player.id;
       }
     }
+    // Our roster going into this pick, before anything is added.
+    const rosterBefore = [...ourRoster];
+
+    // How many teams picking before us still lack a starter at each position -
+    // read from the recommendations, which computed it per position already.
+    const opponentNeedBefore: Partial<Record<Position, number>> = {};
+    for (const recommendation of result.recommendations) {
+      const position = recommendation.player.position;
+      if (opponentNeedBefore[position] === undefined) {
+        opponentNeedBefore[position] = recommendation.insight.opponentTeamsNeedingPosition;
+      }
+    }
+
     const deviation = auditPick({
       overallPick,
       round,
+      rosterBefore: countPositions(rosterBefore),
+      opponentNeedBefore,
       recommendations: result.recommendations,
       firstSeedBestId,
       firstSeedBestName: firstSeedBestId
@@ -264,7 +300,6 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
       );
     }
 
-    const rosterBefore = [...ourRoster];
     if (best) {
       const sleeperId = best.player.externalIds.sleeper;
       if (sleeperId) takenByUs.push(sleeperId);

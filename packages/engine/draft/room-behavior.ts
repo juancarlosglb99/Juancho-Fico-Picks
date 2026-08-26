@@ -97,7 +97,16 @@ export function opponentDemandForPosition({
   const footprint = startingFootprint(position, slots);
 
   let demand = 0;
-  let teamsWithNeed = 0;
+  /*
+   * Distinct TEAMS, not selections.
+   *
+   * A team that picks twice before our turn was being counted twice, so a
+   * ten-team league could report sixteen teams needing a running back - and the
+   * live screen said exactly that. Demand is still summed per selection, since
+   * every selection is a separate chance for the player to go, but the count we
+   * show people has to mean what it says.
+   */
+  const teamsNeeding = new Set<number>();
   for (const team of interveningTeams) {
     if (team.rosterId === null) {
       // Unknown seat: assume average demand rather than none.
@@ -107,14 +116,15 @@ export function opponentDemandForPosition({
     const held = team.counts[position] ?? 0;
     if (held < dedicated) {
       demand += 1;
-      teamsWithNeed += 1;
+      teamsNeeding.add(team.rosterId);
     } else if (held < footprint) {
       demand += 0.45;
-      teamsWithNeed += 1;
+      teamsNeeding.add(team.rosterId);
     } else {
       demand += 0.08;
     }
   }
+  const teamsWithNeed = teamsNeeding.size;
 
   // A live run at this position pulls demand up; a room that has moved past the
   // position pulls it down.
