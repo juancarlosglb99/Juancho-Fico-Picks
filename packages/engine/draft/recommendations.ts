@@ -14,6 +14,7 @@ import { resolvePickRosterId, type SlotToRosterId } from './pick-ownership';
 import { planRemainingRoster, type PlannablePlayer } from './roster-plan';
 import {
   buildRosterConstructionState,
+  startingFootprint,
   type RosterConstructionState,
 } from './roster-state';
 import {
@@ -28,6 +29,8 @@ import {
   DRAFT_NOW_THRESHOLD,
   DRAFT_SCORE_SHAPE,
   PLAN_FUTURE_DISCOUNT,
+  SURPLUS_STACK_PENALTY,
+  consensusAnchorPenalty,
   type DraftBoardState,
   type DraftRecommendation,
   type DraftRecommendationResult,
@@ -42,6 +45,8 @@ const SHORTLIST_OVERALL = 34;
 const SHORTLIST_PER_POSITION = 4;
 /** How many of the leaders get the full take-now-versus-wait comparison. */
 const WAIT_ANALYSIS_DEPTH = 8;
+/** Top of First Seed's board, always scored whatever the roster wants. */
+const SHORTLIST_CONSENSUS = 12;
 
 interface RecommendationInput {
   context: LeagueContext;
@@ -629,6 +634,22 @@ export function generateDraftRecommendations({
     shortlisted.set(entry.candidate.playerId, entry.candidate);
   }
 
+  /*
+   * Always score the top of First Seed's board.
+   *
+   * The shortlist above is built from immediate roster gain, which can leave out
+   * the very player the market rates highest - and an audit of real drafts found
+   * exactly that: on six of fifteen picks the engine never even considered First
+   * Seed's best available, so it could not have taken him however good he was.
+   * Declining a consensus pick is a decision the engine is allowed to make; not
+   * noticing him is not.
+   */
+  for (const candidate of [...plannable]
+    .sort((a, b) => a.consensusRank - b.consensusRank)
+    .slice(0, SHORTLIST_CONSENSUS)) {
+    shortlisted.set(candidate.playerId, candidate);
+  }
+
   /**
    * Bank what we are sure of, discount what we are guessing.
    *
@@ -639,6 +660,92 @@ export function generateDraftRecommendations({
   const decisionValueOf = (immediate: number, planTotal: number) =>
     immediate + PLAN_FUTURE_DISCOUNT * (planTotal - immediate);
 
+  /*
+   * First Seed's board is the prior, so reaching past it costs something.
+   *
+   * Without this the engine drifted six to fifty ranks down the board on almost
+   * every pick, each time convinced by its own simulation that it had gained a
+   * dozen points - and finished hundreds of points behind simply taking the
+   * best player available. The anchor makes a deviation prove itself.
+   */
+  /*
+   * The anchor only exists when there is a real board to anchor to.
+   *
+   * Without a First Seed draft-room ranking, `consensusRank` falls back to our
+   * own projection order - and in a one-quarterback league that order puts
+   * quarterbacks on top, because they score the most raw points. Deferring to
+   * that is not deferring to a consensus, it is deferring to precisely the
+   * mistake this engine was built to stop making.
+   */
+  const rankedCandidates = plannable.filter((candidate) =>
+    roomByPlayerId.has(candidate.playerId),
+  );
+  const hasPublishedBoard = rankedCandidates.length > 0;
+
+  /*
+   * The bar is First Seed's best available player we could actually START.
+   *
+   * A published board is a global ranking; it cannot know that we already have
+   * a quarterback. Late in a one-quarterback league the highest-ranked player
+   * left is often a quarterback we can never play, and anchoring to him drags
+   * the whole board toward a fifth one - which is the exact failure this engine
+   * exists to prevent. Drafting a saved mock by rank alone finished with four
+   * quarterbacks for precisely this reason.
+   *
+   * Someone who cannot improve our lineup is not a real alternative, so he does
+   * not get to set the price of everything else.
+   */
+  const startingGain = (candidate: PlannablePlayer) =>
+    evaluateRoster([...rosterPlayers, candidate], slots).startingValue -
+    currentRosterValue.startingValue;
+  const usableRanked = rankedCandidates.filter(
+    (candidate) => startingGain(candidate) > 0.01,
+  );
+  /*
+   * Once the starting lineup is full, the board stops mattering.
+   *
+   * With no startable player left on the board there is nothing to defer to:
+   * every remaining pick is a bench dart, and what decides between darts is how
+   * likely each is to ever be needed, not where a global ranking placed him.
+   * Falling back to the whole board here re-anchored on the highest-ranked
+   * unusable player - a quarterback we could never start - and dragged the
+   * roster toward a third one.
+   */
+  const anchorApplies = hasPublishedBoard && usableRanked.length > 0;
+  const bestConsensusRank = anchorApplies
+    ? Math.min(...usableRanked.map((candidate) => candidate.consensusRank))
+    : Number.NaN;
+  // Not appearing on First Seed's board at all is itself information, so an
+  // unranked player is treated as sitting just past its end.
+  const unrankedGap = roomByPlayerId.size + 1;
+  /*
+   * How many bodies at a position could ever reach the lineup: every slot it can
+   * occupy, plus one backup. Beyond that they are unusable whatever the board
+   * says about them.
+   */
+  const heldAt = new Map<Position, number>();
+  for (const player of rosterPlayers) {
+    heldAt.set(player.position, (heldAt.get(player.position) ?? 0) + 1);
+  }
+  const surplusPenaltyFor = (candidate: PlannablePlayer) => {
+    // Only a position with a single lineup spot can be stacked meaninglessly.
+    // Running back and receiver depth is genuinely useful and is already
+    // governed by declining bench value, so it is left alone.
+    const footprint = startingFootprint(candidate.position, slots);
+    if (footprint > 1.5) return 0;
+    const capacity = 2; // the starter, plus one backup for byes and injuries
+    const surplus = (heldAt.get(candidate.position) ?? 0) + 1 - capacity;
+    return surplus > 0 ? SURPLUS_STACK_PENALTY * surplus : 0;
+  };
+
+  const anchorPenaltyFor = (candidate: PlannablePlayer) => {
+    if (!anchorApplies) return 0;
+    const gap = roomByPlayerId.has(candidate.playerId)
+      ? candidate.consensusRank - bestConsensusRank
+      : unrankedGap;
+    return consensusAnchorPenalty(gap);
+  };
+
   const planned = [...shortlisted.values()].map((candidate) => {
     const immediate = evaluateRoster([...rosterPlayers, candidate], slots).total;
     const plan = planRemainingRoster(basePlanInput, candidate);
@@ -646,7 +753,10 @@ export function generateDraftRecommendations({
       candidate,
       plan,
       immediate,
-      decisionValue: decisionValueOf(immediate, plan.total),
+      decisionValue:
+        decisionValueOf(immediate, plan.total) -
+        anchorPenaltyFor(candidate) -
+        surplusPenaltyFor(candidate),
     };
   });
   planned.sort(
@@ -736,6 +846,7 @@ export function generateDraftRecommendations({
   ): number => {
     const p = clamp(otherSurvivalProbability, 0, 100) / 100;
     const immediate = evaluateRoster([...rosterPlayers, take], slots).total;
+    const anchor = anchorPenaltyFor(take) + surplusPenaltyFor(take);
     const survives = planRemainingRoster(
       { ...basePlanInput, available: pinned(plannable, other.playerId) },
       take,
@@ -746,7 +857,9 @@ export function generateDraftRecommendations({
     ).total;
     // Same yardstick as the ranking, so urgency and order cannot disagree.
     return (
-      p * decisionValueOf(immediate, survives) + (1 - p) * decisionValueOf(immediate, gone)
+      p * decisionValueOf(immediate, survives) +
+      (1 - p) * decisionValueOf(immediate, gone) -
+      anchor
     );
   };
 
@@ -922,6 +1035,14 @@ export function generateDraftRecommendations({
       positionRunActive: roomBehavior.runs[candidate.position]?.isRun ?? false,
       opponentTeamsNeedingPosition: teamsWithNeed,
       exceptionalReason: exceptional,
+      juanchoBoardRank: index + 1,
+      bestAvailableFirstSeedRank: Number.isFinite(bestConsensusRank)
+        ? Math.round(bestConsensusRank)
+        : null,
+      firstSeedRankGap:
+        roomByPlayerId.get(candidate.playerId) && Number.isFinite(bestConsensusRank)
+          ? Math.round(candidate.consensusRank - bestConsensusRank)
+          : null,
     };
 
     const components: DraftScoreComponents = {

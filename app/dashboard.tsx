@@ -2813,6 +2813,7 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
         )}
         <div className="flex flex-wrap items-center gap-2">
           <ActionBadge recommendation={primary} />
+          <FirstSeedGapBadge recommendation={primary} />
           <MarketEdgeBadge recommendation={primary} />
         </div>
         <div className="mt-4 flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
@@ -2914,6 +2915,7 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <div className="flex flex-wrap gap-2">
                     <ActionBadge recommendation={recommendation} compact />
+                    <FirstSeedGapBadge recommendation={recommendation} compact />
                     <MarketEdgeBadge recommendation={recommendation} compact />
                   </div>
                   <p className="text-xs font-bold text-[#8fa0aa]">
@@ -2987,6 +2989,44 @@ function MarketEdgeBadge({
       title={`Juancho rank ${recommendation.juanchoRank}; market ADP ${recommendation.marketAdp?.toFixed(1)}`}
     >
       {target ? 'Target' : 'Avoid at cost'} · {Math.abs(Math.round(recommendation.marketEdge))} picks
+    </span>
+  );
+}
+
+/**
+ * First Seed rank against Juancho's own rank, always visible.
+ *
+ * First Seed's board is the prior; when Juancho reaches past it, the size of the
+ * reach should be obvious at a glance rather than buried in an inspector. A
+ * small gap is normal. A large one is a claim that needs to be right, and is
+ * coloured to say so.
+ */
+function FirstSeedGapBadge({
+  recommendation,
+  compact = false,
+}: {
+  recommendation: DraftRecommendation;
+  compact?: boolean;
+}) {
+  const ownRank = recommendation.draftRoomRank;
+  const best = recommendation.insight.bestAvailableFirstSeedRank;
+  if (ownRank === null || best === null) return null;
+  const gap = Math.max(0, Math.round(ownRank - best));
+  const severe = gap >= 25;
+  const notable = gap >= 8;
+  return (
+    <span
+      className={`rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${
+        severe
+          ? 'bg-[#ff7a59]/14 text-[#ff9a80]'
+          : notable
+            ? 'bg-[#ffc24d]/14 text-[#ffce6e]'
+            : 'bg-[#8fa0aa]/12 text-[#9fb0ba]'
+      } ${compact ? '' : ''}`}
+      title={`First Seed ranks the best player still available at ${best}. This pick is First Seed ${ownRank}, so Juancho is reaching ${gap} ${gap === 1 ? 'rank' : 'ranks'} past the board.`}
+    >
+      FS {best} → {ownRank}
+      {gap > 0 ? ` · +${gap}` : ' · on board'}
     </span>
   );
 }
@@ -3069,6 +3109,18 @@ function ModelInspector({
         <InspectorGroup
           label="Draft value"
           rows={[
+            [
+              'First Seed rank → Juancho',
+              recommendation.draftRoomRank === null
+                ? 'Unranked by First Seed'
+                : `#${recommendation.draftRoomRank} → #${recommendation.insight.juanchoBoardRank}`,
+            ],
+            [
+              'Reach past the board',
+              recommendation.insight.firstSeedRankGap === null
+                ? '—'
+                : `${recommendation.insight.firstSeedRankGap} ranks`,
+            ],
             ['Cost of waiting', `${recommendation.components.opportunityCost.toFixed(1)} pts`],
             ['Plan vs best', `${recommendation.components.planDelta.toFixed(1)} pts`],
             ['Room tendency', displayEnum(recommendation.insight.roomTendency)],

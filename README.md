@@ -43,6 +43,9 @@ CSV projections are an optional advanced override.
 12. **Measured quality and speed** — a permanent regression corpus of real
     mocks pinned to the data they were drafted on, roster and decision quality
     scoring, and pick-to-advice latency measured against the live API.
+13. **First Seed as the prior** — a consensus anchor tuned against the corpus, a
+    per-pick deviation audit with named reasons, and a First-Seed-only control
+    the strategy engine has to beat.
 
 Lineup, waiver, trade, browser-extension and AI explanation features remain
 future milestones. See [the format audit](docs/format-audit.md) for the exact
@@ -98,6 +101,49 @@ a line per case:
 ```
 
 `npm run test:regression` runs only the corpus.
+
+### How far it may stray from First Seed
+
+First Seed's draft-room ranking is the prior, not a suggestion. Reaching past it
+costs something, and the cost grows with the distance reached, so a deviation
+has to be worth it. The legitimate reasons are narrow and each one is named on
+the pick that used it:
+
+| Reason | Meaning |
+| --- | --- |
+| `positional_saturation` | The higher-ranked player cannot enter our lineup. |
+| `starter_need` | Ours fills an empty starting slot; theirs does not. |
+| `tier_cliff` | Our position is about to run out and theirs is not. |
+| `returns_to_us` | The higher-ranked player is very likely to come back. |
+| `opportunity_cost` | Completing the roster from ours is measurably better. |
+| `higher_projection` | Same position and slot, and First Seed projects ours higher than the one it ranks above him. |
+
+Anything else is the engine inventing its own board, and `npm test` fails on it.
+It also fails on any deviation that materially worsens the completed-roster
+simulation, whatever story is attached.
+
+The audit prints per pick, so an extreme override is obvious:
+
+```text
+R 8 p 80 │ FS# 71 Jayden Daniels  │ FS# 77 Tucker Kraft  │ gap 6 │ plan +10.0 ✓ │ starter_need
+```
+
+The live screen carries the same thing as a badge on every recommendation —
+`FS 71 → 77 · +6` — amber past eight ranks and red past twenty-five.
+
+### Beating the board
+
+A strategy engine that loses to simply taking the best player available should
+not be overriding anything, so the corpus runs both:
+
+```bash
+npm run test:regression   # audit + baseline comparison
+npm run tune:consensus    # sweep the anchor weight against every saved mock
+```
+
+The anchor weight is chosen from that sweep rather than by taste, and the
+comparison is part of the suite: if Juancho drops below the First Seed-only
+baseline, the build fails.
 
 ### Reaction time
 

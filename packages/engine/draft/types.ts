@@ -64,6 +64,12 @@ export interface RecommendationInsight {
   opponentTeamsNeedingPosition: number;
   /** Set when a guard fired, e.g. a saturated position was still preferred. */
   exceptionalReason: string | null;
+  /** Where Juancho placed him, 1-based, for the First Seed comparison. */
+  juanchoBoardRank: number;
+  /** First Seed's rank of the best player still on the board. */
+  bestAvailableFirstSeedRank: number | null;
+  /** How far past First Seed's best available this pick reaches. */
+  firstSeedRankGap: number | null;
 }
 
 export interface DraftScoreRawValues {
@@ -167,3 +173,59 @@ export const DRAFT_NOW_THRESHOLD = 1.5;
  * afterwards counts for less.
  */
 export const PLAN_FUTURE_DISCOUNT = 0.75;
+
+/**
+ * How strongly First Seed's board anchors the order.
+ *
+ * Measured, not chosen. Drafting a saved mock by First Seed rank alone beat the
+ * strategy engine by 234 and 341 starting points, which means the deviations
+ * were not insight - the completed-roster simulation was confidently wrong
+ * about them, claiming an improvement on thirteen of thirteen while the
+ * finished team was much worse.
+ *
+ * So the published board is the prior, and reaching past it has to be paid for.
+ * The cost grows with the distance reached, logarithmically: passing a player
+ * ranked a few spots higher is cheap, reaching fifty spots down is not. Genuine
+ * league-specific reasons - a saturated position, an empty starting slot, a
+ * kicker in the last round - move the completed roster by hundreds of points
+ * and still win comfortably. Noise of ten or twenty does not.
+ *
+ * Swept against the saved corpus with `npm run tune:consensus`. Starting-lineup
+ * points against the First Seed-only baseline:
+ *
+ *     weight    0     10     15     25+
+ *     mock 1  +6.1   -1.4    0.0    0.0
+ *     mock 2 -101.2 -78.2  +11.1    0.0
+ *
+ * Fifteen is the best measured value: it matches the board where the board was
+ * right and still finds a genuine edge where it was not. Past twenty-five the
+ * anchor swamps everything and the engine simply reproduces First Seed, which is
+ * the safe fallback rather than the goal.
+ *
+ * Tuned on two drafts, so treat it as provisional and re-run the sweep as the
+ * corpus grows.
+ */
+export const CONSENSUS_ANCHOR_WEIGHT = Number(
+  process.env.JUANCHO_CONSENSUS_WEIGHT ?? 15,
+);
+
+/**
+ * The cost of stacking a position past what the roster can ever use.
+ *
+ * Late in a draft every remaining player is worth roughly nothing, and with the
+ * differences that small whatever tie-break comes last decides the pick. Board
+ * rank was winning those ties, which walked a one-quarterback roster to five
+ * quarterbacks: each one was the best-ranked player left, and each was
+ * unusable.
+ *
+ * This is deliberately small - a genuine starting need is worth a hundred
+ * points or more and still wins easily - but decisive when nothing else
+ * separates the options.
+ */
+export const SURPLUS_STACK_PENALTY = 40;
+
+/** Reaching past this many First Seed ranks starts to cost meaningfully. */
+export function consensusAnchorPenalty(rankGap: number): number {
+  if (!Number.isFinite(rankGap) || rankGap <= 0) return 0;
+  return CONSENSUS_ANCHOR_WEIGHT * Math.log(1 + rankGap);
+}

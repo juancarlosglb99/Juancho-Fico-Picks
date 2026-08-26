@@ -25,6 +25,12 @@ import {
   summarizeDraftQuality,
   type DraftQualityReport,
 } from './quality';
+import {
+  auditPick,
+  summarizeDeviations,
+  type DeviationRecord,
+  type DeviationSummary,
+} from './deviation';
 
 /** Bumped when the stored shape changes in a way old files cannot satisfy. */
 export const REGRESSION_CASE_VERSION = 1;
@@ -128,6 +134,9 @@ export interface ReplayResult {
   /** Milliseconds to produce recommendations, per selection. */
   computeMs: number[];
   contradictions: string[];
+  /** How far each pick strayed from First Seed, and whether it paid. */
+  deviations: DeviationRecord[];
+  deviationSummary: DeviationSummary;
 }
 
 /**
@@ -166,6 +175,10 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
   const decisions: RecordedDecision[] = [];
   const computeMs: number[] = [];
   const contradictions: string[] = [];
+  const deviations: DeviationRecord[] = [];
+  const roomRankByPlayer = new Map(
+    (roomRankings?.records ?? []).map((record) => [record.playerId, record.rank]),
+  );
   const qualitySamples: Parameters<typeof scoreDecision>[0][] = [];
   const ourRoster: LineupPlayer[] = [];
   const takenByUs: string[] = [];
@@ -209,6 +222,36 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
     const actualPick = ordered.find((pick) => pick.pick_no === overallPick)!;
     const round = actualPick.round;
 
+    /*
+     * First Seed's best available, found from the whole board rather than the
+     * engine's shortlist - so a player the engine never even considered still
+     * shows up in the audit.
+     */
+    let firstSeedBestId: string | null = null;
+    let firstSeedBestRank = Number.POSITIVE_INFINITY;
+    for (const player of board.availablePlayers) {
+      const rank = roomRankByPlayer.get(player.id);
+      if (rank === undefined) continue;
+      if (rank < firstSeedBestRank) {
+        firstSeedBestRank = rank;
+        firstSeedBestId = player.id;
+      }
+    }
+    const deviation = auditPick({
+      overallPick,
+      round,
+      recommendations: result.recommendations,
+      firstSeedBestId,
+      firstSeedBestName: firstSeedBestId
+        ? players.byId.get(firstSeedBestId)?.name ?? firstSeedBestId
+        : undefined,
+      firstSeedBestRank: Number.isFinite(firstSeedBestRank) ? firstSeedBestRank : null,
+      firstSeedBestProjectable: firstSeedBestId
+        ? projectionById.has(firstSeedBestId)
+        : true,
+    });
+    if (deviation) deviations.push(deviation);
+
     if (
       best &&
       best.action === 'DRAFT_NOW' &&
@@ -225,10 +268,20 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
     if (best) {
       const sleeperId = best.player.externalIds.sleeper;
       if (sleeperId) takenByUs.push(sleeperId);
+      /*
+       * Take the value the ENGINE used, not a second lookup.
+       *
+       * Kickers and defenses are not in the projection snapshot - nobody
+       * publishes projections for them - so looking them up here scored them at
+       * zero while the First Seed baseline gave them a nominal value. That made
+       * the comparison read as a 234-point loss for the strategy engine when it
+       * was actually slightly ahead, and very nearly bought a fix for a problem
+       * that did not exist.
+       */
       const chosen: LineupPlayer = {
         playerId: best.player.id,
         position: best.player.position,
-        projection: projectionById.get(best.player.id)?.projection ?? 0,
+        projection: best.raw.projectedPoints,
       };
       ourRoster.push(chosen);
 
@@ -292,6 +345,8 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
     quality: summarizeDraftQuality(roster, decisionQuality),
     computeMs,
     contradictions,
+    deviations,
+    deviationSummary: summarizeDeviations(deviations),
   };
 }
 
