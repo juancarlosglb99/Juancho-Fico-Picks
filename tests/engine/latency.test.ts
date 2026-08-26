@@ -3,6 +3,7 @@ import {
   LATENCY_BUDGET_MS,
   LatencyRecorder,
   buildLatencySample,
+  isNewlyObservedPick,
   measure,
 } from '../../packages/engine/perf/latency';
 
@@ -102,6 +103,33 @@ describe('LatencyRecorder', () => {
     expect(summary.samples).toBe(2);
     expect(summary.total.count).toBe(1);
     expect(summary.withinBudget).toBe(100);
+  });
+});
+
+describe('isNewlyObservedPick', () => {
+  it('does not time the board we arrived to', () => {
+    // Sleeper reports the last pick's timestamp whenever asked. Attaching to a
+    // draft that has been dormant for a month would otherwise report a month of
+    // latency, which is true and useless.
+    expect(isNewlyObservedPick(null, { draftId: 'a', picksMade: 28 })).toBe(false);
+  });
+
+  it('times a pick that arrived while we were watching', () => {
+    expect(
+      isNewlyObservedPick({ draftId: 'a', picksMade: 28 }, { draftId: 'a', picksMade: 29 }),
+    ).toBe(true);
+  });
+
+  it('ignores a poll where nothing moved', () => {
+    expect(
+      isNewlyObservedPick({ draftId: 'a', picksMade: 28 }, { draftId: 'a', picksMade: 28 }),
+    ).toBe(false);
+  });
+
+  it('never carries a measurement across drafts', () => {
+    expect(
+      isNewlyObservedPick({ draftId: 'a', picksMade: 4 }, { draftId: 'b', picksMade: 40 }),
+    ).toBe(false);
   });
 });
 

@@ -161,6 +161,29 @@ export function buildLatencySample({
   };
 }
 
+export interface ObservedBoard {
+  draftId: string;
+  picksMade: number;
+}
+
+/**
+ * Whether this board change is a pick we actually watched arrive.
+ *
+ * Only those can be timed. Sleeper reports `last_picked` for the most recent
+ * selection whenever it is asked, so attaching to a draft that has been sitting
+ * dormant for a month and subtracting that timestamp yields a month of
+ * "latency" - which is true, and completely useless. A sample counts only when
+ * the pick count rose while we were already watching the same draft.
+ */
+export function isNewlyObservedPick(
+  previous: ObservedBoard | null,
+  current: ObservedBoard,
+): boolean {
+  if (previous === null) return false;
+  if (previous.draftId !== current.draftId) return false;
+  return current.picksMade > previous.picksMade;
+}
+
 /** Times a synchronous computation, returning both the value and the cost. */
 export function measure<T>(fn: () => T): { value: T; ms: number } {
   const started = now();

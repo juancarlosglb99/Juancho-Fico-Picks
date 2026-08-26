@@ -105,8 +105,10 @@ import { useLiveDraftSync, type LiveDraftSnapshot } from './use-live-draft-sync'
 import {
   LatencyRecorder,
   buildLatencySample,
+  isNewlyObservedPick,
   measure,
   type LatencySummary,
+  type ObservedBoard,
 } from '@/packages/engine/perf/latency';
 
 interface LeagueWorkspace {
@@ -470,6 +472,7 @@ export function Dashboard() {
    */
   const latencyRef = useRef<LatencyRecorder | null>(null);
   if (latencyRef.current === null) latencyRef.current = new LatencyRecorder();
+  const observedBoardRef = useRef<ObservedBoard | null>(null);
   const [latency, setLatency] = useState<LatencySummary | null>(null);
 
   const draftWorkspace = useMemo<DraftWorkspace | null>(() => {
@@ -921,6 +924,21 @@ export function Dashboard() {
     if (!liveSnapshot || !draftWorkspace || !draftRecommendationsTimed) return;
     const recorder = latencyRef.current;
     if (!recorder) return;
+
+    const current: ObservedBoard = {
+      draftId: draftWorkspace.draft.draft_id,
+      picksMade: draftWorkspace.board.picksMade,
+    };
+    const previous = observedBoardRef.current;
+    observedBoardRef.current = current;
+
+    // Switching drafts starts a fresh measurement rather than mixing two rooms.
+    if (previous && previous.draftId !== current.draftId) {
+      recorder.clear();
+      setLatency(null);
+    }
+    if (!isNewlyObservedPick(previous, current)) return;
+
     recorder.record(
       buildLatencySample({
         overallPick: draftWorkspace.board.currentOverallPick,
