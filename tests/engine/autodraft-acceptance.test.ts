@@ -124,11 +124,17 @@ describe('following recommendation #1 for an entire draft', () => {
     });
   });
 
-  it('wants a second quarterback in Superflex, where there is a slot for one', () => {
-    const superflex = counts(run(SUPERFLEX, 3));
-    const onePassing = counts(run(CLASSIC_1QB, 3));
+  it.each([1, 6, 12])('wants a second quarterback in Superflex from slot %i', (userSlot) => {
+    // Superflex has somewhere to put a second quarterback, and quarterbacks are
+    // the scarcest position in that format - roughly two per team exist. Ending
+    // with one means the superflex slot is holding a much weaker player all
+    // season, which is exactly what the late seat used to do.
+    const superflex = counts(run(SUPERFLEX, userSlot));
     expect(superflex.QB).toBeGreaterThanOrEqual(2);
-    expect(superflex.QB).toBeGreaterThan(onePassing.QB - 1);
+  });
+
+  it('does not want a second quarterback in a one-quarterback league', () => {
+    expect(counts(run(CLASSIC_1QB, 3)).QB).toBeLessThanOrEqual(2);
   });
 
   it('never leaves a required starting slot empty in any format or seat', () => {

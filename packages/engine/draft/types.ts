@@ -150,3 +150,20 @@ export const DRAFT_SCORE_SHAPE = {
 
 /** Deadband, in final-roster points, for calling a pick urgent. */
 export const DRAFT_NOW_THRESHOLD = 1.5;
+
+/**
+ * How much of a plan's FUTURE is trusted.
+ *
+ * Completing the roster requires guessing twice: what the room does, and what
+ * we ourselves will do later. Both are uncertain, and the second one is
+ * systematically optimistic - the plan assumes it can come back for whoever it
+ * skips, which at back-to-back picks is true and at a twenty-pick gap is not.
+ * When two plans tie because each expects to end up with both players, the
+ * ranking would otherwise fall through to consensus order and throw away a
+ * difference we are certain about.
+ *
+ * Discounting the speculative part restores that. What a player adds to the
+ * lineup RIGHT NOW is banked in full; everything the plan expects to happen
+ * afterwards counts for less.
+ */
+export const PLAN_FUTURE_DISCOUNT = 0.75;

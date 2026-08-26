@@ -26,6 +26,7 @@ import { buildProjectionTiers } from './tiers';
 import {
   DRAFT_NOW_THRESHOLD,
   DRAFT_SCORE_SHAPE,
+  PLAN_FUTURE_DISCOUNT,
   type DraftBoardState,
   type DraftRecommendation,
   type DraftRecommendationResult,
@@ -588,14 +589,33 @@ export function generateDraftRecommendations({
     shortlisted.set(entry.candidate.playerId, entry.candidate);
   }
 
-  const planned = [...shortlisted.values()].map((candidate) => ({
-    candidate,
-    plan: planRemainingRoster(basePlanInput, candidate),
-  }));
+  /**
+   * Bank what we are sure of, discount what we are guessing.
+   *
+   * `immediate` is the roster we hold the moment this pick is made - certain.
+   * Everything beyond it is the plan's expectation, which is discounted because
+   * it assumes both the room's behaviour and our own later choices.
+   */
+  const decisionValueOf = (immediate: number, planTotal: number) =>
+    immediate + PLAN_FUTURE_DISCOUNT * (planTotal - immediate);
+
+  const planned = [...shortlisted.values()].map((candidate) => {
+    const immediate = evaluateRoster([...rosterPlayers, candidate], slots).total;
+    const plan = planRemainingRoster(basePlanInput, candidate);
+    return {
+      candidate,
+      plan,
+      immediate,
+      decisionValue: decisionValueOf(immediate, plan.total),
+    };
+  });
   planned.sort(
-    (a, b) => b.plan.total - a.plan.total || a.candidate.consensusRank - b.candidate.consensusRank,
+    (a, b) =>
+      b.decisionValue - a.decisionValue ||
+      b.immediate - a.immediate ||
+      a.candidate.consensusRank - b.candidate.consensusRank,
   );
-  const bestPlanValue = planned[0]?.plan.total ?? 0;
+  const bestPlanValue = planned[0]?.decisionValue ?? 0;
   const referenceLoss = Math.max(
     DRAFT_SCORE_SHAPE.minimumReferenceLoss,
     Math.abs(bestPlanValue) * DRAFT_SCORE_SHAPE.referenceLossShare,
@@ -675,6 +695,7 @@ export function generateDraftRecommendations({
     otherSurvivalProbability: number,
   ): number => {
     const p = clamp(otherSurvivalProbability, 0, 100) / 100;
+    const immediate = evaluateRoster([...rosterPlayers, take], slots).total;
     const survives = planRemainingRoster(
       { ...basePlanInput, available: pinned(plannable, other.playerId) },
       take,
@@ -683,7 +704,10 @@ export function generateDraftRecommendations({
       { ...basePlanInput, available: without(plannable, other.playerId) },
       take,
     ).total;
-    return p * survives + (1 - p) * gone;
+    // Same yardstick as the ranking, so urgency and order cannot disagree.
+    return (
+      p * decisionValueOf(immediate, survives) + (1 - p) * decisionValueOf(immediate, gone)
+    );
   };
 
   const probabilityCache = new Map<string, ReturnType<typeof probabilityFor>>();
@@ -736,7 +760,7 @@ export function generateDraftRecommendations({
       (a, b) =>
         (decisions.get(b.candidate.playerId)?.edge ?? -Infinity) -
           (decisions.get(a.candidate.playerId)?.edge ?? -Infinity) ||
-        b.plan.total - a.plan.total ||
+        b.decisionValue - a.decisionValue ||
         a.candidate.consensusRank - b.candidate.consensusRank,
     );
     planned.splice(0, contenders.length, ...ranked);
@@ -789,7 +813,7 @@ export function generateDraftRecommendations({
 
     const { value: probability, confidence, teamsWithNeed } = probabilityOf(candidate);
     const decision = decisions.get(candidate.playerId);
-    const opportunityCost = decision?.edge ?? round(plan.total - bestPlanValue, 1);
+    const opportunityCost = decision?.edge ?? round(entry.decisionValue - bestPlanValue, 1);
     const backToBack = context.draftState.value.picksBeforeNextSelection === 0;
     const exceptional =
       decision?.exceptional ??
@@ -799,7 +823,7 @@ export function generateDraftRecommendations({
           ? 'He is likely to come back, but nothing else on the board improves the expected final roster more, so he is still the pick.'
           : null);
 
-    const planDelta = round(plan.total - bestPlanValue, 1);
+    const planDelta = round(entry.decisionValue - bestPlanValue, 1);
     const score = round(
       clamp(100 - (Math.abs(planDelta) / referenceLoss) * 100, 0, 100) * situationQuality,
       1,
