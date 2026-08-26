@@ -2722,7 +2722,9 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
                   {primary.nextPickConfidence === 'high' ? 'Available' : 'Estimated available'} at your next selection
                 </p>
                 <p className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#71838e]">
-                  {displayEnum(primary.nextPickConfidence)} confidence · market ADP + room rank
+                  {primary.picksUntilNextUserPick === 0
+                    ? 'You pick again immediately'
+                    : `${displayEnum(primary.nextPickConfidence)} confidence · Sleeper room rank · ${primary.insight.opponentTeamsNeedingPosition} of the teams ahead need ${primary.player.position}`}
                 </p>
               </div>
               <p
