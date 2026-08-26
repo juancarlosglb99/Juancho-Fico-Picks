@@ -58,6 +58,20 @@ export function draftFor(regression: RegressionCase): SleeperDraft {
   } as SleeperDraft;
 }
 
+/**
+ * The same saved draft, seen from a different seat.
+ *
+ * Two captured mocks is a thin basis for judging a ranking rule, but each one
+ * contains a whole room. Replaying a real board from every seat keeps the data
+ * real - the same players went in the same order - while multiplying the number
+ * of situations the engine has to get right, and seat position changes the
+ * problem substantially: who is gone by your turn, how long you wait, whether
+ * you pick back-to-back.
+ */
+export function atSeat(regression: RegressionCase, userSlot: number): RegressionCase {
+  return { ...regression, userSlot };
+}
+
 export function replayCase(regression: RegressionCase): ReplayResult {
   const players = playersFor(regression);
   const draft = draftFor(regression);

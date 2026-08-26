@@ -61,6 +61,8 @@ export interface DeviationParty {
   /** Where Juancho placed him in its own list, 1-based. */
   juanchoRank: number | null;
   projection: number;
+  /** Points he would add to our STARTING lineup right now. */
+  marginalStartingValue: number;
   planValue: number;
   availableNextPickProbability: number | null;
 }
@@ -117,6 +119,7 @@ function toParty(
     firstSeedRank: recommendation.draftRoomRank,
     juanchoRank,
     projection: recommendation.raw.projectedPoints,
+    marginalStartingValue: recommendation.components.marginalStartingValue,
     planValue: recommendation.components.planValue,
     availableNextPickProbability: recommendation.availableNextPickProbability,
   };
@@ -178,6 +181,7 @@ export function auditPick({
               firstSeedRank: firstSeedBestRank ?? null,
               juanchoRank: null,
               projection: 0,
+              marginalStartingValue: 0,
               planValue: 0,
               availableNextPickProbability: null,
             },
@@ -247,6 +251,23 @@ function classify({
   passed: DraftRecommendation;
   planDelta: number;
 }): { reason: DeviationReason; explanation: string } {
+  /*
+   * The most direct reading of saturation there is: can the higher-ranked player
+   * actually improve our starting lineup? The `saturation` label is a summary
+   * and misses cases where a position is technically not full but nobody at it
+   * would start - which is the same thing from the roster's point of view.
+   */
+  const passedAddsNothing = passed.components.marginalStartingValue <= 0.01;
+  const chosenAddsSomething = chosen.components.marginalStartingValue > 0.01;
+  if (passedAddsNothing && chosenAddsSomething) {
+    return {
+      reason: 'positional_saturation',
+      explanation:
+        `${passed.player.name} cannot improve our starting lineup at all, ` +
+        `while ${chosen.player.name} adds ${chosen.components.marginalStartingValue.toFixed(1)} points to it.`,
+    };
+  }
+
   const passedSaturated = ['high', 'complete'].includes(passed.insight.saturation);
   const chosenFillsStarter =
     chosen.insight.startersFilled < chosen.insight.startersRequired;

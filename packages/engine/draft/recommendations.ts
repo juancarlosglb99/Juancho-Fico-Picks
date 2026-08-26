@@ -28,6 +28,7 @@ import { buildFillerCandidates } from './late-round-fillers';
 import {
   DRAFT_NOW_THRESHOLD,
   DRAFT_SCORE_SHAPE,
+  DOMINANCE_PLAN_TOLERANCE,
   PLAN_FUTURE_DISCOUNT,
   SURPLUS_STACK_PENALTY,
   consensusAnchorPenalty,
@@ -683,42 +684,6 @@ export function generateDraftRecommendations({
   const hasPublishedBoard = rankedCandidates.length > 0;
 
   /*
-   * The bar is First Seed's best available player we could actually START.
-   *
-   * A published board is a global ranking; it cannot know that we already have
-   * a quarterback. Late in a one-quarterback league the highest-ranked player
-   * left is often a quarterback we can never play, and anchoring to him drags
-   * the whole board toward a fifth one - which is the exact failure this engine
-   * exists to prevent. Drafting a saved mock by rank alone finished with four
-   * quarterbacks for precisely this reason.
-   *
-   * Someone who cannot improve our lineup is not a real alternative, so he does
-   * not get to set the price of everything else.
-   */
-  const startingGain = (candidate: PlannablePlayer) =>
-    evaluateRoster([...rosterPlayers, candidate], slots).startingValue -
-    currentRosterValue.startingValue;
-  const usableRanked = rankedCandidates.filter(
-    (candidate) => startingGain(candidate) > 0.01,
-  );
-  /*
-   * Once the starting lineup is full, the board stops mattering.
-   *
-   * With no startable player left on the board there is nothing to defer to:
-   * every remaining pick is a bench dart, and what decides between darts is how
-   * likely each is to ever be needed, not where a global ranking placed him.
-   * Falling back to the whole board here re-anchored on the highest-ranked
-   * unusable player - a quarterback we could never start - and dragged the
-   * roster toward a third one.
-   */
-  const anchorApplies = hasPublishedBoard && usableRanked.length > 0;
-  const bestConsensusRank = anchorApplies
-    ? Math.min(...usableRanked.map((candidate) => candidate.consensusRank))
-    : Number.NaN;
-  // Not appearing on First Seed's board at all is itself information, so an
-  // unranked player is treated as sitting just past its end.
-  const unrankedGap = roomByPlayerId.size + 1;
-  /*
    * How many bodies at a position could ever reach the lineup: every slot it can
    * occupy, plus one backup. Beyond that they are unusable whatever the board
    * says about them.
@@ -738,6 +703,39 @@ export function generateDraftRecommendations({
     return surplus > 0 ? SURPLUS_STACK_PENALTY * surplus : 0;
   };
 
+  /*
+   * What the board is measured from.
+   *
+   * Preferably First Seed's best available player who would improve our starting
+   * lineup. Once the lineup is full nobody does, and the reference falls back to
+   * the best-ranked player we could still USE - never to one we have already
+   * stacked past what a roster can play. Anchoring to an unusable quarterback
+   * gave him a zero reach and charged everyone else for not being him, which
+   * walked the roster toward a third and a fourth.
+   */
+  /*
+   * What the reach is measured from: First Seed's best available player the
+   * roster could still use.
+   *
+   * A published board is a global ranking and cannot know we already have a
+   * quarterback. Late in a one-quarterback league the highest-ranked player left
+   * is often one we could never play, and letting him set the bar charged
+   * everyone else for not being him - which walked the roster toward a third and
+   * a fourth. Excluding positions we have already stacked past capacity is
+   * enough; narrowing further, to players who improve the lineup TODAY, threw
+   * the bar away entirely once the lineup was full and let the engine wander
+   * twenty ranks down the board on bench picks that were all worth the same.
+   */
+  const anchorApplies = hasPublishedBoard;
+  const notSurplus = (candidate: PlannablePlayer) => surplusPenaltyFor(candidate) === 0;
+  const withoutSurplus = rankedCandidates.filter(notSurplus);
+  const anchorPool = withoutSurplus.length > 0 ? withoutSurplus : rankedCandidates;
+  const bestConsensusRank = anchorApplies
+    ? Math.min(...anchorPool.map((candidate) => candidate.consensusRank))
+    : Number.NaN;
+  // Not appearing on First Seed's board at all is itself information, so an
+  // unranked player is treated as sitting just past its end.
+  const unrankedGap = roomByPlayerId.size + 1;
   const anchorPenaltyFor = (candidate: PlannablePlayer) => {
     if (!anchorApplies) return 0;
     const gap = roomByPlayerId.has(candidate.playerId)
@@ -917,6 +915,47 @@ export function generateDraftRecommendations({
         a.candidate.consensusRank - b.candidate.consensusRank,
     );
     planned.splice(0, contenders.length, ...ranked);
+  }
+
+  /*
+   * The simulation is the arbiter; heuristics only break ties.
+   *
+   * A starter need, a tier cliff or a thin position are reasons to prefer a
+   * player when the completed-roster simulation is close. They are not reasons
+   * to override it. The audit kept finding picks where the engine reached past
+   * First Seed's board for a named heuristic while its OWN final-roster
+   * evaluation said the player it passed produced the better team - a tight end
+   * taken over a running back at minus six points of final roster, a backup
+   * quarterback at minus a third of a point.
+   *
+   * So a candidate who is beaten on BOTH counts - First Seed ranks the other
+   * player higher, and our own simulation finishes with a better roster from him
+   * - is dominated, and cannot be recommended above him. Nothing else about him
+   * matters, because there is no axis on which he is the better choice.
+   *
+   * The tolerance keeps genuine ties out of it: the plan is a greedy completion
+   * and wobbles by a point or two for reasons that have nothing to do with the
+   * pick, and inside that band the heuristics are exactly what should decide.
+   */
+  const dominated = new Set<string>();
+  for (const entry of planned) {
+    const ownRank = roomByPlayerId.get(entry.candidate.playerId)?.rank;
+    if (ownRank === undefined) continue;
+    for (const other of planned) {
+      if (other === entry) continue;
+      const otherRank = roomByPlayerId.get(other.candidate.playerId)?.rank;
+      if (otherRank === undefined || otherRank >= ownRank) continue;
+      if (other.plan.total > entry.plan.total + DOMINANCE_PLAN_TOLERANCE) {
+        dominated.add(entry.candidate.playerId);
+        break;
+      }
+    }
+  }
+  if (dominated.size > 0 && dominated.size < planned.length) {
+    // A stable partition, so the established order survives within each group.
+    const clear = planned.filter((entry) => !dominated.has(entry.candidate.playerId));
+    const beaten = planned.filter((entry) => dominated.has(entry.candidate.playerId));
+    planned.splice(0, planned.length, ...clear, ...beaten);
   }
 
   // Absolute anchor for the 0-100 score: how much the best pick available can

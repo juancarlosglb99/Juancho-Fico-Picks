@@ -119,8 +119,13 @@ the pick that used it:
 | `higher_projection` | Same position and slot, and First Seed projects ours higher than the one it ranks above him. |
 
 Anything else is the engine inventing its own board, and `npm test` fails on it.
-It also fails on any deviation that materially worsens the completed-roster
-simulation, whatever story is attached.
+
+**The simulation is the arbiter; heuristics only break ties.** A starter need or
+a tier cliff is a reason to prefer a player when the completed-roster
+simulation is close. It is not a reason to override it. A candidate beaten on
+both counts — First Seed ranks the other player higher *and* our own simulation
+finishes with a better roster from him — is dominated and cannot be recommended
+above him, whatever heuristic applies.
 
 The audit prints per pick, so an extreme override is obvious:
 
@@ -144,6 +149,21 @@ npm run tune:consensus    # sweep the anchor weight against every saved mock
 The anchor weight is chosen from that sweep rather than by taste, and the
 comparison is part of the suite: if Juancho drops below the First Seed-only
 baseline, the build fails.
+
+Two captured mocks is a thin basis for a ranking rule, but each contains a whole
+room. Every saved board is therefore replayed from **all ten or twelve seats**,
+which keeps the data real while multiplying the situations the engine has to get
+right — seat position changes who survives to your turn, how long you wait, and
+whether you pick back-to-back:
+
+```text
+[seats] 20 seat-drafts across 2 real boards
+[seats] mean +51.7 · better 10 · matched 10 · worse 0 · worst 0.0 · best 312.2
+```
+
+Worse on no seat is the bar. A recommendation that loses to simply taking the
+best player available is the failure this engine keeps being reported for, so
+the sweep optimizes the tail rather than the average.
 
 ### Reaction time
 

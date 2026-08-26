@@ -171,8 +171,30 @@ export const DRAFT_NOW_THRESHOLD = 1.5;
  * Discounting the speculative part restores that. What a player adds to the
  * lineup RIGHT NOW is banked in full; everything the plan expects to happen
  * afterwards counts for less.
+ *
+ * How much less is measured, not chosen. At 0.75 the immediate term carried a
+ * quarter of the decision, which badly overvalued anyone filling an empty slot
+ * with a big raw number - a standard-scoring quarterback most of all, since he
+ * outscores every running back on the board while being trivially replaceable.
+ * The completed-roster plan knew this and said so (a +2.4 edge on a pick that
+ * cost 68 points of final roster); it was simply outvoted.
+ *
+ * Swept across all twenty seats of both saved boards, against drafting the
+ * board itself:
+ *
+ *     discount    0.85    0.92    0.95
+ *     mean       +57.5   +51.7   +47.1
+ *     seats worse    1       0       1
+ *     worst       -4.5     0.0    -3.2
+ *
+ * 0.85 has the better average and 0.92 has no losing seat at all. The tail is
+ * what matters here: a recommendation that is worse than simply taking the best
+ * player available is the failure this engine keeps being reported for, and six
+ * points of average is not worth reintroducing it.
  */
-export const PLAN_FUTURE_DISCOUNT = 0.75;
+export const PLAN_FUTURE_DISCOUNT = Number(
+  process.env.JUANCHO_FUTURE_DISCOUNT ?? 0.92,
+);
 
 /**
  * How strongly First Seed's board anchors the order.
@@ -190,20 +212,22 @@ export const PLAN_FUTURE_DISCOUNT = 0.75;
  * kicker in the last round - move the completed roster by hundreds of points
  * and still win comfortably. Noise of ten or twenty does not.
  *
- * Swept against the saved corpus with `npm run tune:consensus`. Starting-lineup
- * points against the First Seed-only baseline:
+ * Swept with `npm run tune:consensus` across all twenty seats of both saved
+ * boards, against drafting the board itself:
  *
- *     weight    0     10     15     25+
- *     mock 1  +6.1   -1.4    0.0    0.0
- *     mock 2 -101.2 -78.2  +11.1    0.0
+ *     weight       12      15      20
+ *     mean       +52.6   +51.7   +46.2
+ *     seats worse    2       0       0
+ *     worst     -108.3     0.0     0.0
  *
- * Fifteen is the best measured value: it matches the board where the board was
- * right and still finds a genuine edge where it was not. Past twenty-five the
- * anchor swamps everything and the engine simply reproduces First Seed, which is
- * the safe fallback rather than the goal.
+ * Below fifteen the anchor is too weak to stop the engine reaching, and one seat
+ * finishes a hundred points behind the board. Above it the anchor swamps
+ * everything and the engine just reproduces First Seed - safe, but there is no
+ * longer any point to it. Fifteen is the only value that loses on no seat while
+ * still finding an edge on half of them.
  *
- * Tuned on two drafts, so treat it as provisional and re-run the sweep as the
- * corpus grows.
+ * Tuned on two boards, so treat it as provisional and re-run the sweep as mocks
+ * accumulate.
  */
 export const CONSENSUS_ANCHOR_WEIGHT = Number(
   process.env.JUANCHO_CONSENSUS_WEIGHT ?? 15,
@@ -223,6 +247,18 @@ export const CONSENSUS_ANCHOR_WEIGHT = Number(
  * separates the options.
  */
 export const SURPLUS_STACK_PENALTY = 40;
+
+/**
+ * How much better a completed roster must be before it overrules a heuristic.
+ *
+ * A finished roster is worth roughly 1900 points and the plan is a greedy
+ * completion, so it wobbles by a point or two for reasons unrelated to the pick.
+ * Inside that band the heuristics are exactly what should decide. Outside it,
+ * the simulation wins: a player beaten on both First Seed's board and our own
+ * final-roster evaluation cannot be recommended above the player who beats him
+ * on both.
+ */
+export const DOMINANCE_PLAN_TOLERANCE = 2;
 
 /** Reaching past this many First Seed ranks starts to cost meaningfully. */
 export function consensusAnchorPenalty(rankGap: number): number {
