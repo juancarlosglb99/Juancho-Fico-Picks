@@ -11,6 +11,7 @@ import {
   slotForOverallPick,
   type NormalizedDraftType,
 } from '../draft/next-pick-probability';
+import { inferBenchSlots } from '../draft/pick-ownership';
 import type {
   Confidence,
   ContextValue,
@@ -132,6 +133,8 @@ function normalizeRoster(
     SUPER_FLEX: take('SUPER_FLEX') || draft.settings.slots_super_flex || 0,
     K: take('K') || draft.settings.slots_k || 0,
     DEF: take('DEF', 'DST') || draft.settings.slots_def || 0,
+    // Provisional: a mock draft reports no BN slots at all, so this is
+    // recomputed from rounds minus starters once the starter total is known.
     bench: take('BN') || draft.settings.slots_bn || 0,
     taxi: Math.max(take('TAXI'), league.settings.taxi_slots ?? 0),
     IR: Math.max(take('IR'), league.settings.reserve_slots ?? 0),
@@ -149,6 +152,11 @@ function normalizeRoster(
     roster.K +
     roster.DEF +
     Object.values(roster.idp).reduce((sum, count) => sum + count, 0);
+  roster.bench = inferBenchSlots({
+    explicitBench: roster.bench,
+    rounds: draft.settings.rounds,
+    totalStarterSpots: roster.totalStarterSpots,
+  });
   return value(
     roster,
     fromLeague ? 'league.roster_positions + league.settings' : 'draft.settings',

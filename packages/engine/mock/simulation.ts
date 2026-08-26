@@ -4,7 +4,9 @@ import type { MappedProjection } from '../../projections/types';
 import type { SleeperDraft, SleeperDraftPick, SleeperRoster } from '../../sleeper/types';
 import type { LeagueContext } from '../context/types';
 import { slotForOverallPick } from '../draft/next-pick-probability';
-import { getRosterPositionCounts, getStarterTargets } from '../draft/roster-fit';
+import { getRosterPositionCounts } from '../draft/roster-fit';
+import { resolvePickRosterId } from '../draft/pick-ownership';
+import { evaluateRoster, lineupSlotsFor, type LineupPlayer } from '../draft/lineup';
 import type { DraftBoardState } from '../draft/types';
 import { archetypeForRoster, chooseOpponentPlayer, type OpponentCandidate } from './opponent-model';
 import {
@@ -53,53 +55,76 @@ function ownerForPick(draft: SleeperDraft, overallPick: number): number | null {
   return draft.slot_to_roster_id?.[String(slot)] ?? slot;
 }
 
+/**
+ * How the simulated Juancho seat picks.
+ *
+ * It uses the same roster evaluation the live engine does, so a simulated draft
+ * cannot conclude that a roster shape is good when the recommendation engine
+ * would refuse to build it. The old version added a flat bonus per unfilled
+ * starter and otherwise sorted on raw projection, which is precisely the
+ * behaviour that let simulated rosters pile up quarterbacks.
+ */
 function userChoice(
   candidates: OpponentCandidate[],
-  counts: Partial<Record<Position, number>>,
-  context: LeagueContext,
-): OpponentCandidate | null {
-  const targets = getStarterTargets(context.roster.value);
-  const targetFor = (position: Position) =>
-    ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].includes(position)
-      ? targets[position as keyof Omit<typeof targets, 'FLEX'>]
-      : 0;
-  return [...candidates].sort((a, b) => {
-    const needA = Math.max(0, targetFor(a.projection.position) - (counts[a.projection.position] ?? 0));
-    const needB = Math.max(0, targetFor(b.projection.position) - (counts[b.projection.position] ?? 0));
-    return (
-      b.projection.projection + needB * 18 -
-      (a.projection.projection + needA * 18)
-    );
-  })[0] ?? null;
-}
-
-function rosterOutcome(
   selected: MappedProjection[],
   context: LeagueContext,
-): number {
-  const targets = getStarterTargets(context.roster.value);
-  const byPosition = new Map<Position, MappedProjection[]>();
-  for (const projection of selected) {
-    byPosition.set(projection.position, [
-      ...(byPosition.get(projection.position) ?? []),
-      projection,
-    ]);
+): OpponentCandidate | null {
+  const slots = lineupSlotsFor(context.roster.value);
+  const current: LineupPlayer[] = selected.map((projection) => ({
+    playerId: projection.playerId,
+    position: projection.position,
+    projection: projection.projection,
+  }));
+  const baseline = evaluateRoster(current, slots).total;
+
+  let best: OpponentCandidate | null = null;
+  let bestGain = -Infinity;
+  // Only the strongest few at each position can matter, so this stays cheap.
+  const considered = new Map<Position, number>();
+  for (const candidate of [...candidates].sort(
+    (a, b) => b.projection.projection - a.projection.projection,
+  )) {
+    const seen = considered.get(candidate.projection.position) ?? 0;
+    if (seen >= 3) continue;
+    considered.set(candidate.projection.position, seen + 1);
+    const gain =
+      evaluateRoster(
+        [
+          ...current,
+          {
+            playerId: candidate.projection.playerId,
+            position: candidate.projection.position,
+            projection: candidate.projection.projection,
+          },
+        ],
+        slots,
+      ).total - baseline;
+    if (gain > bestGain) {
+      bestGain = gain;
+      best = candidate;
+    }
   }
-  let score = 0;
-  let missing = 0;
-  for (const position of ['QB', 'RB', 'WR', 'TE'] as const) {
-    const count = Math.max(0, targets[position] ?? 0);
-    const records = [...(byPosition.get(position) ?? [])]
-      .sort((a, b) => b.projection - a.projection)
-      .slice(0, count);
-    score += records.reduce((sum, record) => sum + record.projection, 0);
-    missing += Math.max(0, count - records.length);
-  }
-  const bench = selected
-    .sort((a, b) => b.projection - a.projection)
-    .slice(0, context.roster.value.bench)
-    .reduce((sum, record) => sum + record.projection * 0.08, 0);
-  return Math.round((score + bench - missing * 80) * 10) / 10;
+  return best;
+}
+
+/**
+ * Scores a finished roster.
+ *
+ * This delegates to the same evaluation the recommendation engine uses, which
+ * fixes three things the old version got wrong: FLEX slots were never counted,
+ * so a flex starter was worth nothing; "bench" value was taken from the top N of
+ * ALL selected players, double-counting the starters instead of measuring the
+ * bench; and every extra body added a flat 8% of his projection with no cap, so
+ * hoarding quarterbacks actually RAISED the simulated score.
+ */
+function rosterOutcome(selected: MappedProjection[], context: LeagueContext): number {
+  const slots = lineupSlotsFor(context.roster.value);
+  const players: LineupPlayer[] = selected.map((projection) => ({
+    playerId: projection.playerId,
+    position: projection.position,
+    projection: projection.projection,
+  }));
+  return evaluateRoster(players, slots).total;
 }
 
 export function simulateMockDraft(
@@ -127,7 +152,13 @@ export function simulateMockDraft(
   const counts = new Map<number, Partial<Record<Position, number>>>(
     input.rosters.map((roster) => [
       roster.roster_id,
-      getRosterPositionCounts(roster.roster_id, input.picks, input.rosters, input.players),
+      getRosterPositionCounts(
+        roster.roster_id,
+        input.picks,
+        input.rosters,
+        input.players,
+        input.draft.slot_to_roster_id,
+      ),
     ]),
   );
   const userRosterId = input.context.draftState.value.userRosterId;
@@ -136,7 +167,33 @@ export function simulateMockDraft(
     userRosterId !== null && currentOwner === userRosterId
       ? input.board.currentOverallPick
       : input.context.draftState.value.nextUserPick;
-  const userSelected: MappedProjection[] = [];
+  /*
+   * Seed the simulated roster with what we ALREADY hold.
+   *
+   * A simulation that starts mid-draft from an empty roster will happily draft
+   * a position we have three of, and will score the finished team as though the
+   * earlier rounds never happened. Both make the comparison meaningless.
+   */
+  const projectionByPlayerId = new Map(
+    input.projections.map((projection) => [projection.playerId, projection]),
+  );
+  const existingUserPlayers: MappedProjection[] = [];
+  if (userRosterId !== null) {
+    const ownedSleeperIds = new Set<string>();
+    for (const pick of input.picks) {
+      if (resolvePickRosterId(pick, input.draft.slot_to_roster_id) !== userRosterId) continue;
+      ownedSleeperIds.add(pick.player_id);
+    }
+    for (const sleeperId of input.rosters.find((r) => r.roster_id === userRosterId)?.players ?? []) {
+      ownedSleeperIds.add(sleeperId);
+    }
+    for (const sleeperId of ownedSleeperIds) {
+      const player = input.players.bySleeperId.get(sleeperId);
+      const projection = player ? projectionByPlayerId.get(player.id) : undefined;
+      if (projection) existingUserPlayers.push(projection);
+    }
+  }
+  const userSelected: MappedProjection[] = [...existingUserPlayers];
   const simulated: SimulatedPick[] = [];
   const recentPositions: Position[] = [];
   const totalPicks = input.board.teams * input.board.rounds;
@@ -152,7 +209,7 @@ export function simulateMockDraft(
       const userCandidates = overallPick === firstUserDecisionPick && withholdFirstPlayerId
         ? [...available.values()].filter((candidate) => candidate.projection.playerId !== withholdFirstPlayerId)
         : [...available.values()];
-      selected = userChoice(userCandidates, rosterCounts, input.context);
+      selected = userChoice(userCandidates, userSelected, input.context);
     } else {
       selected = chooseOpponentPlayer({
         candidates: [...available.values()],
@@ -184,7 +241,9 @@ export function simulateMockDraft(
     modelVersion: MONTE_CARLO_MODEL_VERSION,
     seed,
     picks: simulated,
-    userPlayerIds: userSelected.map((projection) => projection.playerId),
+    userPlayerIds: userSelected
+      .slice(existingUserPlayers.length)
+      .map((projection) => projection.playerId),
     rosterScore: rosterOutcome(userSelected, input.context),
   };
 }

@@ -2877,14 +2877,12 @@ function ModelInspector({
   context: LeagueContext;
   compact?: boolean;
 }) {
-  const components = [
-    ['VORP', recommendation.components.vorp, '30%'],
-    ['Next-pick risk', recommendation.components.nextPickRisk, '20%'],
-    ['Tier urgency', recommendation.components.tierUrgency, '15%'],
-    ['Projection', recommendation.components.projection, '15%'],
-    ['Roster fit', recommendation.components.rosterFit, '10%'],
-    ['ADP value', recommendation.components.adpValue, '5%'],
-    ['Scarcity', recommendation.components.scarcity, '5%'],
+  // Points figures are shown as points; only the genuinely 0-100 signals get a
+  // bar, so nothing looks like a percentage that is not one.
+  const bars = [
+    ['Next-pick risk', recommendation.components.nextPickRisk],
+    ['Tier urgency', recommendation.components.tierUrgency],
+    ['Positional saturation', recommendation.components.positionalSaturation],
   ] as const;
 
   return (
@@ -2895,10 +2893,10 @@ function ModelInspector({
         Model inspector
       </summary>
       <div className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
-        {components.map(([label, value, weight]) => (
+        {bars.map(([label, value]) => (
           <div key={label}>
             <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.1em]">
-              <span className="text-[#7f919c]">{label} · {weight}</span>
+              <span className="text-[#7f919c]">{label}</span>
               <span>{Math.round(value)}</span>
             </div>
             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#263844]">
@@ -2912,25 +2910,63 @@ function ModelInspector({
       </div>
       <div className="mt-5 grid gap-3 border-t border-[#20313d] pt-4 text-xs sm:grid-cols-2">
         <InspectorGroup
-          label="Raw model inputs"
+          label="Player value"
           rows={[
             ['Projected points', recommendation.raw.projectedPoints.toFixed(1)],
             ['Provider points', recommendation.raw.sourceProjectedPoints.toFixed(1)],
-            ['Replacement level', recommendation.raw.replacementProjection.toFixed(1)],
-            ['Replacement demand', `Player ${recommendation.raw.replacementDemand}`],
-            ['VORP', recommendation.raw.vorp.toFixed(1)],
             ['Juancho rank', String(recommendation.juanchoRank)],
-            ['Market ADP', recommendation.marketAdp?.toFixed(1) ?? 'Unavailable'],
             ['Sleeper room rank', recommendation.draftRoomRank?.toFixed(0) ?? 'Unavailable'],
             ['External expert rank', recommendation.externalExpertRank?.toFixed(0) ?? 'Unavailable'],
             ['First Seed value delta', recommendation.firstSeedValueDelta?.toFixed(1) ?? 'Unavailable'],
             ['Tier', String(recommendation.tier)],
-            ['Roster need', recommendation.raw.rosterNeed.toFixed(1)],
             [
               'Next-pick probability',
               recommendation.availableNextPickProbability === null
                 ? 'Unavailable'
                 : `${recommendation.availableNextPickProbability.toFixed(1)}% (${recommendation.nextPickConfidence})`,
+            ],
+          ]}
+        />
+        <InspectorGroup
+          label="Your roster"
+          rows={[
+            ['Held at position', String(recommendation.insight.positionCount)],
+            [
+              'Starters',
+              `${recommendation.insight.startersFilled} of ${recommendation.insight.startersRequired}`,
+            ],
+            ['Open starting slots', String(recommendation.insight.openStartingSlots)],
+            ['Depth need', displayEnum(recommendation.insight.depthNeed)],
+            ['Saturation', displayEnum(recommendation.insight.saturation)],
+            ['Starter quality', displayEnum(recommendation.insight.starterQuality)],
+            ['Adds to lineup', `${recommendation.components.marginalStartingValue.toFixed(1)} pts`],
+            ['Bench value', `${recommendation.components.depthValue.toFixed(1)} pts`],
+          ]}
+        />
+        <InspectorGroup
+          label="Draft value"
+          rows={[
+            ['Cost of waiting', `${recommendation.components.opportunityCost.toFixed(1)} pts`],
+            ['Plan vs best', `${recommendation.components.planDelta.toFixed(1)} pts`],
+            ['Room tendency', displayEnum(recommendation.insight.roomTendency)],
+            ['Position run', recommendation.insight.positionRunActive ? 'Active' : 'No'],
+            [
+              'Teams ahead needing it',
+              String(recommendation.insight.opponentTeamsNeedingPosition),
+            ],
+          ]}
+        />
+        <InspectorGroup
+          label="Simulated final roster"
+          rows={[
+            ['Expected total', recommendation.insight.expectedFinalRosterValue.toFixed(1)],
+            ['Starting lineup', recommendation.insight.expectedStartingValue.toFixed(1)],
+            ['Useful bench', recommendation.insight.expectedBenchValue.toFixed(1)],
+            ['Unfilled starter slots', String(recommendation.insight.expectedUnfilledSlots)],
+            ['Build', displayEnum(recommendation.insight.build)],
+            [
+              'Priority',
+              recommendation.insight.strategicPriority.slice(0, 3).join(' · ') || 'None',
             ],
           ]}
         />
