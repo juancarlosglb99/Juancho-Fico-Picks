@@ -96,6 +96,20 @@ export const sleeperClient = {
     );
   },
 
+  /**
+   * Every draft a user has taken part in this season, INCLUDING mock drafts.
+   *
+   * Mock drafts have a null `league_id`, so they never show up under
+   * `/user/{id}/leagues`. This is the only public endpoint that surfaces them,
+   * which makes it the basis of mock discovery.
+   */
+  getUserDrafts(userId: string, season: string, signal?: AbortSignal) {
+    return request<SleeperDraft[]>(
+      `/user/${encodeURIComponent(userId)}/drafts/nfl/${encodeURIComponent(season)}`,
+      signal,
+    );
+  },
+
   getDraft(draftId: string, signal?: AbortSignal) {
     return request<SleeperDraft>(
       `/draft/${encodeURIComponent(draftId)}`,

@@ -70,12 +70,21 @@ export function makeDraft({
   type = 'snake',
   name = 'Synthetic Draft',
   settings = {},
+  leagueId = 'league-1',
+  status = 'drafting',
+  metadata = {},
+  draftOrder: draftOrderOverride,
 }: {
   teams?: number;
   rounds?: number;
   type?: string;
   name?: string;
   settings?: Record<string, number>;
+  /** Pass null to model a Sleeper mock draft, which has no league behind it. */
+  leagueId?: string | null;
+  status?: SleeperDraft['status'];
+  metadata?: Record<string, string | undefined>;
+  draftOrder?: Record<string, number> | null;
 } = {}): SleeperDraft {
   const draftOrder = Object.fromEntries(
     Array.from({ length: teams }, (_, index) => [`user-${index + 1}`, index + 1]),
@@ -85,8 +94,8 @@ export function makeDraft({
   );
   return {
     draft_id: 'draft-1',
-    league_id: 'league-1',
-    status: 'drafting',
+    league_id: leagueId,
+    status,
     type,
     season: '2026',
     start_time: null,
@@ -102,8 +111,9 @@ export function makeDraft({
       slots_bn: 6,
       ...settings,
     },
-    metadata: { name },
-    draft_order: draftOrder,
+    metadata: { name, ...metadata },
+    draft_order:
+      draftOrderOverride === undefined ? draftOrder : draftOrderOverride,
     slot_to_roster_id: slotToRoster,
   };
 }

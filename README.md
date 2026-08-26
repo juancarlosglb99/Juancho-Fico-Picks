@@ -11,7 +11,7 @@ CSV projections are an optional advanced override.
 1. **League import** — username lookup, current leagues, settings, scoring and
    roster ownership.
 2. **Draft synchronization** — draft selection, pick history, availability and
-   five-second refresh while a draft is live.
+   automatic pick-by-pick sync while a draft is live.
 3. **Projection mapping** — CSV provider, canonical player IDs, exact Sleeper-ID
    matching, normalized name/position matching and an unmatched-row review.
 4. **Draft scoring engine** — normalized projection, VORP, scarcity, tier urgency,
@@ -55,6 +55,45 @@ npm run test:smoke
 npm run lint
 npm run build
 ```
+
+## Attaching to a mock or live draft
+
+Juancho follows any Sleeper draft, whether or not it belongs to a league.
+
+Two ways to attach:
+
+1. **Pick a discovered draft.** After connecting your username, the *Follow a
+   draft* panel lists your active and upcoming drafts, mock drafts included.
+   Mocks have no league, so they never appear in the league dropdown; they are
+   read from `/user/{user_id}/drafts/nfl/{season}`.
+2. **Paste the draft link.** Open the Sleeper draft room and copy the address,
+   e.g. `https://sleeper.com/draft/nfl/1234567890123456789`. A bare draft ID, a
+   `sleeper.app` link, and a link with extra path or query segments all work.
+   This route always works, even when discovery cannot see the draft.
+
+Once attached, the banner at the top of the screen names the draft, its format,
+and its draft ID, and shows a live status:
+
+| Status | Meaning |
+| --- | --- |
+| **Watching** | Attached before the first pick. The room is still `pre_draft`; picks appear the moment it goes live. |
+| **Live · auto-syncing** | Following the draft. Every pick updates the board, your roster, the current and next pick, availability probabilities, and the recommendations. |
+| **Reconnecting** | A request to Sleeper failed. The last known board stays on screen while the sync retries with exponential backoff. |
+| **Draft complete** | The draft finished and polling stopped on purpose. |
+
+There is no refresh step. *Sync now* exists only to force an immediate poll.
+
+Synchronization cadence is 2.5s while drafting, 10s before the draft starts, and
+4x slower in a background tab, all with jitter. Failures back off exponentially
+from 2s to a 30s ceiling and never clear the board or raise a page-level error.
+Returning to the tab, or the machine coming back online, triggers an immediate
+resync.
+
+Mock drafts and league drafts use the identical engine path. A mock has no
+league object, so the league and rosters are synthesized from the draft room's
+own settings and `draft_order`. Nothing is invented silently: roster slots and
+scoring are read from `draft.settings`, the normalized context labels that source
+honestly, and the attach banner lists everything that was inferred.
 
 ## Automatic projections and room order
 
@@ -132,7 +171,7 @@ The score is decision support, not a promise of fantasy results.
 
 ```text
 app/                       Web application
-packages/sleeper/          Public Sleeper API client and normalization
+packages/sleeper/          Public Sleeper API client, draft attachment and live sync
 packages/players/          Canonical player model and external-ID indexes
 packages/projections/      Replaceable projection-provider contracts and CSV
 packages/adp/              Automatic ADP planning, providers and canonical mapping
