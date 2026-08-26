@@ -80,6 +80,25 @@ export function planRemainingRoster(
   const roster: LineupPlayer[] = [...rosterPlayers];
   const added: LineupPlayer[] = [];
 
+  /*
+   * The candidate being evaluated is ours.
+   *
+   * The question this function answers is "what does my roster look like if I
+   * take him", so the simulated room must not be allowed to take him first.
+   * Without this reservation the plan walks the room through the picks between
+   * now and our turn, lets it take the consensus board, and then reports that
+   * the player we asked about is unavailable - wasting our pick and returning a
+   * roster one player short.
+   *
+   * That penalised precisely the players the market rates highest: the higher
+   * the consensus rank, the likelier the simulated room took him before we
+   * could. First Seed's number one was being scored as if selecting him were
+   * impossible. Whether he will really last until our turn is a different
+   * question, and it is already answered separately by the availability
+   * estimate.
+   */
+  if (forcedFirst) taken.add(forcedFirst.playerId);
+
   // Best remaining at each position, for our own decisions.
   const byPosition = new Map<Position, PlannablePlayer[]>();
   for (const player of [...available].sort((a, b) => b.projection - a.projection)) {
@@ -91,6 +110,8 @@ export function planRemainingRoster(
 
   let roomCursor = 0;
   const advanceRoom = () => {
+    // Anyone already gone - including the candidate we reserved for ourselves -
+    // is stepped over rather than selected again.
     while (roomCursor < consensusOrder.length && taken.has(consensusOrder[roomCursor].playerId)) {
       roomCursor += 1;
     }
@@ -122,7 +143,8 @@ export function planRemainingRoster(
     if (ourPicks.has(pick)) {
       let chosen: PlannablePlayer | null;
       if (firstOurPick && forcedFirst) {
-        chosen = taken.has(forcedFirst.playerId) ? null : forcedFirst;
+        // Reserved above, so he is guaranteed to be here.
+        chosen = forcedFirst;
       } else {
         chosen = bestForUs();
       }

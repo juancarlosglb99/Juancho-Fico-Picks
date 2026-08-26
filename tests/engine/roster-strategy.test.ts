@@ -314,6 +314,55 @@ describe('roster planning', () => {
     expect(plan.players.length).toBe(4);
   });
 
+  it('keeps the candidate we are evaluating, even when the room would take him first', () => {
+    /*
+     * The regression that made First Seed's number one unrecommendable.
+     *
+     * Sitting at seat three, two selections happen before ours. The simulated
+     * room takes the consensus board during those, and the plan then found the
+     * player we were asking about already gone - so it wasted our pick and
+     * returned a roster one player short. The higher a player's consensus rank,
+     * the more reliably this happened to him.
+     */
+    const available = pool(60);
+    const consensusFirst = [...available].sort((a, b) => a.consensusRank - b.consensusRank)[0];
+    const plan = planRemainingRoster(
+      {
+        rosterPlayers: [],
+        available,
+        // We pick third; picks one and two belong to the room.
+        ourFuturePicks: [3, 22, 27],
+        currentOverallPick: 1,
+        lastOverallPick: 120,
+        slots: CLASSIC,
+      },
+      consensusFirst,
+    );
+
+    expect(plan.added.map((entry) => entry.playerId)).toContain(consensusFirst.playerId);
+    expect(plan.players.map((entry) => entry.playerId)).toContain(consensusFirst.playerId);
+    // Every one of our selections is used, none thrown away.
+    expect(plan.added).toHaveLength(3);
+  });
+
+  it('does not let the room draft the same player twice', () => {
+    const available = pool(60);
+    const consensusFirst = [...available].sort((a, b) => a.consensusRank - b.consensusRank)[0];
+    const plan = planRemainingRoster(
+      {
+        rosterPlayers: [],
+        available,
+        ourFuturePicks: [5, 20],
+        currentOverallPick: 1,
+        lastOverallPick: 120,
+        slots: CLASSIC,
+      },
+      consensusFirst,
+    );
+    const ids = plan.players.map((entry) => entry.playerId);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it('leaves the roster untouched when we have no picks left', () => {
     const plan = planRemainingRoster({
       rosterPlayers: [player('rb1', 'RB', 200)],

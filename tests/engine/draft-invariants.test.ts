@@ -150,6 +150,92 @@ describe('advice never contradicts itself', () => {
   });
 });
 
+describe('watching before our turn', () => {
+  /**
+   * Builds the state the live screen is in most of the time: the board is on
+   * somebody else's pick and we are looking ahead to ours.
+   */
+  function previewFromSeat(userSlot: number, picksAlreadyMade: number) {
+    const players = makePlayerPool(70);
+    const projections = makeProjections(players);
+    const teams = 12;
+    const league = makeLeague({ teams, rosterPositions: ROSTER_POSITIONS });
+    const draft = makeDraft({ teams, rounds: 15, settings: SLOTS });
+    const rosters = makeRosters(teams);
+
+    // Other teams have started; none of these are ours.
+    const picks: SleeperDraftPick[] = [];
+    const pool = players.players.filter((player) => player.position === 'TE');
+    for (let index = 0; index < picksAlreadyMade; index += 1) {
+      picks.push(pickFor(index + 1, pool[index].externalIds.sleeper!, teams));
+    }
+
+    const board = deriveDraftBoardState(draft, picks, rosters, players);
+    const context = normalizeLeagueContext({
+      league,
+      draft,
+      drafts: [draft],
+      picks,
+      tradedPicks: [],
+      rosters,
+      board,
+      userId: `user-${userSlot}`,
+    });
+    return {
+      context,
+      result: generateDraftRecommendations({
+        context,
+        picks,
+        rosters,
+        board,
+        players,
+        projections,
+      }),
+    };
+  }
+
+  it('can still recommend the very best player on the board', () => {
+    /*
+     * The bug this guards: completing the roster walked the simulated room
+     * through the picks before ours, let it take the consensus board, and then
+     * reported the candidate we were evaluating as unavailable - so the plan
+     * wasted our pick and scored him as though taking him were impossible.
+     *
+     * It hit the top of the board hardest, because the better the player the
+     * likelier the simulated room reached him first. From a middle seat the top
+     * two were unrecommendable; from the last seat, the top eleven.
+     */
+    const { context, result } = previewFromSeat(3, 2);
+    expect(context.draftState.value.picksBeforeNextSelection).toBeGreaterThan(0);
+
+    const best = [...result.recommendations].sort(
+      (a, b) => b.components.marginalStartingValue - a.components.marginalStartingValue,
+    )[0];
+    const topRanked = result.recommendations[0];
+
+    // The player who improves the lineup most must be at or very near the top,
+    // not buried thirty places down.
+    const position = result.recommendations.findIndex(
+      (item) => item.player.id === best.player.id,
+    );
+    expect(position).toBeLessThan(3);
+    expect(topRanked.score).toBe(100);
+  });
+
+  it('gives every seat a usable board, not just the one on the clock', () => {
+    for (const userSlot of [1, 6, 12]) {
+      const { result } = previewFromSeat(userSlot, userSlot - 1);
+      expect(result.recommendations.length, `seat ${userSlot}`).toBeGreaterThan(0);
+      // Nobody should be scored as if selecting him were impossible.
+      expect(result.recommendations[0].score, `seat ${userSlot}`).toBe(100);
+      expect(
+        result.recommendations[0].components.planValue,
+        `seat ${userSlot}`,
+      ).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('roster awareness survives a mock draft', () => {
   it('sees our roster even though mock picks carry no roster id', () => {
     const { result } = scenarioWithRoster(['QB', 'RB', 'WR']);
