@@ -1,0 +1,220 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 108,
+      "currentOverallPick": 109,
+      "currentRound": 11,
+      "boardFingerprint": "30-442e8b02",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8408",
+      "reasoning": "gain: Jordan Mason projects 113.5 pts, best of any RB/WR on the board, and gain 34.0 - the largest usable gain outside QB duplicates. opportunity_cost: TE is blocked (Warren+LaPorta), QB2 is worthless behind Hurts; only RB/WR bodies can improve the lineup, and Mason's tier 13 has just 3 left. first_seed_prior: fsGap of only 11 past Conner, whose own 40.4 projection carries a ranking_projection_conflict warning - the reach is nominal.",
+      "reasonCodes": [
+        "gain",
+        "opportunity_cost",
+        "first_seed_prior"
+      ],
+      "confidence": 0.62
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:6819",
+        "reasoning": "Michael Pittman is the best projected WR left (109.5) and would upgrade the WR/FLEX depth behind Harrison.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:4137",
+        "reasoning": "First Seed's best available RB, but 40.4 projected points make him purely a bench lottery ticket.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks twice at 110-111 with RB5 already; needs TE, unlikely to take Mason. Roster 8: Picks 113 right after our 112; RB-heavy and could take a back.",
+    "confidence": 0.62,
+    "model": "claude-opus-5",
+    "urgency": "likely_to_return",
+    "strategy": "Balanced roster with all eight lineup slots filled; use the last non-K/DEF picks on the highest-value startable RB/WR/FLEX bodies, starting with the 113.5-point back.",
+    "firstSeedDeviationReason": "Conner's published 40.4 projection conflicts with his rank 99, so passing him for a 113.5-point back at the same position is worth the 11 ranks.",
+    "strongestAlternativePlayerId": "jfp:6819",
+    "strongestAlternativeWhy": "Pittman projects 109.5, nearly Mason's total, at a position where our FLEX currently runs through Zay Flowers.",
+    "strongestCounterargument": "Mason survives 94% of runs to pick 112 with only 2 intervening selections (team 10, needing TE), so taking Pittman or Kittle now and Mason next costs nothing.",
+    "whyRecommendationStillWins": "Pittman survives 97.7% and Josh Downs/Diggs/Doubs are all 96%+, so the WR shelf is flatter than the 3-man RB tier 13; if the 6% breaks, the RB replacement (Tracy 90.5, Spears 90.7) is 23 pts worse than the WR replacement.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR - Pittman (97.7%) or Diggs/Downs - then spend 129/132/149 on K, DEF and one upside RB.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 110-111 with RB5 already; needs TE, unlikely to take Mason."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks 113 right after our 112; RB-heavy and could take a back."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:6819",
+        "reason": "Michael Pittman is the best projected WR left (109.5) and would upgrade the WR/FLEX depth behind Harrison."
+      },
+      {
+        "playerId": "jfp:4137",
+        "reason": "First Seed's best available RB, but 40.4 projected points make him purely a bench lottery ticket."
+      }
+    ],
+    "confidence": 62,
+    "strategy": "Balanced roster with all eight lineup slots filled; use the last non-K/DEF picks on the highest-value startable RB/WR/FLEX bodies, starting with the 113.5-point back.",
+    "reasons": [
+      {
+        "code": "gain",
+        "detail": "Jordan Mason projects 113.5 pts, best of any RB/WR on the board, and gain 34.0 - the largest usable gain outside QB duplicates."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "TE is blocked (Warren+LaPorta), QB2 is worthless behind Hurts; only RB/WR bodies can improve the lineup, and Mason's tier 13 has just 3 left."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap of only 11 past Conner, whose own 40.4 projection carries a ranking_projection_conflict warning - the reach is nominal."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:6819",
+    "strongestAlternativeWhy": "Pittman projects 109.5, nearly Mason's total, at a position where our FLEX currently runs through Zay Flowers.",
+    "strongestCounterargument": "Mason survives 94% of runs to pick 112 with only 2 intervening selections (team 10, needing TE), so taking Pittman or Kittle now and Mason next costs nothing.",
+    "whyRecommendationStillWins": "Pittman survives 97.7% and Josh Downs/Diggs/Doubs are all 96%+, so the WR shelf is flatter than the 3-man RB tier 13; if the 6% breaks, the RB replacement (Tracy 90.5, Spears 90.7) is 23 pts worse than the WR replacement.",
+    "firstSeedDeviationReason": "Conner's published 40.4 projection conflicts with his rank 99, so passing him for a 113.5-point back at the same position is worth the 11 ranks.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR - Pittman (97.7%) or Diggs/Downs - then spend 129/132/149 on K, DEF and one upside RB.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 110-111 with RB5 already; needs TE, unlikely to take Mason."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks 113 right after our 112; RB-heavy and could take a back."
+      }
+    ],
+    "urgency": "likely_to_return"
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:6819",
+        "reason": "Michael Pittman is the best projected WR left (109.5) and would upgrade the WR/FLEX depth behind Harrison."
+      },
+      {
+        "playerId": "jfp:4137",
+        "reason": "First Seed's best available RB, but 40.4 projected points make him purely a bench lottery ticket."
+      }
+    ],
+    "confidence": 62,
+    "strategy": "Balanced roster with all eight lineup slots filled; use the last non-K/DEF picks on the highest-value startable RB/WR/FLEX bodies, starting with the 113.5-point back.",
+    "reasons": [
+      {
+        "code": "gain",
+        "detail": "Jordan Mason projects 113.5 pts, best of any RB/WR on the board, and gain 34.0 - the largest usable gain outside QB duplicates."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "TE is blocked (Warren+LaPorta), QB2 is worthless behind Hurts; only RB/WR bodies can improve the lineup, and Mason's tier 13 has just 3 left."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap of only 11 past Conner, whose own 40.4 projection carries a ranking_projection_conflict warning - the reach is nominal."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:6819",
+    "strongestAlternativeWhy": "Pittman projects 109.5, nearly Mason's total, at a position where our FLEX currently runs through Zay Flowers.",
+    "strongestCounterargument": "Mason survives 94% of runs to pick 112 with only 2 intervening selections (team 10, needing TE), so taking Pittman or Kittle now and Mason next costs nothing.",
+    "whyRecommendationStillWins": "Pittman survives 97.7% and Josh Downs/Diggs/Doubs are all 96%+, so the WR shelf is flatter than the 3-man RB tier 13; if the 6% breaks, the RB replacement (Tracy 90.5, Spears 90.7) is 23 pts worse than the WR replacement.",
+    "firstSeedDeviationReason": "Conner's published 40.4 projection conflicts with his rank 99, so passing him for a 113.5-point back at the same position is worth the 11 ranks.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR - Pittman (97.7%) or Diggs/Downs - then spend 129/132/149 on K, DEF and one upside RB.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 110-111 with RB5 already; needs TE, unlikely to take Mason."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks 113 right after our 112; RB-heavy and could take a back."
+      }
+    ],
+    "urgency": "likely_to_return"
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:6819",
+            "reason": "Michael Pittman is the best projected WR left (109.5) and would upgrade the WR/FLEX depth behind Harrison."
+          },
+          {
+            "playerId": "jfp:4137",
+            "reason": "First Seed's best available RB, but 40.4 projected points make him purely a bench lottery ticket."
+          }
+        ],
+        "confidence": 62,
+        "strategy": "Balanced roster with all eight lineup slots filled; use the last non-K/DEF picks on the highest-value startable RB/WR/FLEX bodies, starting with the 113.5-point back.",
+        "reasons": [
+          {
+            "code": "gain",
+            "detail": "Jordan Mason projects 113.5 pts, best of any RB/WR on the board, and gain 34.0 - the largest usable gain outside QB duplicates."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "TE is blocked (Warren+LaPorta), QB2 is worthless behind Hurts; only RB/WR bodies can improve the lineup, and Mason's tier 13 has just 3 left."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap of only 11 past Conner, whose own 40.4 projection carries a ranking_projection_conflict warning - the reach is nominal."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:6819",
+        "strongestAlternativeWhy": "Pittman projects 109.5, nearly Mason's total, at a position where our FLEX currently runs through Zay Flowers.",
+        "strongestCounterargument": "Mason survives 94% of runs to pick 112 with only 2 intervening selections (team 10, needing TE), so taking Pittman or Kittle now and Mason next costs nothing.",
+        "whyRecommendationStillWins": "Pittman survives 97.7% and Josh Downs/Diggs/Doubs are all 96%+, so the WR shelf is flatter than the 3-man RB tier 13; if the 6% breaks, the RB replacement (Tracy 90.5, Spears 90.7) is 23 pts worse than the WR replacement.",
+        "firstSeedDeviationReason": "Conner's published 40.4 projection conflicts with his rank 99, so passing him for a 113.5-point back at the same position is worth the 11 ranks.",
+        "expectedNextPickPlan": "At 112 take the best remaining WR - Pittman (97.7%) or Diggs/Downs - then spend 129/132/149 on K, DEF and one upside RB.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks twice at 110-111 with RB5 already; needs TE, unlikely to take Mason."
+          },
+          {
+            "rosterId": 8,
+            "why": "Picks 113 right after our 112; RB-heavy and could take a back."
+          }
+        ],
+        "urgency": "likely_to_return"
+      },
+      "usage": {
+        "inputTokens": 16455,
+        "outputTokens": 1178
+      },
+      "latencyMs": 19889,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 16455,
+    "outputTokens": 1178
+  },
+  "latencyMs": 19889,
+  "error": null,
+  "cachedAt": "2026-08-27T20:01:56.659Z",
+  "key": "2c52fe050c3bf4c52f230eb171283853",
+  "label": "1398448522730221568 p109 claude-opus-5/playbook-v1 blind concise"
+}

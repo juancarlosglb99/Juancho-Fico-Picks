@@ -1,0 +1,204 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11604",
+      "reasoning": "tier_cliff: Bowers is the lone TE tier 1 member; gapAfter is 15.7 pts to Loveland (120.4) and Warren (116.8), the biggest cliff on the board. positional_scarcity: 143.7 proj TE vs a replacement-level TE we'd get at 69+ (LaPorta 105.5, Andrews 105.7) - roughly 38 pts, larger than the WR gap Pickens (151.7) holds over Rice/Higgins (146-148). survives_to_next_turn: Bowers survives only 74.3%, the lowest of any candidate; Pickens 78.3% and the RB tier has 6.5 expected survivors, so the fallbacks are deeper than the TE.",
+      "reasonCodes": [
+        "tier_cliff",
+        "positional_scarcity",
+        "survives_to_next_turn"
+      ],
+      "confidence": 0.72
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reasoning": "Standard-scoring WR2 with the best First Seed rank on the board and 78% survival is only a fallback if Bowers is gone.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7588",
+        "reasoning": "Javonte Williams heads a 7-deep RB tier 9 and would fill our second RB/flex slot.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks twice at 30-31 with TE, QB, RB and WR all high needs - the only team that can take Bowers.",
+    "confidence": 0.72,
+    "model": "claude-opus-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced Nacua/Barkley core, now buying the one genuinely separating TE before the 15.7-point cliff, with RB/WR depth restocked at 32 and 49.",
+    "firstSeedDeviationReason": "Only fsGap 1 past First Seed's best available - effectively following the board.",
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's best available (rank 28, fsGap 0), top projected WR left at 151.7, and fills a starting WR slot.",
+    "strongestCounterargument": "Juancho's sim puts Bowers at simGap -12.7 versus Javonte Williams at 0, and Bowers/Pickens are BOTH available in 55.7% of runs with Pickens surviving 78.3% - so we could plausibly get the TE at 32 anyway.",
+    "whyRecommendationStillWins": "The 55.7% both-survive is a coin flip on the only TE with a 15.7-pt cliff behind him; if he goes we replace him with a ~105-pt TE. If Pickens goes instead (21.7%), Rice/Higgins/McMillan sit within 5 pts at WR. Asymmetric downside favors Bowers now.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/Nabers/Rice at WR, or Javonte Williams/Judkins if the WR tier thins; RB tier 9 (6.5 expected survivors) should still be there at 49.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 30-31 with TE, QB, RB and WR all high needs - the only team that can take Bowers."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "Standard-scoring WR2 with the best First Seed rank on the board and 78% survival is only a fallback if Bowers is gone."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams heads a 7-deep RB tier 9 and would fill our second RB/flex slot."
+      }
+    ],
+    "confidence": 72,
+    "strategy": "Balanced Nacua/Barkley core, now buying the one genuinely separating TE before the 15.7-point cliff, with RB/WR depth restocked at 32 and 49.",
+    "urgency": "must_take_now",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Bowers is the lone TE tier 1 member; gapAfter is 15.7 pts to Loveland (120.4) and Warren (116.8), the biggest cliff on the board."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "143.7 proj TE vs a replacement-level TE we'd get at 69+ (LaPorta 105.5, Andrews 105.7) - roughly 38 pts, larger than the WR gap Pickens (151.7) holds over Rice/Higgins (146-148)."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Bowers survives only 74.3%, the lowest of any candidate; Pickens 78.3% and the RB tier has 6.5 expected survivors, so the fallbacks are deeper than the TE."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's best available (rank 28, fsGap 0), top projected WR left at 151.7, and fills a starting WR slot.",
+    "strongestCounterargument": "Juancho's sim puts Bowers at simGap -12.7 versus Javonte Williams at 0, and Bowers/Pickens are BOTH available in 55.7% of runs with Pickens surviving 78.3% - so we could plausibly get the TE at 32 anyway.",
+    "whyRecommendationStillWins": "The 55.7% both-survive is a coin flip on the only TE with a 15.7-pt cliff behind him; if he goes we replace him with a ~105-pt TE. If Pickens goes instead (21.7%), Rice/Higgins/McMillan sit within 5 pts at WR. Asymmetric downside favors Bowers now.",
+    "firstSeedDeviationReason": "Only fsGap 1 past First Seed's best available - effectively following the board.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/Nabers/Rice at WR, or Javonte Williams/Judkins if the WR tier thins; RB tier 9 (6.5 expected survivors) should still be there at 49.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 30-31 with TE, QB, RB and WR all high needs - the only team that can take Bowers."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "Standard-scoring WR2 with the best First Seed rank on the board and 78% survival is only a fallback if Bowers is gone."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams heads a 7-deep RB tier 9 and would fill our second RB/flex slot."
+      }
+    ],
+    "confidence": 72,
+    "strategy": "Balanced Nacua/Barkley core, now buying the one genuinely separating TE before the 15.7-point cliff, with RB/WR depth restocked at 32 and 49.",
+    "urgency": "must_take_now",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Bowers is the lone TE tier 1 member; gapAfter is 15.7 pts to Loveland (120.4) and Warren (116.8), the biggest cliff on the board."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "143.7 proj TE vs a replacement-level TE we'd get at 69+ (LaPorta 105.5, Andrews 105.7) - roughly 38 pts, larger than the WR gap Pickens (151.7) holds over Rice/Higgins (146-148)."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Bowers survives only 74.3%, the lowest of any candidate; Pickens 78.3% and the RB tier has 6.5 expected survivors, so the fallbacks are deeper than the TE."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's best available (rank 28, fsGap 0), top projected WR left at 151.7, and fills a starting WR slot.",
+    "strongestCounterargument": "Juancho's sim puts Bowers at simGap -12.7 versus Javonte Williams at 0, and Bowers/Pickens are BOTH available in 55.7% of runs with Pickens surviving 78.3% - so we could plausibly get the TE at 32 anyway.",
+    "whyRecommendationStillWins": "The 55.7% both-survive is a coin flip on the only TE with a 15.7-pt cliff behind him; if he goes we replace him with a ~105-pt TE. If Pickens goes instead (21.7%), Rice/Higgins/McMillan sit within 5 pts at WR. Asymmetric downside favors Bowers now.",
+    "firstSeedDeviationReason": "Only fsGap 1 past First Seed's best available - effectively following the board.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/Nabers/Rice at WR, or Javonte Williams/Judkins if the WR tier thins; RB tier 9 (6.5 expected survivors) should still be there at 49.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 30-31 with TE, QB, RB and WR all high needs - the only team that can take Bowers."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:11604",
+        "alternatives": [
+          {
+            "playerId": "jfp:8137",
+            "reason": "Standard-scoring WR2 with the best First Seed rank on the board and 78% survival is only a fallback if Bowers is gone."
+          },
+          {
+            "playerId": "jfp:7588",
+            "reason": "Javonte Williams heads a 7-deep RB tier 9 and would fill our second RB/flex slot."
+          }
+        ],
+        "confidence": 72,
+        "strategy": "Balanced Nacua/Barkley core, now buying the one genuinely separating TE before the 15.7-point cliff, with RB/WR depth restocked at 32 and 49.",
+        "urgency": "must_take_now",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "Bowers is the lone TE tier 1 member; gapAfter is 15.7 pts to Loveland (120.4) and Warren (116.8), the biggest cliff on the board."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "143.7 proj TE vs a replacement-level TE we'd get at 69+ (LaPorta 105.5, Andrews 105.7) - roughly 38 pts, larger than the WR gap Pickens (151.7) holds over Rice/Higgins (146-148)."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Bowers survives only 74.3%, the lowest of any candidate; Pickens 78.3% and the RB tier has 6.5 expected survivors, so the fallbacks are deeper than the TE."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8137",
+        "strongestAlternativeWhy": "Pickens is First Seed's best available (rank 28, fsGap 0), top projected WR left at 151.7, and fills a starting WR slot.",
+        "strongestCounterargument": "Juancho's sim puts Bowers at simGap -12.7 versus Javonte Williams at 0, and Bowers/Pickens are BOTH available in 55.7% of runs with Pickens surviving 78.3% - so we could plausibly get the TE at 32 anyway.",
+        "whyRecommendationStillWins": "The 55.7% both-survive is a coin flip on the only TE with a 15.7-pt cliff behind him; if he goes we replace him with a ~105-pt TE. If Pickens goes instead (21.7%), Rice/Higgins/McMillan sit within 5 pts at WR. Asymmetric downside favors Bowers now.",
+        "firstSeedDeviationReason": "Only fsGap 1 past First Seed's best available - effectively following the board.",
+        "expectedNextPickPlan": "At 32 take the best of Pickens/Nabers/Rice at WR, or Javonte Williams/Judkins if the WR tier thins; RB tier 9 (6.5 expected survivors) should still be there at 49.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks twice at 30-31 with TE, QB, RB and WR all high needs - the only team that can take Bowers."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 16110,
+        "outputTokens": 1232
+      },
+      "latencyMs": 18889,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 16110,
+    "outputTokens": 1232
+  },
+  "latencyMs": 18889,
+  "error": null,
+  "cachedAt": "2026-08-27T20:01:56.659Z",
+  "key": "89a1e0cbf84491e4f9669023a19d94be",
+  "label": "1398448522730221568 p29 claude-opus-5/playbook-v1 blind concise"
+}
