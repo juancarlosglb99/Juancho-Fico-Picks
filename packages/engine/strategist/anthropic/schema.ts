@@ -77,6 +77,38 @@ export const SUBMIT_RECOMMENDATION_TOOL = {
           additionalProperties: false,
         },
       },
+      strongestAlternative: {
+        type: 'object',
+        description:
+          'The single best selection other than your recommendation. Never the same player.',
+        properties: {
+          playerId: { type: 'string', description: 'Board table id, copied exactly.' },
+          why: {
+            type: 'string',
+            description: 'One sentence on what makes him the strongest competing case.',
+          },
+        },
+        required: ['playerId', 'why'],
+        additionalProperties: false,
+      },
+      strongestCounterargument: {
+        type: 'string',
+        description:
+          'The single fact in the supplied state that most threatens your recommendation, ' +
+          'stated as its advocate would state it and with the number quoted. For a DRAFT_NOW ' +
+          'this is normally the best case for waiting - a joint availability figure showing ' +
+          'the position survives, a deep tier, a high survival probability. For a WAIT it is ' +
+          'normally the best case for taking him now. Do not pick a weak objection you can ' +
+          'easily dismiss. One or two sentences.',
+      },
+      whyRecommendationStillWins: {
+        type: 'string',
+        description:
+          'Answer that counterargument directly and specifically. Not a restatement of your ' +
+          'reasons - engage with the number you just quoted and say why it does not change ' +
+          'the decision. If it genuinely does, change your recommendation instead. One or two ' +
+          'sentences.',
+      },
       firstSeedDeviationReason: {
         type: ['string', 'null'],
         description:
@@ -114,6 +146,9 @@ export const SUBMIT_RECOMMENDATION_TOOL = {
       'decision',
       'strategy',
       'reasons',
+      'strongestAlternative',
+      'strongestCounterargument',
+      'whyRecommendationStillWins',
       'firstSeedDeviationReason',
       'expectedNextPickPlan',
       'opponentsThatMatter',
@@ -131,6 +166,12 @@ export interface StrategistResponse {
   decision: 'DRAFT_NOW' | 'WAIT';
   strategy: string;
   reasons: { code: string; detail: string }[];
+  /** The best selection other than the recommendation. */
+  strongestAlternative: { playerId: string; why: string };
+  /** The fact that most threatens the recommendation, stated at full strength. */
+  strongestCounterargument: string;
+  /** The direct answer to it. */
+  whyRecommendationStillWins: string;
   firstSeedDeviationReason: string | null;
   expectedNextPickPlan: string;
   opponentsThatMatter: { rosterId: number; why: string }[];

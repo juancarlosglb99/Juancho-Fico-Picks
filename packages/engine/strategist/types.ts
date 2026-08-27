@@ -431,6 +431,12 @@ export interface StrategistAdvice {
   strategy?: string;
   /** Required when the pick reaches meaningfully past First Seed. */
   firstSeedDeviationReason?: string | null;
+  /** The best selection other than this one. */
+  strongestAlternative?: { playerId: string; why: string };
+  /** The fact that most threatens this pick, stated at full strength. */
+  strongestCounterargument?: string;
+  /** The direct answer to it. */
+  whyRecommendationStillWins?: string;
   /** What we expect to do at our next selection, given this one. */
   expectedNextPickPlan?: string;
   /** The teams whose selections before our next turn changed the decision. */

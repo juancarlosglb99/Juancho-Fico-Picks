@@ -219,6 +219,56 @@ export function validateStrategistResponse(
     }
   }
 
+  /* -------------------------------------------------- the counterargument */
+
+  /*
+   * These exist because the strategist once recommended a tight end while the
+   * state in front of it said there was a 76% chance the tier survived to the
+   * next turn - and never mentioned it. A model is not obliged to notice the
+   * fact that most threatens its own answer unless it is asked to name it.
+   */
+  if ('strongestAlternative' in value) {
+    const alternative = value.strongestAlternative;
+    if (typeof alternative !== 'object' || alternative === null || Array.isArray(alternative)) {
+      fail('wrong_type', 'strongestAlternative', 'Expected an object with playerId and why.');
+    } else {
+      const entry = alternative as Record<string, unknown>;
+      const playerId = entry.playerId;
+      if (typeof playerId !== 'string') {
+        fail('wrong_type', 'strongestAlternative.playerId', 'Expected a player id string.');
+      } else if (playerId.trim() === '') {
+        fail('empty_string', 'strongestAlternative.playerId', 'The player id was empty.');
+      } else if (!board.has(playerId)) {
+        fail(
+          'unknown_player',
+          'strongestAlternative.playerId',
+          `"${playerId}" is not an id on the board the strategist was shown.`,
+        );
+      } else if (playerId === recommended) {
+        // Naming your own pick as its own strongest rival answers nothing.
+        fail(
+          'wrong_type',
+          'strongestAlternative.playerId',
+          'The strongest alternative cannot be the recommended player.',
+        );
+      }
+      requireText(entry.why, 'strongestAlternative.why', fail);
+    }
+  }
+
+  requireText(
+    value.strongestCounterargument,
+    'strongestCounterargument',
+    fail,
+    'strongestCounterargument' in value,
+  );
+  requireText(
+    value.whyRecommendationStillWins,
+    'whyRecommendationStillWins',
+    fail,
+    'whyRecommendationStillWins' in value,
+  );
+
   /*
    * Null is a valid answer here and undefined is not, which is why the presence
    * check above is separate from this type check.

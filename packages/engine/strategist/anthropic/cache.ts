@@ -17,6 +17,21 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { StrategistCallResult } from './client';
 import { PLAYBOOK_VERSION } from './playbook';
+import { SUBMIT_RECOMMENDATION_TOOL } from './schema';
+
+/**
+ * A fingerprint of the response contract.
+ *
+ * Without it, tightening the schema would make every stored answer look
+ * MALFORMED rather than simply out of date - the entries would still be served,
+ * fail the new validation, and be reported as the model misbehaving. They did
+ * not misbehave; they answered a different question. A schema change should be
+ * a clean cache miss.
+ */
+const SCHEMA_FINGERPRINT = createHash('sha256')
+  .update(JSON.stringify(SUBMIT_RECOMMENDATION_TOOL))
+  .digest('hex')
+  .slice(0, 12);
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const CACHE_DIRECTORY = join(
@@ -39,7 +54,7 @@ export interface CachedCall extends StrategistCallResult {
 
 export function cacheKey({ model, payload }: { model: string; payload: unknown }): string {
   const hash = createHash('sha256');
-  hash.update(`${model} v${PLAYBOOK_VERSION} `);
+  hash.update(`${model} v${PLAYBOOK_VERSION} schema:${SCHEMA_FINGERPRINT} `);
   hash.update(JSON.stringify(payload));
   return hash.digest('hex').slice(0, 32);
 }

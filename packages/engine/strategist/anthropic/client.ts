@@ -34,6 +34,16 @@ export interface AnthropicStrategistOptions {
   promptContext?: Partial<PromptContextOptions>;
 }
 
+/** What one request to the model produced, before or after repair. */
+export interface CallAttempt {
+  /** Empty when the attempt satisfied the contract. */
+  problems: ResponseProblem[];
+  rawResponse: unknown;
+  usage: { inputTokens: number; outputTokens: number } | null;
+  latencyMs: number;
+  error: string | null;
+}
+
 export interface StrategistCallResult {
   advice: StrategistAdvice | null;
   /** The validated tool input, kept verbatim for auditing. Null if it failed. */
@@ -45,8 +55,17 @@ export interface StrategistCallResult {
    * preserved for the audit rather than discarded with the advice.
    */
   rawResponse: unknown;
-  /** Everything wrong with the response. Empty when it was accepted. */
+  /** Everything wrong with the FINAL response. Empty when it was accepted. */
   problems: ResponseProblem[];
+  /**
+   * Every request made, in order. One entry normally, two after a repair.
+   *
+   * Kept in full because a repaired answer and a first-time answer are not the
+   * same event: one says the model needed correcting, and how often that
+   * happens is a property worth watching rather than smoothing over.
+   */
+  attempts: CallAttempt[];
+  repairAttempted: boolean;
   /** The model's own reasoning, when extended thinking is on. */
   thinking: string | null;
   model: string;
@@ -115,11 +134,123 @@ export class AnthropicStrategist implements StrategistClient {
     return result.advice;
   }
 
-  /** The full call, for the evaluation harness: usage, thinking, raw response. */
+  /** The full call, including any repair attempt: usage, thinking, raw responses. */
   async call(brief: DraftBrief, signal?: AbortSignal): Promise<StrategistCallResult> {
     const context = buildStrategistPromptContext(brief, this.promptContext);
-    const startedAt = Date.now();
+    const boardIds = brief.candidates.map((candidate) => candidate.playerId);
+    const messages: Anthropic.MessageParam[] = [
+      { role: 'user', content: `Current draft state:\n\n${JSON.stringify(context)}` },
+    ];
 
+    const attempts: CallAttempt[] = [];
+    let thinking: string | null = null;
+
+    /*
+     * One repair, and only one.
+     *
+     * Two malformed responses in eight calls, both dropping the same required
+     * field, is a reliability property rather than a fluke - and a contract
+     * violation is the one failure a model can reliably fix when it is simply
+     * shown what it broke. What we must NOT do is fill the field in ourselves:
+     * that manufactures an answer nobody can tell from a real one, which is the
+     * failure the validator exists to prevent.
+     *
+     * A second failure means something is wrong beyond a slip, so it falls back
+     * to the deterministic engine exactly as before.
+     */
+    for (let attempt = 0; attempt <= 1; attempt += 1) {
+      const outcome = await this.request(messages, signal);
+      thinking = outcome.thinking ?? thinking;
+
+      if (outcome.transportError) {
+        attempts.push({
+          problems: [],
+          rawResponse: null,
+          usage: outcome.usage,
+          latencyMs: outcome.latencyMs,
+          error: outcome.transportError,
+        });
+        // A network or API failure is not something the model can repair.
+        return assemble(attempts, null, null, thinking, this.model, outcome.transportError);
+      }
+
+      if (!outcome.toolUse) {
+        attempts.push({
+          problems: [],
+          rawResponse: null,
+          usage: outcome.usage,
+          latencyMs: outcome.latencyMs,
+          error: 'The strategist returned no recommendation.',
+        });
+        return assemble(
+          attempts,
+          null,
+          null,
+          thinking,
+          this.model,
+          'The strategist returned no recommendation.',
+        );
+      }
+
+      const validation = validateStrategistResponse(outcome.toolUse.input, boardIds);
+      attempts.push({
+        problems: validation.problems,
+        rawResponse: outcome.toolUse.input,
+        usage: outcome.usage,
+        latencyMs: outcome.latencyMs,
+        error: validation.ok
+          ? null
+          : `The strategist's response did not satisfy the contract. ${describeProblems(validation.problems)}`,
+      });
+
+      if (validation.ok) {
+        return assemble(
+          attempts,
+          validation.response,
+          toAdvice(validation.response, brief, this.model),
+          thinking,
+          this.model,
+          null,
+        );
+      }
+
+      if (attempt === 1) break;
+
+      // Hand the invalid call back with the exact faults, and ask for the same
+      // analysis in a valid envelope.
+      messages.push(
+        { role: 'assistant', content: outcome.content },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result' as const,
+              tool_use_id: outcome.toolUse.id,
+              is_error: true,
+              content: repairInstruction(validation.problems),
+            },
+          ],
+        },
+      );
+    }
+
+    const last = attempts[attempts.length - 1];
+    return assemble(attempts, null, null, thinking, this.model, last?.error ?? 'Unknown failure.');
+  }
+
+  /** One request/response round trip, with nothing interpreted yet. */
+  private async request(
+    messages: Anthropic.MessageParam[],
+    signal?: AbortSignal,
+  ): Promise<{
+    toolUse: Anthropic.ToolUseBlock | null;
+    content: Anthropic.ContentBlock[];
+    thinking: string | null;
+    usage: { inputTokens: number; outputTokens: number } | null;
+    latencyMs: number;
+    transportError: string | null;
+  }> {
+    const startedAt = Date.now();
     try {
       const message = await this.client.messages.create(
         {
@@ -140,92 +271,95 @@ export class AnthropicStrategist implements StrategistClient {
           ...(this.thinkingBudget > 0
             ? { thinking: { type: 'enabled' as const, budget_tokens: this.thinkingBudget } }
             : {}),
-          messages: [
-            {
-              role: 'user',
-              content: `Current draft state:\n\n${JSON.stringify(context)}`,
-            },
-          ],
+          messages,
         },
         signal ? { signal } : undefined,
-      );
-
-      const latencyMs = Date.now() - startedAt;
-      const toolUse = message.content.find(
-        (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use',
       );
       const thinking = message.content
         .filter((block): block is Anthropic.ThinkingBlock => block.type === 'thinking')
         .map((block) => block.thinking)
         .join('\n')
         .trim();
-
-      if (!toolUse) {
-        return {
-          advice: null,
-          response: null,
-          rawResponse: null,
-          problems: [],
-          thinking: thinking || null,
-          model: this.model,
-          usage: usageOf(message),
-          latencyMs,
-          error: 'The strategist returned no recommendation.',
-        };
-      }
-
-      /*
-       * The schema is a request, not a guarantee.
-       *
-       * The first evaluation run had the model omit `decision` entirely despite
-       * it being required, and nothing noticed - it flowed through as
-       * `undefined` and printed as "undefined". So the response is checked
-       * against the published contract before it is allowed to become advice,
-       * and a failure produces no advice at all rather than a partial one.
-       */
-      const validation = validateStrategistResponse(
-        toolUse.input,
-        brief.candidates.map((candidate) => candidate.playerId),
-      );
-      if (!validation.ok) {
-        return {
-          advice: null,
-          response: null,
-          rawResponse: toolUse.input,
-          problems: validation.problems,
-          thinking: thinking || null,
-          model: this.model,
-          usage: usageOf(message),
-          latencyMs,
-          error: `The strategist's response did not satisfy the contract. ${describeProblems(validation.problems)}`,
-        };
-      }
-
       return {
-        advice: toAdvice(validation.response, brief, this.model),
-        response: validation.response,
-        rawResponse: toolUse.input,
-        problems: [],
+        toolUse:
+          message.content.find(
+            (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use',
+          ) ?? null,
+        content: message.content,
         thinking: thinking || null,
-        model: this.model,
         usage: usageOf(message),
-        latencyMs,
-        error: null,
+        latencyMs: Date.now() - startedAt,
+        transportError: null,
       };
     } catch (error) {
       return {
-        advice: null,
-        response: null,
-        rawResponse: null,
-        problems: [],
+        toolUse: null,
+        content: [],
         thinking: null,
-        model: this.model,
         usage: null,
         latencyMs: Date.now() - startedAt,
-        error: redactSecrets(error instanceof Error ? error.message : String(error)),
+        transportError: redactSecrets(error instanceof Error ? error.message : String(error)),
       };
     }
   }
+}
+
+/**
+ * What the model is told when its answer did not satisfy the contract.
+ *
+ * Three things it has to convey: exactly what was wrong, that the ANALYSIS is
+ * not what is being questioned, and that the fix is a complete payload rather
+ * than a patch. Without the second, a model asked to try again tends to
+ * reconsider the pick as well, which turns a formatting slip into a different
+ * recommendation and makes the repair unauditable.
+ */
+export function repairInstruction(problems: ResponseProblem[]): string {
+  const faults = problems
+    .map((problem) => `  - ${problem.path || '<root>'}: ${problem.message}`)
+    .join('\n');
+  return [
+    'Your submit_recommendation call was rejected because it did not match the required schema:',
+    faults,
+    '',
+    'Your strategic analysis is not in question and should not change unless a listed problem',
+    'genuinely requires it (for example, a player id that is not on the board).',
+    '',
+    'Call submit_recommendation again with the COMPLETE payload - every required field, not',
+    'only the ones listed above. Keep the same recommendation, alternatives, reasons and',
+    'confidence you had already decided on.',
+  ].join('\n');
+}
+
+function assemble(
+  attempts: CallAttempt[],
+  response: StrategistResponse | null,
+  advice: StrategistAdvice | null,
+  thinking: string | null,
+  model: string,
+  error: string | null,
+): StrategistCallResult {
+  const last = attempts[attempts.length - 1];
+  return {
+    advice,
+    response,
+    rawResponse: last?.rawResponse ?? null,
+    problems: last?.problems ?? [],
+    attempts,
+    repairAttempted: attempts.length > 1,
+    thinking,
+    model,
+    // Totals: a repaired answer cost both requests, and reporting only the
+    // successful one would understate what it took to get it.
+    usage: attempts.reduce(
+      (total, attempt) => ({
+        inputTokens: total.inputTokens + (attempt.usage?.inputTokens ?? 0),
+        outputTokens: total.outputTokens + (attempt.usage?.outputTokens ?? 0),
+      }),
+      { inputTokens: 0, outputTokens: 0 },
+    ),
+    latencyMs: attempts.reduce((total, attempt) => total + attempt.latencyMs, 0),
+    error,
+  };
 }
 
 /**
@@ -267,6 +401,9 @@ export function toAdvice(
     decision: response.decision,
     strategy: response.strategy,
     firstSeedDeviationReason: response.firstSeedDeviationReason,
+    strongestAlternative: response.strongestAlternative,
+    strongestCounterargument: response.strongestCounterargument,
+    whyRecommendationStillWins: response.whyRecommendationStillWins,
     expectedNextPickPlan: response.expectedNextPickPlan,
     opponentsThatMatter: response.opponentsThatMatter,
   };

@@ -52,6 +52,19 @@ export function renderEvaluatedPick(evaluated: EvaluatedPick): string[] {
       (detCandidate ? `  ${describeGap(detCandidate)}  ${describePlan(detCandidate)}` : ''),
   );
 
+  for (const [index, attempt] of (call.attempts ?? []).entries()) {
+    if (attempt.problems.length === 0) continue;
+    lines.push(
+      `  ATTEMPT ${index + 1}    rejected — ${attempt.problems.map((p) => `${p.path || '<root>'}: ${p.code}`).join(', ')}` +
+        (index === 0 && (call.attempts?.length ?? 0) > 1 ? '  → repair requested' : ''),
+    );
+  }
+  if (call.repairAttempted) {
+    lines.push(
+      `  REPAIR       ${call.advice ? 'succeeded on the second attempt' : 'failed on the second attempt'}`,
+    );
+  }
+
   if (call.error) {
     lines.push(`  CLAUDE       call failed — ${call.error}`);
     for (const problem of call.problems ?? []) {
@@ -93,6 +106,21 @@ export function renderEvaluatedPick(evaluated: EvaluatedPick): string[] {
   if (response.firstSeedDeviationReason) {
     lines.push(`  FS deviation ${wrap(response.firstSeedDeviationReason, 15)}`);
   }
+  if (response.strongestAlternative) {
+    const rival = evaluated.brief.candidates.find(
+      (candidate) => candidate.playerId === response.strongestAlternative.playerId,
+    );
+    lines.push(
+      `  strongest    ${rival ? `${rival.name} (${rival.position})` : response.strongestAlternative.playerId} — ` +
+        `${wrap(response.strongestAlternative.why, 15)}`,
+    );
+  }
+  if (response.strongestCounterargument) {
+    lines.push(`  AGAINST      ${wrap(response.strongestCounterargument, 15)}`);
+  }
+  if (response.whyRecommendationStillWins) {
+    lines.push(`  ANSWER       ${wrap(response.whyRecommendationStillWins, 15)}`);
+  }
   lines.push(`  next pick    ${wrap(response.expectedNextPickPlan, 15)}`);
   if (response.opponentsThatMatter.length > 0) {
     for (const opponent of response.opponentsThatMatter) {
@@ -132,9 +160,11 @@ export function renderEvaluatedPick(evaluated: EvaluatedPick): string[] {
   );
 
   if (call.usage) {
+    const attempts = call.attempts?.length ?? 1;
     lines.push(
       `  cost         ${call.usage.inputTokens} in / ${call.usage.outputTokens} out` +
-        `  ·  ${call.latencyMs}ms  ·  ${call.model}`,
+        `  ·  ${call.latencyMs}ms  ·  ${call.model}` +
+        (attempts > 1 ? `  ·  ${attempts} attempts (totals)` : ''),
     );
   }
   return lines;

@@ -182,6 +182,18 @@ export interface EvaluateOptions {
  * Cheap enough to run on every read, and it means the cache can never be a way
  * around the rules.
  */
+/** The repair story of a call, for the audit record. Null when it went first time. */
+function repairRecordFor(call: CachedCall) {
+  const attempts = call.attempts ?? [];
+  if (attempts.length <= 1) return null;
+  return {
+    attempted: true,
+    firstAttemptProblems: attempts[0]?.problems ?? [],
+    succeeded: call.advice !== null,
+    attempts: attempts.length,
+  };
+}
+
 function enforceContract(call: CachedCall, brief: DraftBrief): CachedCall {
   if (call.response === null || call.response === undefined) {
     return { ...call, problems: call.problems ?? [] };
@@ -230,6 +242,7 @@ export async function evaluatePick(
     brief,
     advice: call.advice,
     responseProblems: call.problems,
+    repair: repairRecordFor(call),
     latencyMs: call.latencyMs,
     strategistId: `anthropic:${options.model}`,
   });

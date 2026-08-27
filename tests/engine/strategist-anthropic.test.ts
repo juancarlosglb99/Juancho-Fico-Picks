@@ -103,6 +103,9 @@ const respond = (
     { code: 'starter_need', detail: 'Our second receiver slot is empty.' },
     { code: 'tier_cliff', detail: 'Two players left in this tier.' },
   ],
+  strongestAlternative: { playerId: 'alt-1', why: 'Fills the same slot a round later.' },
+  strongestCounterargument: 'He is 84% to survive to our next turn.',
+  whyRecommendationStillWins: 'The tier behind him empties first, so the slot is the scarce thing.',
   firstSeedDeviationReason: null,
   expectedNextPickPlan: 'Take the better of the two remaining backs at our next turn.',
   opponentsThatMatter: [{ rosterId: 4, why: 'They start two backs and need a receiver.' }],
@@ -178,6 +181,11 @@ describe('the response contract', () => {
       'decision',
       'strategy',
       'reasons',
+      // Forced self-criticism: the model must name the fact that most threatens
+      // its own answer and engage with it, rather than only its supporting case.
+      'strongestAlternative',
+      'strongestCounterargument',
+      'whyRecommendationStillWins',
       'firstSeedDeviationReason',
       'expectedNextPickPlan',
       'opponentsThatMatter',

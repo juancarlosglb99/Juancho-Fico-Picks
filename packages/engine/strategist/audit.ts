@@ -56,6 +56,8 @@ export interface StrategistAuditRecord {
    * because the deterministic pick is shown either way.
    */
   responseProblems: ResponseValidationProblem[];
+  /** Whether the response had to be repaired, and what was wrong first time. */
+  repair: RepairRecord | null;
   /** The strategist's structured reasons, kept verbatim. */
   reasons: { playerId: string; reasonCodes: string[]; reasoning: string }[];
   guardrail: GuardrailResult | null;
@@ -87,6 +89,20 @@ export interface ResponseValidationProblem {
   message: string;
 }
 
+/**
+ * A response that failed validation once and was asked again.
+ *
+ * Recorded because a repaired answer and a first-time answer are not the same
+ * event. How often the model needs correcting is a property worth watching,
+ * and it is invisible from the outside once the second attempt succeeds.
+ */
+export interface RepairRecord {
+  attempted: boolean;
+  firstAttemptProblems: ResponseValidationProblem[];
+  succeeded: boolean;
+  attempts: number;
+}
+
 export interface ResolveStrategistInput {
   brief: DraftBrief;
   /** Null whenever no strategist ran, it failed, or it was aborted. */
@@ -99,6 +115,8 @@ export interface ResolveStrategistInput {
    * investigating, the other is an outage.
    */
   responseProblems?: ResponseValidationProblem[];
+  /** Set whenever a first attempt failed validation, repaired or not. */
+  repair?: RepairRecord | null;
   latencyMs?: number | null;
   strategistId?: string | null;
   /**
@@ -133,6 +151,7 @@ export function resolveStrategistDecision(
     advice,
     adviceConfidence: advice?.confidence ?? null,
     responseProblems: input.responseProblems ?? [],
+    repair: input.repair ?? null,
     reasons:
       advice === null
         ? []

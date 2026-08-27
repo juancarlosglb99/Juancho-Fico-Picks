@@ -101,6 +101,9 @@ function sound(overrides: Partial<Record<keyof StrategistResponse, unknown>> = {
       { code: 'starter_need', detail: 'Our second receiver slot is empty.' },
       { code: 'tier_cliff', detail: 'Two players left in this tier.' },
     ],
+    strongestAlternative: { playerId: second, why: 'Fills the same slot a round later.' },
+    strongestCounterargument: 'He is 84% to survive to our next turn, so waiting may be free.',
+    whyRecommendationStillWins: 'The tier behind him empties first, so the slot is the scarce thing.',
     firstSeedDeviationReason: null,
     expectedNextPickPlan: 'Take the better remaining back at our next turn.',
     opponentsThatMatter: [{ rosterId: 4, why: 'They start two backs and need a receiver.' }],
@@ -292,6 +295,51 @@ describe('malformed arrays', () => {
   });
 });
 
+/* ------------------------------------------------------ the counterargument */
+
+describe('the strongest counterargument', () => {
+  it('cannot be omitted', () => {
+    for (const field of [
+      'strongestAlternative',
+      'strongestCounterargument',
+      'whyRecommendationStillWins',
+    ]) {
+      const partial = sound();
+      delete partial[field];
+      expect(codes(partial), `${field} was allowed to be missing`).toContain('missing_field');
+      expect(paths(partial)).toContain(field);
+    }
+  });
+
+  it('cannot be empty prose', () => {
+    expect(codes(sound({ strongestCounterargument: '   ' }))).toContain('empty_string');
+    expect(codes(sound({ whyRecommendationStillWins: '' }))).toContain('empty_string');
+    expect(
+      codes(sound({ strongestAlternative: { playerId: second, why: '' } })),
+    ).toContain('empty_string');
+  });
+
+  it('names a real player on the board', () => {
+    expect(
+      codes(sound({ strongestAlternative: { playerId: 'jfp:invented', why: 'x' } })),
+    ).toContain('unknown_player');
+    expect(codes(sound({ strongestAlternative: second }))).toContain('wrong_type');
+    expect(codes(sound({ strongestAlternative: { why: 'x' } }))).toContain('wrong_type');
+  });
+
+  it('rejects naming the recommendation as its own strongest rival', () => {
+    // An alternative that is the pick itself answers nothing, and would let the
+    // field be satisfied without engaging with anything.
+    const result = check(
+      sound({ strongestAlternative: { playerId: first, why: 'He is also the best.' } }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.problems.map((problem) => problem.path)).toContain(
+      'strongestAlternative.playerId',
+    );
+  });
+});
+
 /* -------------------------------------------------------- nonexistent players */
 
 describe('players that are not on the board', () => {
@@ -344,7 +392,9 @@ describe('partial and degenerate tool responses', () => {
   it('rejects an empty object with one problem per required field', () => {
     const result = check({});
     expect(result.ok).toBe(false);
-    expect(result.problems).toHaveLength(9);
+    expect(result.problems).toHaveLength(
+      SUBMIT_RECOMMENDATION_TOOL.input_schema.required.length,
+    );
     expect(result.problems.every((problem) => problem.code === 'missing_field')).toBe(true);
   });
 
