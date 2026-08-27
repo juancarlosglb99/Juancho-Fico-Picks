@@ -1,0 +1,363 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 128,
+      "currentOverallPick": 129,
+      "currentRound": 13,
+      "boardFingerprint": "3k-02d5ca83",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:ARI",
+      "reasoning": "starter_need: Our lineup reads K=EMPTY and DEF=EMPTY with only three selections left (129, 132, 149) and rules.mustFillBeforeDraftEnds is Kx1 DEFx1, so two of our three remaining picks are already spoken for. opportunity_cost: Every skill position is capped: RB5 and WR4 with both flexes filled by Judkins and Flowers, QB Hurts starting in a 1QB league, and TE explicitly blocked - so Romeo Doubs (fsRank 128, 101.3 proj) would be a pure bench body worth 0 to our starting lineup. positional_scarcity: Defense is the scarcer of our two mandatory slots: Arizona 77% and Atlanta 78.7% survival with only 55.7% chance both remain, while five of six kickers sit at 100% survival. opponent_demand: Team 10 selects twice at 130 and 131 with DEF:high and K:high and no defense rostered, and teams 1, 3, 4, 5, 6 and 8 all still list DEF:high - two DEFs and a K have gone in the last 15 picks. first_seed_prior: First Seed does not rank kickers or defenses at all, so their best available (Doubs, rank 128) is a ranking of players we structurally cannot start; the fsGap is not a real cost here. tier_cliff: All six remaining defenses project identically at 115 and all six kickers at 125, so there is no quality loss in taking DEF first and K later, only the risk of the higher-demand names being consumed.",
+      "reasonCodes": [
+        "starter_need",
+        "opportunity_cost",
+        "positional_scarcity",
+        "opponent_demand",
+        "first_seed_prior",
+        "tier_cliff"
+      ],
+      "confidence": 0.72
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:ATL",
+        "reasoning": "Equivalent top-tier defense with an almost identical 78.7% survival, the same 255 immediate gain, and the same zero opportunity cost.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:120",
+        "reasoning": "A kicker is the other mandatory slot, and all six remaining kickers are projected identically at 125 so any one closes the hole - but Vinatieri is flagged Injured Reserve, making him the worst of the six to actually roster.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks twice back-to-back at 130 and 131 with holes at both K and DEF and needs K:high DEF:high; the most likely team to take Arizona or Atlanta before we pick again. Roster 8: Picks at 133 with DEF:high and K:high and no defense rostered; combined with team 10 they are why the top defenses sit at only 77-78.7% survival. Roster 6: Already took Brandon Aubrey at pick 115 and lists DEF as their only remaining hole, so their pick at 135 is almost certainly a defense.",
+    "confidence": 0.72,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with every skill slot filled and TE blocked; the only remaining job is to fill K and DEF with our last three selections, so we take the scarcer of the two mandatory slots now (DEF, top names at 77-78.7% survival) and take the flat kicker pool at 132 or 149.",
+    "firstSeedDeviationReason": "The pick reaches past First Seed's best available (Romeo Doubs, rank 128) because First Seed does not rank K or DEF and cannot see that our lineup has two empty mandatory starting slots and three picks left; a startable 115-point defense is worth more than a fifth receiver who can never enter our lineup.",
+    "strongestAlternative": {
+      "playerId": "jfp:ATL",
+      "why": "Atlanta is the same 115-projection tier-1 defense with a marginally higher 78.7% survival, making the choice between the two essentially a coin flip."
+    },
+    "strongestCounterargument": "The tiers table shows the DEF tier has eitherRemains of 100% with an expected 5.6 members still available at our next selection, and Baltimore, Buffalo, Carolina and Chicago all sit at 100% survival - so a defense is guaranteed to be there at 132 and 149 and this pick could instead buy a real player like Jayden Reed (111.2 proj) or Bo Nix.",
+    "whyRecommendationStillWins": "The 100% figure only guarantees *a* defense, not this one, and since all six remaining project identically at 115 that guarantee is exactly why the \"real player\" alternative is worthless: with RB5/WR4, both flexes filled, QB set and TE blocked, Doubs or Reed adds 0 to our starting lineup, so we lose nothing by locking the higher-demand slot while Arizona (77%) is still on the board.",
+    "expectedNextPickPlan": "At 132 we take a kicker - Alex Hale, Alex Kessman, Alex McNulty or Alex Quevedo are all at 100% survival and all project 125, so the slot fills at no cost - leaving 149 free for an upside dart such as Jonathon Brooks (RB, 124.7 proj, 100% surv) or Isiah Pacheco (115.5 proj, 99.7% surv) as RB insurance.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice back-to-back at 130 and 131 with holes at both K and DEF and needs K:high DEF:high; the most likely team to take Arizona or Atlanta before we pick again."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks at 133 with DEF:high and K:high and no defense rostered; combined with team 10 they are why the top defenses sit at only 77-78.7% survival."
+      },
+      {
+        "rosterId": 6,
+        "why": "Already took Brandon Aubrey at pick 115 and lists DEF as their only remaining hole, so their pick at 135 is almost certainly a defense."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:ARI",
+    "decision": "DRAFT_NOW",
+    "confidence": 72,
+    "alternatives": [
+      {
+        "playerId": "jfp:ATL",
+        "reason": "Equivalent top-tier defense with an almost identical 78.7% survival, the same 255 immediate gain, and the same zero opportunity cost."
+      },
+      {
+        "playerId": "jfp:120",
+        "reason": "A kicker is the other mandatory slot, and all six remaining kickers are projected identically at 125 so any one closes the hole - but Vinatieri is flagged Injured Reserve, making him the worst of the six to actually roster."
+      }
+    ],
+    "strategy": "Balanced roster with every skill slot filled and TE blocked; the only remaining job is to fill K and DEF with our last three selections, so we take the scarcer of the two mandatory slots now (DEF, top names at 77-78.7% survival) and take the flat kicker pool at 132 or 149.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Our lineup reads K=EMPTY and DEF=EMPTY with only three selections left (129, 132, 149) and rules.mustFillBeforeDraftEnds is Kx1 DEFx1, so two of our three remaining picks are already spoken for."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Every skill position is capped: RB5 and WR4 with both flexes filled by Judkins and Flowers, QB Hurts starting in a 1QB league, and TE explicitly blocked - so Romeo Doubs (fsRank 128, 101.3 proj) would be a pure bench body worth 0 to our starting lineup."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Defense is the scarcer of our two mandatory slots: Arizona 77% and Atlanta 78.7% survival with only 55.7% chance both remain, while five of six kickers sit at 100% survival."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 selects twice at 130 and 131 with DEF:high and K:high and no defense rostered, and teams 1, 3, 4, 5, 6 and 8 all still list DEF:high - two DEFs and a K have gone in the last 15 picks."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed does not rank kickers or defenses at all, so their best available (Doubs, rank 128) is a ranking of players we structurally cannot start; the fsGap is not a real cost here."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "All six remaining defenses project identically at 115 and all six kickers at 125, so there is no quality loss in taking DEF first and K later, only the risk of the higher-demand names being consumed."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:ATL",
+      "why": "Atlanta is the same 115-projection tier-1 defense with a marginally higher 78.7% survival, making the choice between the two essentially a coin flip."
+    },
+    "strongestCounterargument": "The tiers table shows the DEF tier has eitherRemains of 100% with an expected 5.6 members still available at our next selection, and Baltimore, Buffalo, Carolina and Chicago all sit at 100% survival - so a defense is guaranteed to be there at 132 and 149 and this pick could instead buy a real player like Jayden Reed (111.2 proj) or Bo Nix.",
+    "whyRecommendationStillWins": "The 100% figure only guarantees *a* defense, not this one, and since all six remaining project identically at 115 that guarantee is exactly why the \"real player\" alternative is worthless: with RB5/WR4, both flexes filled, QB set and TE blocked, Doubs or Reed adds 0 to our starting lineup, so we lose nothing by locking the higher-demand slot while Arizona (77%) is still on the board.",
+    "firstSeedDeviationReason": "The pick reaches past First Seed's best available (Romeo Doubs, rank 128) because First Seed does not rank K or DEF and cannot see that our lineup has two empty mandatory starting slots and three picks left; a startable 115-point defense is worth more than a fifth receiver who can never enter our lineup.",
+    "expectedNextPickPlan": "At 132 we take a kicker - Alex Hale, Alex Kessman, Alex McNulty or Alex Quevedo are all at 100% survival and all project 125, so the slot fills at no cost - leaving 149 free for an upside dart such as Jonathon Brooks (RB, 124.7 proj, 100% surv) or Isiah Pacheco (115.5 proj, 99.7% surv) as RB insurance.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice back-to-back at 130 and 131 with holes at both K and DEF and needs K:high DEF:high; the most likely team to take Arizona or Atlanta before we pick again."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks at 133 with DEF:high and K:high and no defense rostered; combined with team 10 they are why the top defenses sit at only 77-78.7% survival."
+      },
+      {
+        "rosterId": 6,
+        "why": "Already took Brandon Aubrey at pick 115 and lists DEF as their only remaining hole, so their pick at 135 is almost certainly a defense."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:ARI",
+    "decision": "DRAFT_NOW",
+    "confidence": 72,
+    "alternatives": [
+      {
+        "playerId": "jfp:ATL",
+        "reason": "Equivalent top-tier defense with an almost identical 78.7% survival, the same 255 immediate gain, and the same zero opportunity cost."
+      },
+      {
+        "playerId": "jfp:120",
+        "reason": "A kicker is the other mandatory slot, and all six remaining kickers are projected identically at 125 so any one closes the hole - but Vinatieri is flagged Injured Reserve, making him the worst of the six to actually roster."
+      }
+    ],
+    "strategy": "Balanced roster with every skill slot filled and TE blocked; the only remaining job is to fill K and DEF with our last three selections, so we take the scarcer of the two mandatory slots now (DEF, top names at 77-78.7% survival) and take the flat kicker pool at 132 or 149.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Our lineup reads K=EMPTY and DEF=EMPTY with only three selections left (129, 132, 149) and rules.mustFillBeforeDraftEnds is Kx1 DEFx1, so two of our three remaining picks are already spoken for."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Every skill position is capped: RB5 and WR4 with both flexes filled by Judkins and Flowers, QB Hurts starting in a 1QB league, and TE explicitly blocked - so Romeo Doubs (fsRank 128, 101.3 proj) would be a pure bench body worth 0 to our starting lineup."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Defense is the scarcer of our two mandatory slots: Arizona 77% and Atlanta 78.7% survival with only 55.7% chance both remain, while five of six kickers sit at 100% survival."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 selects twice at 130 and 131 with DEF:high and K:high and no defense rostered, and teams 1, 3, 4, 5, 6 and 8 all still list DEF:high - two DEFs and a K have gone in the last 15 picks."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed does not rank kickers or defenses at all, so their best available (Doubs, rank 128) is a ranking of players we structurally cannot start; the fsGap is not a real cost here."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "All six remaining defenses project identically at 115 and all six kickers at 125, so there is no quality loss in taking DEF first and K later, only the risk of the higher-demand names being consumed."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:ATL",
+      "why": "Atlanta is the same 115-projection tier-1 defense with a marginally higher 78.7% survival, making the choice between the two essentially a coin flip."
+    },
+    "strongestCounterargument": "The tiers table shows the DEF tier has eitherRemains of 100% with an expected 5.6 members still available at our next selection, and Baltimore, Buffalo, Carolina and Chicago all sit at 100% survival - so a defense is guaranteed to be there at 132 and 149 and this pick could instead buy a real player like Jayden Reed (111.2 proj) or Bo Nix.",
+    "whyRecommendationStillWins": "The 100% figure only guarantees *a* defense, not this one, and since all six remaining project identically at 115 that guarantee is exactly why the \"real player\" alternative is worthless: with RB5/WR4, both flexes filled, QB set and TE blocked, Doubs or Reed adds 0 to our starting lineup, so we lose nothing by locking the higher-demand slot while Arizona (77%) is still on the board.",
+    "firstSeedDeviationReason": "The pick reaches past First Seed's best available (Romeo Doubs, rank 128) because First Seed does not rank K or DEF and cannot see that our lineup has two empty mandatory starting slots and three picks left; a startable 115-point defense is worth more than a fifth receiver who can never enter our lineup.",
+    "expectedNextPickPlan": "At 132 we take a kicker - Alex Hale, Alex Kessman, Alex McNulty or Alex Quevedo are all at 100% survival and all project 125, so the slot fills at no cost - leaving 149 free for an upside dart such as Jonathon Brooks (RB, 124.7 proj, 100% surv) or Isiah Pacheco (115.5 proj, 99.7% surv) as RB insurance.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice back-to-back at 130 and 131 with holes at both K and DEF and needs K:high DEF:high; the most likely team to take Arizona or Atlanta before we pick again."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks at 133 with DEF:high and K:high and no defense rostered; combined with team 10 they are why the top defenses sit at only 77-78.7% survival."
+      },
+      {
+        "rosterId": 6,
+        "why": "Already took Brandon Aubrey at pick 115 and lists DEF as their only remaining hole, so their pick at 135 is almost certainly a defense."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [
+        {
+          "code": "missing_field",
+          "path": "decision",
+          "message": "Required field \"decision\" was not returned."
+        },
+        {
+          "code": "wrong_type",
+          "path": "strongestAlternative",
+          "message": "Expected an object with playerId and why."
+        }
+      ],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:ARI",
+        "alternatives": [
+          {
+            "playerId": "jfp:ATL",
+            "reason": "Equivalent top-tier defense with an almost identical 78.7% survival, the same 255 immediate gain, and the same zero opportunity cost."
+          },
+          {
+            "playerId": "jfp:120",
+            "reason": "A kicker is the other mandatory slot, and all six remaining kickers are projected identically at 125 so any one closes the hole - but Vinatieri is flagged Injured Reserve, making him the worst of the six to actually roster."
+          }
+        ],
+        "confidence": 72,
+        "strategy": "Balanced roster with every skill slot filled and blocked at TE; the only remaining job is to fill K and DEF with our last three selections, so we take the scarcer of the two mandatory slots now (DEF, 77-78.7% survival at the top) and take the flat kicker pool at 132 or 149.",
+        "reasons": [
+          {
+            "code": "starter_need",
+            "detail": "Our lineup reads K=EMPTY and DEF=EMPTY with only three selections left (129, 132, 149) and rules.mustFillBeforeDraftEnds is Kx1 DEFx1, so two of our three remaining picks are already spoken for."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Every skill position is capped: RB5 and WR4 with both flexes filled by Judkins and Flowers, QB Hurts starting with usableCapacity QB2 in a 1QB league, and TE is explicitly blocked - so Romeo Doubs (fsRank 128, 101.3 proj) or a backup QB like Bo Nix would be a pure bench body worth 0 to our starting lineup."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "Defense is the scarcer of our two mandatory slots at this turn: the top DEF tier has Arizona at 77% and Atlanta at 78.7% survival with only 55.7% chance both remain, while five of six kickers sit at 100% survival."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Team 10 selects twice at 130 and 131 with DEF:high and K:high needs and no defense rostered, and teams 1, 3, 4, 5, 6 and 8 all still list DEF:high - the defenses are the pieces the room is actively consuming (two DEFs and a K in the last 15 picks)."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "First Seed does not rank kickers or defenses at all, so their best available (Doubs, rank 128) is a ranking of players we structurally cannot start - the fsGap is not a real cost here."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "All six remaining defenses project identically at 115 and all six kickers at 125, so there is no quality loss in taking DEF first and K later, only the risk of the top-tier names being consumed."
+          }
+        ],
+        "strongestAlternative": "{\"playerId\":\"jfp:ATL\",\"why\":\"Atlanta is the same 115-projection tier-1 defense with a marginally higher 78.7% survival, making the choice between the two essentially a coin flip.",
+        "strongestCounterargument": "The tiers table shows the DEF tier has eitherRemains of 100% with an expected 5.6 members still available at our next selection, and Baltimore, Buffalo, Carolina and Chicago all sit at 100% survival - so a defense is guaranteed to be there at 132 and 149 and this pick could instead buy a real player like Jayden Reed (111.2 proj) or Bo Nix.",
+        "whyRecommendationStillWins": "The 100% figure only guarantees *a* defense, not this one, and since all six remaining project identically at 115 that guarantee is exactly why the \"real player\" alternative is worthless: with RB5/WR4, both flexes filled, QB set and TE blocked, Doubs or Reed adds 0 to our starting lineup and would be cut-line bench filler, so we lose nothing by locking the higher-demand slot first while Arizona/Atlanta (77%/78.7%) are still on the board.",
+        "firstSeedDeviationReason": "The pick reaches past First Seed's best available (Romeo Doubs, rank 128) because First Seed does not rank K or DEF and cannot see that our lineup has two empty mandatory starting slots and three picks left; a startable 115-point defense is worth more than a fifth receiver who can never enter our lineup.",
+        "expectedNextPickPlan": "At 132 we take a kicker - Alex Hale, Alex Kessman, Alex McNulty or Alex Quevedo are all at 100% survival and all project 125, so the slot fills at no cost - leaving 149 free for a genuine upside dart such as Jonathon Brooks (RB, 124.7 proj, 100% surv) or Isiah Pacheco (115.5 proj, 99.7% surv) as RB insurance behind Saquon and Judkins.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks twice back-to-back at 130 and 131 with holes at both K and DEF and needs listed K:high DEF:high; they are the single most likely team to take Arizona or Atlanta before we pick again."
+          },
+          {
+            "rosterId": 8,
+            "why": "Picks at 133 with DEF:high and K:high and no defense rostered; combined with team 10 they are why the top defenses sit at only 77-78.7% survival."
+          },
+          {
+            "rosterId": 6,
+            "why": "Already took Brandon Aubrey at K115 and lists DEF:high as their only remaining hole, so their next pick at 135 is almost certainly a defense."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 17601,
+        "outputTokens": 2036
+      },
+      "latencyMs": 30045,
+      "error": "The strategist's response did not satisfy the contract. decision: Required field \"decision\" was not returned. strongestAlternative: Expected an object with playerId and why."
+    },
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:ARI",
+        "decision": "DRAFT_NOW",
+        "confidence": 72,
+        "alternatives": [
+          {
+            "playerId": "jfp:ATL",
+            "reason": "Equivalent top-tier defense with an almost identical 78.7% survival, the same 255 immediate gain, and the same zero opportunity cost."
+          },
+          {
+            "playerId": "jfp:120",
+            "reason": "A kicker is the other mandatory slot, and all six remaining kickers are projected identically at 125 so any one closes the hole - but Vinatieri is flagged Injured Reserve, making him the worst of the six to actually roster."
+          }
+        ],
+        "strategy": "Balanced roster with every skill slot filled and TE blocked; the only remaining job is to fill K and DEF with our last three selections, so we take the scarcer of the two mandatory slots now (DEF, top names at 77-78.7% survival) and take the flat kicker pool at 132 or 149.",
+        "reasons": [
+          {
+            "code": "starter_need",
+            "detail": "Our lineup reads K=EMPTY and DEF=EMPTY with only three selections left (129, 132, 149) and rules.mustFillBeforeDraftEnds is Kx1 DEFx1, so two of our three remaining picks are already spoken for."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Every skill position is capped: RB5 and WR4 with both flexes filled by Judkins and Flowers, QB Hurts starting in a 1QB league, and TE explicitly blocked - so Romeo Doubs (fsRank 128, 101.3 proj) would be a pure bench body worth 0 to our starting lineup."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "Defense is the scarcer of our two mandatory slots: Arizona 77% and Atlanta 78.7% survival with only 55.7% chance both remain, while five of six kickers sit at 100% survival."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Team 10 selects twice at 130 and 131 with DEF:high and K:high and no defense rostered, and teams 1, 3, 4, 5, 6 and 8 all still list DEF:high - two DEFs and a K have gone in the last 15 picks."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "First Seed does not rank kickers or defenses at all, so their best available (Doubs, rank 128) is a ranking of players we structurally cannot start; the fsGap is not a real cost here."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "All six remaining defenses project identically at 115 and all six kickers at 125, so there is no quality loss in taking DEF first and K later, only the risk of the higher-demand names being consumed."
+          }
+        ],
+        "strongestAlternative": {
+          "playerId": "jfp:ATL",
+          "why": "Atlanta is the same 115-projection tier-1 defense with a marginally higher 78.7% survival, making the choice between the two essentially a coin flip."
+        },
+        "strongestCounterargument": "The tiers table shows the DEF tier has eitherRemains of 100% with an expected 5.6 members still available at our next selection, and Baltimore, Buffalo, Carolina and Chicago all sit at 100% survival - so a defense is guaranteed to be there at 132 and 149 and this pick could instead buy a real player like Jayden Reed (111.2 proj) or Bo Nix.",
+        "whyRecommendationStillWins": "The 100% figure only guarantees *a* defense, not this one, and since all six remaining project identically at 115 that guarantee is exactly why the \"real player\" alternative is worthless: with RB5/WR4, both flexes filled, QB set and TE blocked, Doubs or Reed adds 0 to our starting lineup, so we lose nothing by locking the higher-demand slot while Arizona (77%) is still on the board.",
+        "firstSeedDeviationReason": "The pick reaches past First Seed's best available (Romeo Doubs, rank 128) because First Seed does not rank K or DEF and cannot see that our lineup has two empty mandatory starting slots and three picks left; a startable 115-point defense is worth more than a fifth receiver who can never enter our lineup.",
+        "expectedNextPickPlan": "At 132 we take a kicker - Alex Hale, Alex Kessman, Alex McNulty or Alex Quevedo are all at 100% survival and all project 125, so the slot fills at no cost - leaving 149 free for an upside dart such as Jonathon Brooks (RB, 124.7 proj, 100% surv) or Isiah Pacheco (115.5 proj, 99.7% surv) as RB insurance.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks twice back-to-back at 130 and 131 with holes at both K and DEF and needs K:high DEF:high; the most likely team to take Arizona or Atlanta before we pick again."
+          },
+          {
+            "rosterId": 8,
+            "why": "Picks at 133 with DEF:high and K:high and no defense rostered; combined with team 10 they are why the top defenses sit at only 77-78.7% survival."
+          },
+          {
+            "rosterId": 6,
+            "why": "Already took Brandon Aubrey at pick 115 and lists DEF as their only remaining hole, so their pick at 135 is almost certainly a defense."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 19863,
+        "outputTokens": 1987
+      },
+      "latencyMs": 19882,
+      "error": null
+    }
+  ],
+  "repairAttempted": true,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 37464,
+    "outputTokens": 4023
+  },
+  "latencyMs": 49927,
+  "error": null,
+  "cachedAt": "2026-08-27T19:14:38.356Z",
+  "key": "b071aeb43d936ea2cfb18773e9c1d67a",
+  "label": "1398448522730221568 p129 claude-opus-5/playbook-v1"
+}
