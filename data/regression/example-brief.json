@@ -3712,7 +3712,7 @@
         "immediateRosterGain": 256.8
       },
       "survival": {
-        "probability": 62.5,
+        "probability": 50.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -3758,7 +3758,7 @@
         "immediateRosterGain": 44.5
       },
       "survival": {
-        "probability": 74.7,
+        "probability": 83.3,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -3804,7 +3804,7 @@
         "immediateRosterGain": 446.5
       },
       "survival": {
-        "probability": 72.9,
+        "probability": 68.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -3850,7 +3850,7 @@
         "immediateRosterGain": 41
       },
       "survival": {
-        "probability": 77.6,
+        "probability": 88.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -3895,7 +3895,7 @@
         "immediateRosterGain": 37.1
       },
       "survival": {
-        "probability": 82.9,
+        "probability": 95.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -3941,7 +3941,7 @@
         "immediateRosterGain": 38.3
       },
       "survival": {
-        "probability": 80.2,
+        "probability": 91,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -3986,7 +3986,7 @@
         "immediateRosterGain": 37.1
       },
       "survival": {
-        "probability": 81.3,
+        "probability": 91.3,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4031,7 +4031,7 @@
         "immediateRosterGain": 449.6
       },
       "survival": {
-        "probability": 77.2,
+        "probability": 82.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -4077,7 +4077,7 @@
         "immediateRosterGain": 256.3
       },
       "survival": {
-        "probability": 84.1,
+        "probability": 89.3,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4123,7 +4123,7 @@
         "immediateRosterGain": 34.5
       },
       "survival": {
-        "probability": 88.5,
+        "probability": 96,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -4169,7 +4169,7 @@
         "immediateRosterGain": 242.8
       },
       "survival": {
-        "probability": 85.5,
+        "probability": 96,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4215,7 +4215,7 @@
         "immediateRosterGain": 36.8
       },
       "survival": {
-        "probability": 90.3,
+        "probability": 97,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -4261,7 +4261,7 @@
         "immediateRosterGain": 35.3
       },
       "survival": {
-        "probability": 91,
+        "probability": 97.3,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -4307,7 +4307,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 91.7,
+        "probability": 98,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -4350,7 +4350,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 92.3,
+        "probability": 98.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -4393,7 +4393,7 @@
         "immediateRosterGain": 36.2
       },
       "survival": {
-        "probability": 92.9,
+        "probability": 98.3,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -4439,7 +4439,7 @@
         "immediateRosterGain": 245.5
       },
       "survival": {
-        "probability": 88.6,
+        "probability": 98,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4485,7 +4485,7 @@
         "immediateRosterGain": 55.2
       },
       "survival": {
-        "probability": 89.5,
+        "probability": 97,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4531,7 +4531,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 89.9,
+        "probability": 97,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4574,7 +4574,7 @@
         "immediateRosterGain": 232.1
       },
       "survival": {
-        "probability": 89.7,
+        "probability": 98,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4620,7 +4620,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 95.2,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -4663,7 +4663,7 @@
         "immediateRosterGain": 419.8
       },
       "survival": {
-        "probability": 83.9,
+        "probability": 98,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -4709,7 +4709,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 91.5,
+        "probability": 99,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4752,7 +4752,7 @@
         "immediateRosterGain": 423.8
       },
       "survival": {
-        "probability": 84.5,
+        "probability": 98.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -4798,7 +4798,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 96.8,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -4841,7 +4841,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 92.3,
+        "probability": 99.3,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4884,7 +4884,7 @@
         "immediateRosterGain": 424.3
       },
       "survival": {
-        "probability": 85,
+        "probability": 98.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -4930,7 +4930,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 92,
+        "probability": 99.3,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -4974,7 +4974,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 92.7,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5017,7 +5017,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 97.5,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -5061,7 +5061,7 @@
         "immediateRosterGain": 234.3
       },
       "survival": {
-        "probability": 92.3,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5107,7 +5107,7 @@
         "immediateRosterGain": 422.5
       },
       "survival": {
-        "probability": 85.6,
+        "probability": 98.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -5153,7 +5153,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.1,
+        "probability": 99,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5196,7 +5196,7 @@
         "immediateRosterGain": 245.7
       },
       "survival": {
-        "probability": 92.7,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5242,7 +5242,7 @@
         "immediateRosterGain": 229.7
       },
       "survival": {
-        "probability": 92.8,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5288,7 +5288,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 92.9,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5332,7 +5332,7 @@
         "immediateRosterGain": 427.4
       },
       "survival": {
-        "probability": 86.1,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -5378,7 +5378,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 98.1,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -5421,7 +5421,7 @@
         "immediateRosterGain": 243.4
       },
       "survival": {
-        "probability": 93.1,
+        "probability": 99.7,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5467,7 +5467,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.5,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5510,7 +5510,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.6,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5553,7 +5553,7 @@
         "immediateRosterGain": 416.1
       },
       "survival": {
-        "probability": 86.3,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -5599,7 +5599,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.3,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5643,7 +5643,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.3,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5686,7 +5686,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.7,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5728,7 +5728,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 98.4,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -5771,7 +5771,7 @@
         "immediateRosterGain": 238.9
       },
       "survival": {
-        "probability": 93.4,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5816,7 +5816,7 @@
         "immediateRosterGain": 419.1
       },
       "survival": {
-        "probability": 86.5,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -5862,7 +5862,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 98.5,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -5904,7 +5904,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.5,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5947,7 +5947,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.8,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -5989,7 +5989,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 98.5,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -6032,7 +6032,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 98.5,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -6074,7 +6074,7 @@
         "immediateRosterGain": 235
       },
       "survival": {
-        "probability": 93.6,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -6119,7 +6119,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 98.5,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -6161,7 +6161,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 98.5,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -6203,7 +6203,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.8,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -6245,7 +6245,7 @@
         "immediateRosterGain": 412.7
       },
       "survival": {
-        "probability": 86.8,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6291,7 +6291,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 98.6,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 0,
         "interveningDemand": 0.2
@@ -6333,7 +6333,7 @@
         "immediateRosterGain": 416.1
       },
       "survival": {
-        "probability": 86.8,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6378,7 +6378,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.8,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -6420,7 +6420,7 @@
         "immediateRosterGain": 399
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6464,7 +6464,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.8,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -6506,7 +6506,7 @@
         "immediateRosterGain": 405.8
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6550,7 +6550,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 93.8,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9
@@ -6592,7 +6592,7 @@
         "immediateRosterGain": 395.6
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6636,7 +6636,7 @@
         "immediateRosterGain": 398.5
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6680,7 +6680,7 @@
         "immediateRosterGain": 403.4
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6724,7 +6724,7 @@
         "immediateRosterGain": 405.5
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6768,7 +6768,7 @@
         "immediateRosterGain": 390.4
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6812,7 +6812,7 @@
         "immediateRosterGain": 377.9
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6855,7 +6855,7 @@
         "immediateRosterGain": 368.5
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6898,7 +6898,7 @@
         "immediateRosterGain": 377.2
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6941,7 +6941,7 @@
         "immediateRosterGain": 368
       },
       "survival": {
-        "probability": 86.9,
+        "probability": 100,
         "confidence": "high",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -6984,7 +6984,7 @@
         "immediateRosterGain": 305.9
       },
       "survival": {
-        "probability": 50.1,
+        "probability": 100,
         "confidence": "low",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 2
@@ -7029,7 +7029,7 @@
         "immediateRosterGain": null
       },
       "survival": {
-        "probability": 61,
+        "probability": 100,
         "confidence": "low",
         "interveningTeamsWithNeed": 1,
         "interveningDemand": 0.9

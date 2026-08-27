@@ -22,6 +22,12 @@ import {
   opponentDemandForPosition,
   type InterveningTeam,
 } from './room-behavior';
+import {
+  RANK_SCALE,
+  RANK_SCALE_WITHOUT_BOARD,
+  simulateRoom,
+  type SimulationCandidate,
+} from './room-simulation';
 import { getRosterPositionCounts } from './roster-fit';
 import { buildProjectionTiers } from './tiers';
 import { buildFillerCandidates } from './late-round-fillers';
@@ -50,6 +56,21 @@ const WAIT_ANALYSIS_DEPTH = 8;
 /** Top of First Seed's board, always scored whatever the roster wants. */
 const SHORTLIST_CONSENSUS = 12;
 
+/**
+ * Which availability model to use.
+ *
+ * `simulation` plays the intervening selections forward as a shared sequence,
+ * so exactly one player leaves per pick. `independent` is the original
+ * per-player hazard, kept only so the two can be compared honestly on the same
+ * boards - it is known to imply more departures than there are picks.
+ */
+export type SurvivalModel = 'simulation' | 'independent';
+
+export function resolveSurvivalModel(explicit?: SurvivalModel): SurvivalModel {
+  if (explicit) return explicit;
+  return process.env.JUANCHO_SURVIVAL_MODEL === 'independent' ? 'independent' : 'simulation';
+}
+
 interface RecommendationInput {
   context: LeagueContext;
   picks: SleeperDraftPick[];
@@ -58,6 +79,8 @@ interface RecommendationInput {
   players: CanonicalPlayerMap;
   projections: MappedProjection[];
   roomRankings?: DraftRoomRankingSnapshot | null;
+  /** Defaults to the simulation; the old model is available for comparison. */
+  survivalModel?: SurvivalModel;
 }
 
 interface ValuedProjection {
@@ -371,7 +394,9 @@ export function generateDraftRecommendations({
   players,
   projections: inputProjections,
   roomRankings = null,
+  survivalModel,
 }: RecommendationInput): DraftRecommendationResult {
+  const survivalModelUsed = resolveSurvivalModel(survivalModel);
   const support = baseSupport(context);
   if (support.status === 'unsupported' || support.status === 'data_required') {
     return unavailableResult(context, support.status, support.messages);
@@ -777,8 +802,67 @@ export function generateDraftRecommendations({
 
   /* ------------------------------------ availability and the wait comparison */
 
+  /*
+   * One shared model of the intervening selections, run once.
+   *
+   * Not once per candidate: the whole correction is that the candidates are
+   * competing for the same picks, so their survival probabilities have to come
+   * out of the same simulated future. Exactly one player leaves per selection
+   * because exactly one is chosen per selection.
+   */
+  const roomSimulation =
+    survivalModelUsed === 'simulation'
+      ? simulateRoom({
+          selections: context.draftState.value.interveningSelections.map((selection) => ({
+            overallPick: selection.overallPick,
+            rosterId: selection.ownerRosterId,
+          })),
+          /*
+           * Absence from First Seed's board is information, and the simulation
+           * has to read it the same way the anchor already does.
+           *
+           * `consensusRank` falls back to our own projection order for anybody
+           * First Seed does not rank - and in a one-quarterback league that
+           * order puts quarterbacks on top, because they score the most raw
+           * points. Feeding that to the simulation made it certain the room
+           * would take an unranked rookie quarterback immediately, and equally
+           * certain about every unranked kicker. Rooms do neither.
+           *
+           * So an unranked player sits just past the end of the board, exactly
+           * as `consensusAnchorPenalty` treats him. Only where a real board
+           * exists: with none, projection order is the sole ordering available
+           * and there is no "unranked" contrast to draw.
+           */
+          available: plannable.map((candidate): SimulationCandidate => {
+            const ranked = roomByPlayerId.get(candidate.playerId);
+            return {
+              playerId: candidate.playerId,
+              position: candidate.position,
+              consensusRank:
+                !hasPublishedBoard || ranked
+                  ? candidate.consensusRank
+                  : roomByPlayerId.size + 1,
+            };
+          }),
+          rosterCounts,
+          slots,
+          teams: board.teams,
+          totalRounds: board.rounds,
+          // Without a real consensus to reach from, the room is modelled as
+          // much less predictable rather than the answer being shrunk after
+          // the fact - which would break the one-player-per-pick property.
+          rankScale: hasPublishedBoard ? RANK_SCALE : RANK_SCALE_WITHOUT_BOARD,
+          // Derived from the board so the same state always yields the same
+          // numbers: a live screen must not report a different probability on
+          // every poll, and the corpus replays boards byte for byte.
+          seed: board.currentOverallPick * 1000003 + board.picksMade,
+        })
+      : null;
+
   const probabilityFor = (candidate: PlannablePlayer): { value: number | null; confidence: Confidence; teamsWithNeed: number; demand: number } => {
     const nextUserPick = context.draftState.value.nextUserPick;
+    // Still reported, because the screen and the strategist both use it to
+    // explain WHY a player is at risk - it no longer drives the estimate.
     const { demand, teamsWithNeed } = opponentDemandForPosition({
       position: candidate.position,
       interveningTeams,
@@ -794,13 +878,29 @@ export function generateDraftRecommendations({
     if (interveningTeams.length === 0) {
       return { value: 100, confidence: 'high', teamsWithNeed, demand };
     }
-    const source = projectionByPlayerId.get(candidate.playerId);
+
     const room = roomByPlayerId.get(candidate.playerId);
     const confidence: Confidence = room
       ? roomRankings?.compatibility.level === 'weak'
         ? 'medium'
         : 'high'
       : 'low';
+
+    if (roomSimulation) {
+      /*
+       * No reliability shrinkage here.
+       *
+       * The old estimate was pulled toward even odds when the board was weak,
+       * because its own answer was a curve fitted to a rank it did not trust.
+       * The simulation's uncertainty is already expressed in the spread of its
+       * outcomes: an unranked player simply gets chosen less often, and pulling
+       * the result toward 50% afterwards would reintroduce exactly the kind of
+       * unconstrained adjustment this model was built to remove.
+       */
+      const value = roomSimulation.survival.get(candidate.playerId) ?? 100;
+      return { value, confidence, teamsWithNeed, demand };
+    }
+
     const raw = probabilityAvailableAtNextPick({
       adp: candidate.consensusRank,
       currentOverallPick: board.currentOverallPick,
@@ -814,7 +914,6 @@ export function generateDraftRecommendations({
     // toward even odds rather than being reported as a confident 3% or 97%.
     const reliability = confidenceWeight(confidence);
     const value = round(clamp(50 + (raw - 50) * reliability, 0, 100), 1);
-    void source;
     return { value, confidence, teamsWithNeed, demand };
   };
 

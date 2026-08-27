@@ -15,7 +15,9 @@ import type { SleeperDraft, SleeperLeague, SleeperRoster } from '../../sleeper/t
 import { normalizeLeagueContext } from '../context/normalize';
 import { generateDraftRecommendations } from '../draft/recommendations';
 import { deriveDraftBoardState } from '../draft/state';
-import { buildDraftBrief, type CandidatePoolOptions } from '../strategist/brief';
+import { buildDraftBrief } from '../strategist/brief';
+import type { CandidatePoolOptions } from '../strategist/candidates';
+import type { SurvivalModel } from '../draft/recommendations';
 import type { DraftBrief } from '../strategist/types';
 import type { RegressionCase } from './case';
 
@@ -28,6 +30,8 @@ export interface BriefReplayInput {
   draft: SleeperDraft;
   rosters: SleeperRoster[];
   candidatePool?: Partial<CandidatePoolOptions>;
+  /** Lets the calibration study compare the two availability models. */
+  survivalModel?: SurvivalModel;
 }
 
 /** Every overall pick number our seat owns in a saved case. */
@@ -73,6 +77,7 @@ export function buildBriefAtPick(
     players,
     projections: projections.records,
     roomRankings,
+    survivalModel: input.survivalModel,
   });
 
   return buildDraftBrief({

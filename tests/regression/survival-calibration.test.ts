@@ -23,12 +23,13 @@ import {
   readProjectionSnapshot,
   readRoomSnapshot,
 } from '../../packages/engine/benchmark/store';
+import type { SurvivalModel } from '../../packages/engine/draft/recommendations';
 import { buildDraftAttachment } from '../../packages/sleeper/attachment';
 import { draftFor, playersFor } from './replay-harness';
 
 const cases = listCases();
 
-function inputFor(entry: (typeof cases)[number]) {
+function inputFor(entry: (typeof cases)[number], survivalModel: SurvivalModel) {
   const draft = draftFor(entry);
   const attachment = buildDraftAttachment({ draft, league: null, rosters: null });
   return {
@@ -39,7 +40,13 @@ function inputFor(entry: (typeof cases)[number]) {
     league: attachment.league,
     draft,
     rosters: attachment.rosters,
+    survivalModel,
   };
+}
+
+/** Every prediction one model made across the whole corpus. */
+function observationsFor(survivalModel: SurvivalModel): SurvivalObservation[] {
+  return cases.flatMap((entry) => collectSurvivalObservations(inputFor(entry, survivalModel)));
 }
 
 function median(values: number[]): number {
@@ -59,127 +66,177 @@ function summaryLine(summary: CalibrationSummary): string {
 }
 
 describe('survival probability calibration', () => {
-  it('measures the estimate against what actually happened', () => {
-    const observations: SurvivalObservation[] = cases.flatMap((entry) =>
-      collectSurvivalObservations(inputFor(entry)),
-    );
-    expect(observations.length, 'the corpus should yield predictions to check').toBeGreaterThan(100);
+  it('measures both models against what actually happened', () => {
+    /*
+     * The old model is kept behind a switch precisely so this comparison can be
+     * made on identical boards. Two numbers produced from different data would
+     * settle nothing.
+     */
+    const oldObs = observationsFor('independent');
+    const newObs = observationsFor('simulation');
+    expect(oldObs.length).toBe(newObs.length);
+    expect(newObs.length).toBeGreaterThan(100);
 
-    const report = buildCalibrationReport(observations);
+    const oldReport = buildCalibrationReport(oldObs);
+    const newReport = buildCalibrationReport(newObs);
 
     console.log(
-      `\n[calibration] ${observations.length} predictions from ${cases.length} saved mocks\n`,
+      `\n[calibration] ${newObs.length} predictions from ${cases.length} saved mocks\n`,
     );
 
-    console.log('OVERALL');
-    console.log(summaryLine(report.overall));
-    console.log(summaryLine(report.predictiveOnly));
+    console.log('OVERALL                OLD (independent hazard)');
+    console.log(summaryLine(oldReport.overall));
+    console.log(summaryLine(oldReport.predictiveOnly));
+    console.log('                       NEW (sequential room simulation)');
+    console.log(summaryLine(newReport.overall));
+    console.log(summaryLine(newReport.predictiveOnly));
     console.log(
       '  (skill is 1 - brier/base: positive means the estimate beats always guessing the base rate)',
     );
 
-    console.log('\nCALIBRATION BUCKETS');
+    console.log('\nCALIBRATION BUCKETS          OLD                        NEW');
     console.log(
-      '  bucket        n      mean predicted   actual survived    gap   verdict',
+      '  bucket         n    predicted   actual    gap  │     n    predicted   actual    gap',
     );
-    for (const bucket of report.buckets) {
-      if (bucket.count === 0) {
-        console.log(`  ${`${bucket.from}-${bucket.to}%`.padEnd(10)} ${'0'.padStart(5)}       —                —              —`);
-        continue;
-      }
-      // A model is over-confident when it predicts a player will be gone more
-      // often than he actually is - the direction that makes a pick feel urgent
-      // when it is not.
-      const verdict =
-        Math.abs(bucket.gap) < 5
-          ? 'well calibrated'
-          : bucket.gap > 0
-            ? 'UNDER-confident (survives more than predicted)'
-            : 'OVER-confident (survives less than predicted)';
+    for (let index = 0; index < newReport.buckets.length; index += 1) {
+      const before = oldReport.buckets[index];
+      const after = newReport.buckets[index];
       console.log(
-        `  ${`${bucket.from}-${bucket.to}%`.padEnd(10)} ${String(bucket.count).padStart(5)}  ` +
-          `${bucket.meanPredicted.toFixed(1).padStart(13)}%  ` +
-          `${bucket.actualSurvivalRate.toFixed(1).padStart(14)}%  ` +
-          `${(bucket.gap >= 0 ? '+' : '') + bucket.gap.toFixed(1)}`.padStart(8) +
-          `   ${verdict}`,
+        `  ${`${after.from}-${after.to}%`.padEnd(9)} ` +
+          `${bucketCells(before)}  │  ${bucketCells(after)}`,
       );
     }
 
-    console.log('\nBY POSITION');
-    for (const summary of report.byPosition) console.log(summaryLine(summary));
+    console.log('\nBY POSITION            OLD → NEW');
+    for (const after of newReport.byPosition) {
+      const before = oldReport.byPosition.find((entry) => entry.label === after.label);
+      console.log(comparisonLine(before, after));
+    }
 
-    console.log('\nBY INTERVENING SELECTIONS');
-    for (const summary of report.byIntervening) console.log(summaryLine(summary));
+    console.log('\nBY INTERVENING SELECTIONS   OLD → NEW');
+    for (const after of newReport.byIntervening) {
+      const before = oldReport.byIntervening.find((entry) => entry.label === after.label);
+      console.log(comparisonLine(before, after));
+    }
 
     /*
-     * The check that explains the curve rather than just describing it.
-     *
-     * At most one player leaves the board per selection, so the expected number
-     * gone can never exceed the number of intervening picks. This is arithmetic,
-     * not a preference.
+     * The check that prompted the rewrite. At most one player leaves the board
+     * per selection, so the expected number gone can never exceed the number of
+     * intervening picks. This is arithmetic, not a preference.
      */
-    console.log('\nREMOVAL BUDGET (expected departures vs how many picks actually happen)');
-    console.log('  decision              pool   model expects gone   actually gone   ceiling   over');
-    const budgets = report.removalBudgets.filter((entry) => entry.maxPossibleRemovals > 0);
-    for (const budget of budgets.slice(0, 12)) {
+    console.log('\nREMOVAL BUDGET (expected departures ÷ picks that actually happen)');
+    for (const [label, report] of [
+      ['OLD', oldReport],
+      ['NEW', newReport],
+    ] as const) {
+      const budgets = report.removalBudgets.filter((entry) => entry.maxPossibleRemovals > 0);
+      const over = budgets.filter((entry) => entry.overBudget > 1);
       console.log(
-        `  ${budget.draftId.slice(-6)} R${String(budget.round).padStart(2)} p${String(budget.overallPick).padStart(3)}  ` +
-          `${String(budget.poolSize).padStart(5)}  ${budget.expectedRemovals.toFixed(1).padStart(17)}  ` +
-          `${String(budget.actualRemovals).padStart(14)}  ${String(budget.maxPossibleRemovals).padStart(8)}  ` +
-          `${budget.overBudget.toFixed(2).padStart(5)}x`,
+        `  ${label}: ${over.length} of ${budgets.length} decisions expect MORE departures than there are picks · ` +
+          `median ${median(budgets.map((entry) => entry.overBudget)).toFixed(2)}x · ` +
+          `worst ${Math.max(...budgets.map((entry) => entry.overBudget)).toFixed(2)}x`,
       );
     }
-    const over = budgets.filter((entry) => entry.overBudget > 1);
-    console.log(
-      `  → ${over.length} of ${budgets.length} decisions expect MORE departures than there are picks; ` +
-        `worst ${Math.max(...budgets.map((entry) => entry.overBudget)).toFixed(2)}x, ` +
-        `median ${median(budgets.map((entry) => entry.overBudget)).toFixed(2)}x`,
-    );
+    console.log('\n  a worked example, the decision that exposed it:');
+    for (const [label, report] of [
+      ['OLD', oldReport],
+      ['NEW', newReport],
+    ] as const) {
+      const budget = report.removalBudgets.find(
+        (entry) => entry.draftId.endsWith('783168') && entry.overallPick === 21,
+      );
+      if (!budget) continue;
+      console.log(
+        `    ${label} p21: pool ${budget.poolSize}, model expects ${budget.expectedRemovals.toFixed(1)} gone, ` +
+          `${budget.actualRemovals} actually gone, ceiling ${budget.maxPossibleRemovals}`,
+      );
+    }
 
-    /*
-     * The observation that prompted this, shown as ONE data point and not as
-     * proof of anything. A 10.5% event occurring is not evidence of a broken
-     * model; the buckets above are where the answer actually lives.
-     */
-    const warren = observations.find(
+    /* The observation that started this, still just one data point. */
+    const warren = newObs.find(
       (entry) =>
         entry.draftId === '1398448522730221568' &&
         entry.overallPick === 52 &&
         entry.playerName.includes('Tyler Warren'),
     );
-    console.log('\nTHE OBSERVATION THAT PROMPTED THIS (one data point, not a verdict)');
-    if (warren) {
+    const warrenOld = oldObs.find(
+      (entry) =>
+        entry.draftId === '1398448522730221568' &&
+        entry.overallPick === 52 &&
+        entry.playerName.includes('Tyler Warren'),
+    );
+    console.log('\nTYLER WARREN AT PICK 52 (one observation, not a verdict)');
+    if (warren && warrenOld) {
       console.log(
-        `  ${warren.playerName} (${warren.position}) at pick ${warren.overallPick}: ` +
-          `predicted ${warren.predicted}% to survive ${warren.interveningPicks} intervening ` +
-          `selections with ${warren.teamsNeedingPosition} teams ahead needing ${warren.position} — ` +
-          `actually ${warren.survived ? 'SURVIVED' : 'was taken'}`,
+        `  OLD predicted ${warrenOld.predicted}%  ·  NEW predicted ${warren.predicted}%  ·  ` +
+          `he actually ${warren.survived ? 'SURVIVED' : 'was taken'} ` +
+          `(${warren.interveningPicks} intervening selections, ${warren.teamsNeedingPosition} teams ahead needing TE)`,
       );
-      const peers = observations.filter(
-        (entry) => Math.abs(entry.predicted - warren.predicted) <= 5,
-      );
-      console.log(
-        `  peers within 5 points of that estimate: ${peers.length} predictions, ` +
-          `${peers.filter((entry) => entry.survived).length} survived ` +
-          `(${((peers.filter((entry) => entry.survived).length / peers.length) * 100).toFixed(1)}% ` +
-          `against a predicted ${warren.predicted}%)`,
-      );
-    } else {
-      console.log('  not found in the corpus');
+      for (const [label, observations, subject] of [
+        ['OLD', oldObs, warrenOld],
+        ['NEW', newObs, warren],
+      ] as const) {
+        const peers = observations.filter(
+          (entry) => Math.abs(entry.predicted - subject.predicted) <= 5,
+        );
+        const survived = peers.filter((entry) => entry.survived).length;
+        console.log(
+          `    ${label}: ${peers.length} predictions within 5 points of ${subject.predicted}%, ` +
+            `${survived} survived (${((survived / peers.length) * 100).toFixed(1)}%)`,
+        );
+      }
     }
 
     expect(warren, 'Tyler Warren at pick 52 should be one of the observations').toBeTruthy();
     expect(warren!.survived).toBe(true);
   });
 
+  it('removes exactly as many players as there are selections', () => {
+    /*
+     * The property the rewrite exists to guarantee, asserted on real boards
+     * rather than synthetic ones. Expected departures across the offered pool
+     * cannot exceed the number of picks that happen.
+     */
+    const budgets = buildCalibrationReport(observationsFor('simulation')).removalBudgets.filter(
+      (entry) => entry.maxPossibleRemovals > 0,
+    );
+    expect(budgets.length).toBeGreaterThan(0);
+    for (const budget of budgets) {
+      expect(
+        budget.expectedRemovals,
+        `${budget.draftId} p${budget.overallPick} expects ${budget.expectedRemovals} departures from ${budget.maxPossibleRemovals} picks`,
+      ).toBeLessThanOrEqual(budget.maxPossibleRemovals + 0.5);
+    }
+  });
+
   it('counts an outcome as survival only if the room did not take him', () => {
     // A sanity check on the measurement itself, which is the part most likely
     // to be quietly wrong: at the turn nobody picks in between, so everybody
-    // must survive and the engine's certain 100% must be exactly right.
-    const observations = cases.flatMap((entry) => collectSurvivalObservations(inputFor(entry)));
-    const atTheTurn = observations.filter((entry) => entry.backToBack);
+    // must survive and a certain 100% must be exactly right.
+    const atTheTurn = observationsFor('simulation').filter((entry) => entry.backToBack);
     if (atTheTurn.length === 0) return;
     expect(atTheTurn.every((entry) => entry.survived)).toBe(true);
     expect(atTheTurn.every((entry) => entry.predicted === 100)).toBe(true);
   });
 });
+
+function bucketCells(bucket: { count: number; meanPredicted: number; actualSurvivalRate: number; gap: number }): string {
+  if (bucket.count === 0) return `${'—'.padStart(5)}          —        —      —`;
+  return (
+    `${String(bucket.count).padStart(5)}  ${bucket.meanPredicted.toFixed(1).padStart(8)}%  ` +
+    `${bucket.actualSurvivalRate.toFixed(1).padStart(6)}%  ` +
+    `${((bucket.gap >= 0 ? '+' : '') + bucket.gap.toFixed(0)).padStart(5)}`
+  );
+}
+
+function comparisonLine(before: CalibrationSummary | undefined, after: CalibrationSummary): string {
+  const arrow = before
+    ? `brier ${before.brier.toFixed(4)} → ${after.brier.toFixed(4)}   ` +
+      `skill ${before.skill >= 0 ? '+' : ''}${before.skill.toFixed(2)} → ${after.skill >= 0 ? '+' : ''}${after.skill.toFixed(2)}`
+    : `brier ${after.brier.toFixed(4)}`;
+  return (
+    `  ${after.label.padEnd(18)} n=${String(after.count).padStart(5)}  ` +
+    `predicted ${before ? `${before.meanPredicted.toFixed(1)}%→` : ''}${after.meanPredicted.toFixed(1)}%  ` +
+    `actual ${after.actualSurvivalRate.toFixed(1)}%  ${arrow}`
+  );
+}

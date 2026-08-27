@@ -21,6 +21,7 @@ import type { DraftRoomRankingSnapshot, ProjectionSnapshot } from '../../data/ty
 import type { CanonicalPlayerMap } from '../../players/types';
 import type { SleeperDraft, SleeperLeague, SleeperRoster } from '../../sleeper/types';
 import { buildBriefAtPick, ourPickNumbers } from './brief-replay';
+import type { SurvivalModel } from '../draft/recommendations';
 import type { RegressionCase } from './case';
 
 export interface SurvivalObservation {
@@ -116,6 +117,8 @@ export interface CalibrationInput {
   league: SleeperLeague;
   draft: SleeperDraft;
   rosters: SleeperRoster[];
+  /** Which availability model produced the predictions being checked. */
+  survivalModel?: SurvivalModel;
 }
 
 /**
