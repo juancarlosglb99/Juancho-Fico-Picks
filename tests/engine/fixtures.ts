@@ -1,3 +1,4 @@
+import type { DraftRoomRankingSnapshot } from '../../packages/data/types';
 import { normalizeLeagueContext } from '../../packages/engine/context/normalize';
 import type { LeagueContextOverrides } from '../../packages/engine/context/types';
 import { deriveDraftBoardState } from '../../packages/engine/draft/state';
@@ -240,5 +241,71 @@ export function makeContext({
       userId,
       overrides,
     }),
+  };
+}
+
+/**
+ * A First Seed draft-room ranking over the same pool.
+ *
+ * The engine anchors to a published board and deliberately does nothing of the
+ * sort when there is none - its own projection order is not a consensus. A
+ * synthetic scenario without this is therefore a different situation from a
+ * real draft, and anything that depends on the anchor has to supply one.
+ */
+export function makeRoomRankings(
+  projections: MappedProjection[],
+  {
+    scoringFormat = 'standard',
+    qbFormat = '1qb',
+  }: { scoringFormat?: string; qbFormat?: '1qb' | 'superflex' } = {},
+): DraftRoomRankingSnapshot {
+  const ranked = [...projections].sort(
+    (a, b) => b.projection - a.projection || a.playerName.localeCompare(b.playerName),
+  );
+  return {
+    kind: 'draft-room-ranking',
+    provenance: {
+      sourceId: 'synthetic-first-seed',
+      sourceLabel: 'Synthetic First Seed board',
+      season: '2026',
+      fetchedAt: '2026-08-01T00:00:00.000Z',
+      sourceUpdatedAt: null,
+      sourceConfidence: 'high',
+    },
+    context: {
+      platform: 'sleeper',
+      scoringFormat: scoringFormat as DraftRoomRankingSnapshot['context']['scoringFormat'],
+      qbFormat,
+      sheet: 'Synthetic',
+    },
+    records: ranked.map((projection, index) => ({
+      sourceRow: index + 2,
+      playerName: projection.playerName,
+      position: projection.position,
+      team: projection.team ?? null,
+      rank: index + 1,
+      upstreamMarketAdp: null,
+      upstreamExpertRank: index + 1,
+      firstSeedValueDelta: null,
+      firstSeedLandmineScore: null,
+      playerId: projection.playerId,
+      resolutionMethod: 'direct-external-id',
+      resolutionConfidence: 1,
+    })),
+    unresolved: [],
+    resolution: {
+      total: ranked.length,
+      matched: ranked.length,
+      directExternalId: ranked.length,
+      exactCanonical: 0,
+      normalizedName: 0,
+      ambiguous: 0,
+      unresolved: 0,
+    },
+    compatibility: {
+      level: 'exact',
+      confidence: 'high',
+      reasons: ['Synthetic board built for the exact league format under test.'],
+    },
   };
 }

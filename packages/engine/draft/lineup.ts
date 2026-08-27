@@ -31,6 +31,8 @@ export interface SolvedLineup {
   /** Total projected points of the players occupying starting slots. */
   total: number;
   starters: LineupPlayer[];
+  /** Which slot each starter ended up in, in fill order. */
+  assignments: { slot: keyof LineupSlots; player: LineupPlayer }[];
   /** Slots that could not be filled at all. */
   unfilled: { slot: keyof LineupSlots; count: number }[];
   benchPlayers: LineupPlayer[];
@@ -94,6 +96,7 @@ export function solveBestLineup(
 ): SolvedLineup {
   const remaining = [...players].sort((a, b) => b.projection - a.projection);
   const starters: LineupPlayer[] = [];
+  const assignments: { slot: keyof LineupSlots; player: LineupPlayer }[] = [];
   const unfilled: { slot: keyof LineupSlots; count: number }[] = [];
 
   const takeBest = (eligible: Position[], count: number, slot: keyof LineupSlots) => {
@@ -102,6 +105,7 @@ export function solveBestLineup(
       const index = remaining.findIndex((player) => eligible.includes(player.position));
       if (index === -1) break;
       starters.push(remaining[index]);
+      assignments.push({ slot, player: remaining[index] });
       remaining.splice(index, 1);
       filled += 1;
     }
@@ -120,6 +124,7 @@ export function solveBestLineup(
   return {
     total: Math.round(starters.reduce((sum, player) => sum + player.projection, 0) * 10) / 10,
     starters,
+    assignments,
     unfilled,
     benchPlayers: remaining,
   };

@@ -72,7 +72,10 @@ export function atSeat(regression: RegressionCase, userSlot: number): Regression
   return { ...regression, userSlot };
 }
 
-export function replayCase(regression: RegressionCase): ReplayResult {
+export function replayCase(
+  regression: RegressionCase,
+  { collectBriefs = false }: { collectBriefs?: boolean } = {},
+): ReplayResult {
   const players = playersFor(regression);
   const draft = draftFor(regression);
   const attachment = buildDraftAttachment({ draft, league: null, rosters: null });
@@ -86,6 +89,7 @@ export function replayCase(regression: RegressionCase): ReplayResult {
     league: attachment.league,
     draft,
     rosters: attachment.rosters,
+    collectBriefs,
   });
 }
 

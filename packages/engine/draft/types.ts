@@ -2,6 +2,7 @@ import type { CanonicalPlayer } from '../../players/types';
 import type { MappedProjection } from '../../projections/types';
 import type { DraftRoomRankingSnapshot } from '../../data/types';
 import type { Confidence, LeagueContext } from '../context/types';
+import type { DraftDecisionInternals } from './internals';
 
 export interface DraftBoardState {
   teams: number;
@@ -121,6 +122,15 @@ export interface DraftRecommendation {
 
 export interface DraftRecommendationResult {
   recommendations: DraftRecommendation[];
+  /**
+   * The engine's working state, for layers that reason ABOUT the engine.
+   *
+   * Optional and never read by the engine, the UI or the benchmark: it exists
+   * so the AI Strategist can be given what was already computed instead of
+   * recomputing it from the same inputs and drifting. Absent whenever the
+   * engine could not produce recommendations at all.
+   */
+  internals?: DraftDecisionInternals;
   status: 'ready' | 'limited' | 'data_required' | 'unsupported';
   messages: string[];
   scoringCoverage:

@@ -31,6 +31,8 @@ import {
   type DeviationRecord,
   type DeviationSummary,
 } from './deviation';
+import { buildDraftBrief } from '../strategist/brief';
+import type { DraftBrief } from '../strategist/types';
 
 /** Bumped when the stored shape changes in a way old files cannot satisfy. */
 export const REGRESSION_CASE_VERSION = 1;
@@ -125,6 +127,15 @@ export interface ReplayInput {
   league: SleeperLeague;
   draft: SleeperDraft;
   rosters: SleeperRoster[];
+  /**
+   * Also assemble a `DraftBrief` at each of our selections.
+   *
+   * Off by default because it costs work nothing else needs. It lives here
+   * rather than in a separate replay so the brief is built from the SAME
+   * reconstruction the engine was run against - a second loop over the same
+   * inputs would eventually disagree with this one about the same board.
+   */
+  collectBriefs?: boolean;
 }
 
 export interface ReplayResult {
@@ -137,6 +148,8 @@ export interface ReplayResult {
   /** How far each pick strayed from First Seed, and whether it paid. */
   deviations: DeviationRecord[];
   deviationSummary: DeviationSummary;
+  /** One per selection, in draft order. Empty unless `collectBriefs` was set. */
+  briefs: DraftBrief[];
 }
 
 /**
@@ -183,6 +196,7 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
   const qualitySamples: Parameters<typeof scoreDecision>[0][] = [];
   const ourRoster: LineupPlayer[] = [];
   const takenByUs: string[] = [];
+  const briefs: DraftBrief[] = [];
 
   for (const overallPick of ourPickNumbers) {
     // The room's real picks, plus our own replacements so far.
@@ -238,6 +252,21 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
       }),
     );
     computeMs.push(ms);
+
+    if (input.collectBriefs) {
+      const brief = buildDraftBrief({
+        context,
+        board,
+        picks: picksBefore,
+        rosters,
+        players,
+        result,
+        draftId: regression.draftId,
+        rosterViews: null,
+        isMock: regression.format.isMock,
+      });
+      if (brief) briefs.push(brief);
+    }
 
     const best = result.recommendations[0] ?? null;
     const actualPick = ordered.find((pick) => pick.pick_no === overallPick)!;
@@ -382,6 +411,7 @@ export function replayRegressionCase(input: ReplayInput): ReplayResult {
     contradictions,
     deviations,
     deviationSummary: summarizeDeviations(deviations),
+    briefs,
   };
 }
 

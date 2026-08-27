@@ -39,6 +39,7 @@ import {
   type RecommendationAction,
   type RecommendationInsight,
 } from './types';
+import type { DraftDecisionInternals, PlannedCandidate } from './internals';
 
 /** How many overall candidates get a full roster plan computed. */
 const SHORTLIST_OVERALL = 34;
@@ -733,6 +734,11 @@ export function generateDraftRecommendations({
   const bestConsensusRank = anchorApplies
     ? Math.min(...anchorPool.map((candidate) => candidate.consensusRank))
     : Number.NaN;
+  // The player the reach is measured FROM, so a strategist sees the same
+  // reference the anchor penalty uses rather than re-deriving its own.
+  const bestConsensusPlayerId = anchorApplies
+    ? anchorPool.find((candidate) => candidate.consensusRank === bestConsensusRank)?.playerId ?? null
+    : null;
   // Not appearing on First Seed's board at all is itself information, so an
   // unranked player is treated as sitting just past its end.
   const unrankedGap = roomByPlayerId.size + 1;
@@ -1160,8 +1166,72 @@ export function generateDraftRecommendations({
         : Math.round((recommendation.marketAdp - recommendation.juanchoRank) * 10) / 10,
   }));
 
+  /*
+   * Everything above, handed out rather than discarded.
+   *
+   * Nothing here is computed for this block: `plannedById` indexes a list that
+   * already exists, and every lookup closes over a map that was built to make
+   * the recommendations. The cost is a few object allocations, and the benefit
+   * is that the strategist layer never has to reproduce this reasoning.
+   */
+  const plannedById = new Map<string, PlannedCandidate>(
+    planned.map((entry) => [
+      entry.candidate.playerId,
+      {
+        playerId: entry.candidate.playerId,
+        planTotal: entry.plan.total,
+        immediate: entry.immediate,
+        decisionValue: entry.decisionValue,
+      },
+    ]),
+  );
+  const plannableById = new Map(plannable.map((item) => [item.playerId, item]));
+  const remainingInTierOf = (playerId: string): number => {
+    const candidate = plannableById.get(playerId);
+    if (!candidate) return 0;
+    const tier = tiers.get(playerId)?.tier;
+    if (tier === undefined) return 0;
+    return (availableByPosition.get(candidate.position) ?? []).filter(
+      (item) => tiers.get(item.scored.playerId)?.tier === tier,
+    ).length;
+  };
+
+  const internals: DraftDecisionInternals = {
+    slots,
+    rosterState,
+    roomBehavior,
+    interveningTeams,
+    rosterCounts,
+    slotToRosterId,
+    ourRosterPlayers: rosterPlayers,
+    currentRosterValue: currentRosterValue.total,
+    ourSelections: selectionRounds,
+    ourFuturePicks,
+    candidatePool: plannable,
+    kickersAndDefensesAllowed: allowKickersAndDefense,
+    bestAvailableConsensusRank: Number.isFinite(bestConsensusRank) ? bestConsensusRank : null,
+    bestAvailableConsensusPlayerId: bestConsensusPlayerId,
+    projectionOf: (playerId) => projectionByPlayerId.get(playerId),
+    sourceProjectionOf: (playerId) => valuedById.get(playerId)?.source,
+    firstSeedOf: (playerId) => roomByPlayerId.get(playerId),
+    tierOf: (playerId) => tiers.get(playerId),
+    playersRemainingInTier: remainingInTierOf,
+    juanchoBoardRankOf: (playerId) => leagueRankByPlayer.get(playerId),
+    positionalRankOf: (playerId) => positionalRankByPlayer.get(playerId),
+    plannedOf: (playerId) => plannedById.get(playerId),
+    survivalOf: (playerId) => {
+      const candidate = plannableById.get(playerId);
+      if (!candidate) {
+        return { value: null, confidence: 'low', teamsWithNeed: 0, demand: 0 };
+      }
+      return probabilityOf(candidate);
+    },
+    playerOf: (playerId) => players.byId.get(playerId),
+  };
+
   return {
     recommendations: withMarketEdge,
+    internals,
     status,
     messages: [...new Set(messages)],
     scoringCoverage: coverage,
