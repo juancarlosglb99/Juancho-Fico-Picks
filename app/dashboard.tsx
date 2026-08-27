@@ -1,6 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { buildDraftBrief } from '@/packages/engine/strategist/brief';
+import type { LiveStrategistState } from '@/packages/engine/strategist/live';
+import { useStrategist } from './use-strategist';
 import {
   automaticAdpCacheKey,
   fetchAutomaticAdp,
@@ -915,6 +918,36 @@ export function Dashboard() {
   const draftRecommendations = draftRecommendationsTimed?.value ?? null;
 
   /**
+   * The brief, for the strategist only.
+   *
+   * Built from what the engine already computed, so it costs a few object
+   * allocations rather than any new work - and it stays out of the path that
+   * puts a recommendation on screen. Null whenever the engine could not
+   * produce recommendations at all, which is when there is nothing to reason
+   * about anyway.
+   */
+  const draftBrief = useMemo(() => {
+    if (!draftWorkspace || !leagueContext || !draftRecommendations) return null;
+    return buildDraftBrief({
+      context: leagueContext,
+      board: draftWorkspace.board,
+      picks: draftWorkspace.picks,
+      rosters: draftWorkspace.attachment.rosters,
+      players: draftWorkspace.players,
+      result: draftRecommendations,
+      draftId: draftWorkspace.draft.draft_id,
+      isMock: draftWorkspace.attachment.source === 'mock',
+    });
+  }, [draftWorkspace, leagueContext, draftRecommendations]);
+
+  /*
+   * The strategist runs alongside, never in front. The deterministic panel is
+   * already on screen by the time this starts, and stays there whatever
+   * happens next.
+   */
+  const strategist = useStrategist(draftBrief);
+
+  /**
    * One sample per pick that actually moved the board.
    *
    * `last_picked` is Sleeper's own timestamp for the selection, so this measures
@@ -1165,7 +1198,10 @@ export function Dashboard() {
                       onRun={() => void runMockDraft()}
                     />
                   ) : draftRecommendations ? (
-                    <RecommendationPanel result={draftRecommendations} />
+                    <RecommendationPanel
+                      result={draftRecommendations}
+                      strategist={strategist}
+                    />
                   ) : (
                     <RecommendationDataEmptyState
                       adp={adpSnapshot}
@@ -2754,7 +2790,120 @@ function ProjectionPanel({
   );
 }
 
-function RecommendationPanel({ result }: { result: DraftRecommendationResult }) {
+/**
+ * What the strategist has to say, when it has anything to say.
+ *
+ * Never blocks and never shouts. While it thinks, a quiet line; when it agrees,
+ * a note that it agreed; when it disagrees, the player it prefers and the case
+ * against its own choice. When it fails, one muted sentence and the
+ * deterministic recommendation carries on exactly as before - a draft clock
+ * does not stop for an outage, so nothing here is ever an error state.
+ *
+ * The prompt and the audit record stay out of this. They are for the evaluation
+ * harness and for answering a question about a pick weeks later, not for
+ * someone with forty seconds on a clock.
+ */
+function StrategistPanel({ state }: { state: LiveStrategistState }) {
+  if (state.phase === 'idle') return null;
+
+  if (state.phase === 'analyzing') {
+    return (
+      <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-[#2d414d] bg-[#0f1a21] px-4 py-3">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#b9ff38]" />
+        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#8fa0aa]">
+          AI analyzing…
+        </p>
+      </div>
+    );
+  }
+
+  const advice = state.decision?.audit.advice ?? null;
+  if (state.phase === 'fallback' || !advice || state.decision?.final?.source !== 'strategist') {
+    // Muted on purpose: the recommendation below is unaffected, so this is a
+    // footnote rather than a warning.
+    return (
+      <p className="mb-5 text-[11px] text-[#5f7280]">
+        {state.reason ?? 'Showing the deterministic recommendation.'}
+      </p>
+    );
+  }
+
+  const confirmed = state.decision?.outcome === 'ai_confirmed';
+  const chosen = state.decision?.final;
+  // The audit record carries the board the advice was about, which is the only
+  // place a name for an alternative can come from.
+  const nameOf = (playerId: string) =>
+    state.decision?.audit.brief.candidates.find(
+      (candidate) => candidate.playerId === playerId,
+    )?.name ?? playerId;
+
+  return (
+    <div className="mb-5 rounded-xl border border-[#2d414d] bg-[#0f1a21] p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] ${
+            confirmed ? 'bg-[#b9ff38]/15 text-[#b9ff38]' : 'bg-[#ff7a59]/15 text-[#ff9a80]'
+          }`}
+        >
+          {confirmed ? 'AI confirmed' : 'AI override'}
+        </span>
+        <span className="text-sm font-black text-[#e8f0f4]">{chosen?.name}</span>
+        <span className="text-[11px] text-[#8fa0aa]">
+          {Math.round((advice.confidence ?? 0) * 100)}% confident
+          {advice.urgency ? ` · ${advice.urgency.replace(/_/g, ' ')}` : ''}
+        </span>
+      </div>
+
+      {advice.strategy && (
+        <p className="mt-2.5 text-xs leading-5 text-[#c3d1d9]">{advice.strategy}</p>
+      )}
+
+      <ul className="mt-3 space-y-1.5">
+        {(advice.reasons ?? []).slice(0, 3).map((reason) => (
+          <li key={reason.code} className="text-[11px] leading-5 text-[#8fa0aa]">
+            <span className="font-black text-[#c3d1d9]">{reason.code.replace(/_/g, ' ')}</span>
+            {' — '}
+            {reason.detail}
+          </li>
+        ))}
+      </ul>
+
+      {advice.strongestCounterargument && (
+        <div className="mt-3 rounded-lg border border-[#28323a] bg-[#0b1318] p-3">
+          <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#71838e]">
+            Strongest case against
+          </p>
+          <p className="mt-1 text-[11px] leading-5 text-[#8fa0aa]">
+            {advice.strongestCounterargument}
+          </p>
+          {advice.whyRecommendationStillWins && (
+            <p className="mt-2 text-[11px] leading-5 text-[#c3d1d9]">
+              {advice.whyRecommendationStillWins}
+            </p>
+          )}
+        </div>
+      )}
+
+      {advice.alternatives.length > 0 && (
+        <p className="mt-3 text-[11px] text-[#71838e]">
+          Alternatives:{' '}
+          {advice.alternatives
+            .slice(0, 2)
+            .map((alternative) => nameOf(alternative.playerId))
+            .join(' · ')}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function RecommendationPanel({
+  result,
+  strategist,
+}: {
+  result: DraftRecommendationResult;
+  strategist?: LiveStrategistState;
+}) {
   const [primary, ...alternatives] = result.recommendations.slice(0, 3);
   if (!primary) {
     return (
@@ -2799,6 +2948,7 @@ function RecommendationPanel({ result }: { result: DraftRecommendationResult }) 
       </div>
 
       <div className="p-5 sm:p-6">
+        {strategist && <StrategistPanel state={strategist} />}
         {result.messages.length > 0 && (
           <details className="mb-5 rounded-xl border border-[#5a4630] bg-[#251d12] p-4">
             <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.12em] text-[#f0c777]">

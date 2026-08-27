@@ -12,7 +12,11 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import type { DraftBrief, StrategistAdvice, StrategistClient } from '../types';
-import { buildStrategistPromptContext, type PromptContextOptions } from '../prompt-context';
+import {
+  buildStrategistPromptContext,
+  type PromptContextOptions,
+  type StrategistPromptContext,
+} from '../prompt-context';
 import { PLAYBOOK_VERSION, STRATEGIST_SYSTEM_PROMPT } from './playbook';
 import {
   recommendationTool,
@@ -199,8 +203,32 @@ export class AnthropicStrategist implements StrategistClient {
 
   /** The full call, including any repair attempt: usage, thinking, raw responses. */
   async call(brief: DraftBrief, signal?: AbortSignal): Promise<StrategistCallResult> {
-    const context = buildStrategistPromptContext(brief, this.promptContext);
-    const boardIds = brief.candidates.map((candidate) => candidate.playerId);
+    const result = await this.callWithContext(
+      buildStrategistPromptContext(brief, this.promptContext),
+      brief.candidates.map((candidate) => candidate.playerId),
+      signal,
+    );
+    // This path holds the brief, so it can stamp the advice with the board the
+    // question was about. The context-only path cannot, and leaves it to the
+    // caller who can.
+    return result.response === null
+      ? result
+      : { ...result, advice: toAdvice(result.response, brief, this.model) };
+  }
+
+  /**
+   * The same call, from a context that was prepared elsewhere.
+   *
+   * The live path builds the context in the browser, where the draft state
+   * already lives, and posts it to a server route that holds the API key. The
+   * server has no reason to rebuild a brief it would have to re-fetch Sleeper
+   * and First Seed to produce.
+   */
+  async callWithContext(
+    context: StrategistPromptContext,
+    boardIds: string[],
+    signal?: AbortSignal,
+  ): Promise<StrategistCallResult> {
     const messages: Anthropic.MessageParam[] = [
       { role: 'user', content: `Current draft state:\n\n${JSON.stringify(context)}` },
     ];
@@ -267,14 +295,9 @@ export class AnthropicStrategist implements StrategistClient {
       });
 
       if (validation.ok) {
-        return assemble(
-          attempts,
-          validation.response,
-          toAdvice(validation.response, brief, this.model),
-          thinking,
-          this.model,
-          null,
-        );
+        // Advice is stamped with the caller's board, so it is built by whoever
+        // holds the brief rather than here.
+        return assemble(attempts, validation.response, null, thinking, this.model, null);
       }
 
       if (attempt === 1) break;
@@ -483,6 +506,7 @@ export function toAdvice(
     confidence: clamp01(response.confidence / 100),
     model,
     urgency: response.urgency,
+    reasons: response.reasons,
     strategy: response.strategy,
     firstSeedDeviationReason: response.firstSeedDeviationReason,
     strongestAlternativePlayerId: response.strongestAlternativePlayerId,

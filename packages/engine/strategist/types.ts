@@ -487,6 +487,14 @@ export interface StrategistAdvice {
   strongestCounterargument?: string;
   /** The direct answer to it. */
   whyRecommendationStillWins?: string;
+  /**
+   * The structured reasons, kept as they were returned.
+   *
+   * `primary.reasoning` joins them into one string for the audit trail, and a
+   * screen that wants them apart should not have to take that string back
+   * apart with a regular expression.
+   */
+  reasons?: { code: string; detail: string }[];
   /** What we expect to do at our next selection, given this one. */
   expectedNextPickPlan?: string;
   /** The teams whose selections before our next turn changed the decision. */
