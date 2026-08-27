@@ -17,6 +17,7 @@ import {
 } from '../../packages/engine/benchmark/brief-replay';
 import { listCases, readProjectionSnapshot, readRoomSnapshot } from '../../packages/engine/benchmark/store';
 import { validateStrategistPick } from '../../packages/engine/strategist/guardrails';
+import { buildStrategistPromptContext } from '../../packages/engine/strategist/prompt-context';
 import { buildDraftAttachment } from '../../packages/sleeper/attachment';
 import { draftFor, playersFor, replayCase } from './replay-harness';
 
@@ -115,6 +116,40 @@ describe('the brief on real drafts', () => {
   );
 
   it.each(cases.map((entry) => ({ entry, name: entry.draftId })))(
+    'compresses to a payload that hides nothing on $name',
+    ({ entry }) => {
+      const input = inputFor(entry);
+      for (const overallPick of ourPickNumbers(entry)) {
+        const brief = buildBriefAtPick(input, overallPick)!;
+        const context = buildStrategistPromptContext(brief);
+        const at = `pick ${overallPick}`;
+
+        // Every available player still offered.
+        const idColumn = context.board.columns.indexOf('id');
+        const offered = context.board.rows.map((row) => row[idColumn]);
+        expect(offered.sort(), at).toEqual(
+          brief.candidates.map((candidate) => candidate.playerId).sort(),
+        );
+
+        // Every team still described, with its actual players.
+        expect(context.opponents, at).toHaveLength(entry.format.teams - 1);
+        for (const team of brief.opponents) {
+          const compact = context.opponents.find((other) => other.id === team.rosterId)!;
+          for (const player of team.players) expect(compact.roster, at).toContain(player.name);
+        }
+
+        // And the deterministic pick, which the whole layer is judged against.
+        expect(offered, at).toContain(brief.deterministic.recommended!.playerId);
+
+        expect(
+          JSON.stringify(context).length,
+          `${at}: payload should be a fraction of the brief`,
+        ).toBeLessThan(JSON.stringify(brief).length * 0.35);
+      }
+    },
+  );
+
+  it.each(cases.map((entry) => ({ entry, name: entry.draftId })))(
     "passes its own guardrails at every pick the engine makes on $name",
     ({ entry }) => {
       /*
@@ -167,15 +202,15 @@ describe('the brief on real drafts', () => {
     console.log(`\n[brief] ${entry.draftId} · seat ${entry.userSlot} · ${entry.format.teams}-team`);
     for (const overallPick of sample) {
       const brief = buildBriefAtPick(input, overallPick)!;
-      const bytes = JSON.stringify(brief).length;
-      const section = (value: unknown) => (JSON.stringify(value).length / 1024).toFixed(0);
+      const context = buildStrategistPromptContext(brief);
+      const kb = (value: unknown) => JSON.stringify(value).length / 1024;
+      const full = kb(brief);
+      const compact = kb(context);
       console.log(
         `  R${String(brief.draft.currentRound).padStart(2)} p${String(overallPick).padStart(3)} · ` +
           `${brief.candidates.length} candidates · ${brief.opponents.length} opponents · ` +
-          `${brief.room.recentPicks.length} recent picks · ` +
-          `${brief.room.tierCliffs.filter((cliff) => cliff.atRisk).length} tiers at risk · ` +
-          `${(bytes / 1024).toFixed(0)}KB ` +
-          `(candidates ${section(brief.candidates)}KB · teams ${section([brief.ourTeam, ...brief.opponents])}KB · room ${section(brief.room)}KB)`,
+          `brief ${full.toFixed(1)}KB → context ${compact.toFixed(1)}KB ` +
+          `(${(100 - (compact / full) * 100).toFixed(0)}% smaller, ~${Math.round((compact * 1024) / 3.6)} tokens)`,
       );
     }
 
@@ -184,7 +219,14 @@ describe('the brief on real drafts', () => {
       const at = Number(process.env.JUANCHO_BRIEF_PICK ?? sample[1]);
       const brief = buildBriefAtPick(input, at)!;
       writeFileSync(out, `${JSON.stringify(brief, null, 2)}\n`, 'utf8');
+      const contextPath = out.replace(/\.json$/, '-context.json');
+      writeFileSync(
+        contextPath,
+        `${JSON.stringify(buildStrategistPromptContext(brief), null, 2)}\n`,
+        'utf8',
+      );
       console.log(`[brief] wrote pick ${at} of ${entry.draftId} to ${out}`);
+      console.log(`[brief] wrote the strategist context to ${contextPath}`);
     }
 
     expect(picks.length).toBeGreaterThan(0);

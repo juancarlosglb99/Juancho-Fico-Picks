@@ -32,6 +32,18 @@ export type {
   GuardrailViolation,
   GuardrailViolationCode,
 } from './guardrails';
+export {
+  buildStrategistPromptContext,
+  DEFAULT_PROMPT_CONTEXT,
+  PROMPT_CONTEXT_VERSION,
+} from './prompt-context';
+export type {
+  CompactTable,
+  CompactTeam,
+  OurTeamContext,
+  PromptContextOptions,
+  StrategistPromptContext,
+} from './prompt-context';
 export { resolveStrategistDecision, summarizeAudit } from './audit';
 export type {
   ChosenPlayer,
