@@ -1,0 +1,334 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 31,
+      "currentOverallPick": 32,
+      "currentRound": 4,
+      "boardFingerprint": "v-f73a257b",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:7588",
+      "reasoning": "starter_need: Our lineup shows RB=EMPTY behind Saquon plus two FLEX holes; Javonte Williams at 186.9 projected is the top remaining RB projection and fills the RB2 slot immediately. first_seed_prior: He is First Seed's best available at rank 32 with fsGap 0 - this is the board pick, not a reach. tier_cliff: RB tier 9 has 7 left with a 9.3-point gap after it, and with 16 selections before pick 49 the expected number of tier-9 backs remaining is only 2.6, all of them lower-projected than Williams. survives_to_next_turn: Williams survives just 5.7% of runs and Irving 9.3%; both are gone together in 85.7% of simulations, so the top of this tier does not come back to us. opportunity_cost: QB tier 3 has 4 members with 100% chance at least one survives (Hurts 98.3%, Daniels 96%, Burrow 76.7%) and TE tier 3 keeps a member 100% of runs (Kraft 98.3%), so both holes are cheaply fillable at 49/52 while this RB is not. opponent_demand: Teams 1, 3, 5, 6 and 8 all list RB:high or medium and pick eight times before us; teams 2 and 4 already hold three backs each and will chase WR/QB, but that still leaves five RB-hungry rosters ahead.",
+      "reasonCodes": [
+        "starter_need",
+        "first_seed_prior",
+        "tier_cliff",
+        "survives_to_next_turn",
+        "opportunity_cost",
+        "opponent_demand"
+      ],
+      "confidence": 0.76
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:11584",
+        "reasoning": "Bucky Irving is the next RB in the same tier 9 with only 9.3% survival, so he is the other back who cannot be waited on.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:12481",
+        "reasoning": "Cam Skattebo actually projects higher (178.4 vs 186.9 is close) and at 40.7% survival is a coin flip to return, but he is the fallback if the two top backs are gone.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 8: Picks 33 and 48, needs RB:medium and QB:high with two backs already - the most likely team to take Williams or Irving immediately. Roster 5: Picks 36 and 45 with RB:high behind only Breece Hall; a direct competitor for the last tier-9 backs. Roster 3: Picks 38 and 43 with RB:high behind Gibbs alone and identical hero-RB shape to ours. Roster 1: Picks 40 and 41 back-to-back with RB:high and WR:high; can clear two of our targets in a row. Roster 6: Picks 35 and 46 with RB:high behind McCaffrey and QB already filled, so he spends purely on RB/WR/TE. Roster 2: Picks 39 and 42 but holds RB3 with WR:critical - unlikely to take our back, which improves Williams's odds only marginally.",
+    "confidence": 0.76,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Hero RB (Saquon) with two strong WRs already rostered; this pick converts the empty RB2 slot into a real starter before the last members of RB tier 9 clear, leaving QB and TE - both genuinely flat here - for our 49/52 back-to-back turn.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternative": {
+      "playerId": "jfp:11564",
+      "why": "Drake Maye is QB tier 3's best at 309.6 projected with tier 3 flagged atRisk and only 64% survival, and he would fill our empty QB slot with a genuine weekly edge."
+    },
+    "strongestCounterargument": "RB tier 9 shows eitherRemains 99.3% with an expected 2.6 members still available at pick 49 - Judkins 56.7%, Montgomery 70.3%, Swift 66.7% - so we can very likely still get a startable tier-9 back next turn, while Drake Maye survives only 64% and QB tier 3 is flagged atRisk.",
+    "whyRecommendationStillWins": "The 2.6 expected survivors are the bottom of the tier (Swift 173.1, Montgomery 175.2) and we will still need two of RB/QB/TE at 49 and 52 regardless; in a 1QB league the drop from Maye 309.6 to Hurts 309.6 / Daniels 306.5 / Burrow 300.3 - three quarterbacks with 76-98% survival - is essentially zero, so \"atRisk\" on QB tier 3 costs us nothing while passing the top of the RB tier costs a real starter.",
+    "expectedNextPickPlan": "At the 49/52 turn take a QB from tier 3 (Hurts 98.3%, Daniels 96%, or Burrow 76.7% survival) and a TE from tier 3 (Kraft 98.3%, Warren 80.3%), with a tier-9/10 RB or WR such as Montgomery, Swift or TreVeyon Henderson as the fallback if a tier-3 TE unexpectedly clears out; that fills QB, TE and leaves 69/72 for FLEX bodies.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 33 and 48, needs RB:medium and QB:high with two backs already - the most likely team to take Williams or Irving immediately."
+      },
+      {
+        "rosterId": 5,
+        "why": "Picks 36 and 45 with RB:high behind only Breece Hall; a direct competitor for the last tier-9 backs."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks 38 and 43 with RB:high behind Gibbs alone and identical hero-RB shape to ours."
+      },
+      {
+        "rosterId": 1,
+        "why": "Picks 40 and 41 back-to-back with RB:high and WR:high; can clear two of our targets in a row."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 35 and 46 with RB:high behind McCaffrey and QB already filled, so he spends purely on RB/WR/TE."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 39 and 42 but holds RB3 with WR:critical - unlikely to take our back, which improves Williams's odds only marginally."
+      }
+    ]
+  },
+  "response": {
+    "playerId": "x",
+    "recommendedPlayerId": "jfp:7588",
+    "alternatives": [
+      {
+        "playerId": "jfp:11584",
+        "reason": "Bucky Irving is the next RB in the same tier 9 with only 9.3% survival, so he is the other back who cannot be waited on."
+      },
+      {
+        "playerId": "jfp:12481",
+        "reason": "Cam Skattebo actually projects higher (178.4 vs 186.9 is close) and at 40.7% survival is a coin flip to return, but he is the fallback if the two top backs are gone."
+      }
+    ],
+    "confidence": 76,
+    "decision": "DRAFT_NOW",
+    "strategy": "Hero RB (Saquon) with two strong WRs already rostered; this pick converts the empty RB2 slot into a real starter before the last members of RB tier 9 clear, leaving QB and TE - both genuinely flat here - for our 49/52 back-to-back turn.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Our lineup shows RB=EMPTY behind Saquon plus two FLEX holes; Javonte Williams at 186.9 projected is the top remaining RB projection and fills the RB2 slot immediately."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "He is First Seed's best available at rank 32 with fsGap 0 - this is the board pick, not a reach."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 9 has 7 left with a 9.3-point gap after it, and with 16 selections before pick 49 the expected number of tier-9 backs remaining is only 2.6, all of them lower-projected than Williams."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Williams survives just 5.7% of runs and Irving 9.3%; both are gone together in 85.7% of simulations, so the top of this tier does not come back to us."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "QB tier 3 has 4 members with 100% chance at least one survives (Hurts 98.3%, Daniels 96%, Burrow 76.7%) and TE tier 3 keeps a member 100% of runs (Kraft 98.3%), so both holes are cheaply fillable at 49/52 while this RB is not."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Teams 1, 3, 5, 6 and 8 all list RB:high or medium and pick eight times before us; teams 2 and 4 already hold three backs each and will chase WR/QB, but that still leaves five RB-hungry rosters ahead."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:11564",
+      "why": "Drake Maye is QB tier 3's best at 309.6 projected with tier 3 flagged atRisk and only 64% survival, and he would fill our empty QB slot with a genuine weekly edge."
+    },
+    "strongestCounterargument": "RB tier 9 shows eitherRemains 99.3% with an expected 2.6 members still available at pick 49 - Judkins 56.7%, Montgomery 70.3%, Swift 66.7% - so we can very likely still get a startable tier-9 back next turn, while Drake Maye survives only 64% and QB tier 3 is flagged atRisk.",
+    "whyRecommendationStillWins": "The 2.6 expected survivors are the bottom of the tier (Swift 173.1, Montgomery 175.2) and we will still need two of RB/QB/TE at 49 and 52 regardless; in a 1QB league the drop from Maye 309.6 to Hurts 309.6 / Daniels 306.5 / Burrow 300.3 - three quarterbacks with 76-98% survival - is essentially zero, so \"atRisk\" on QB tier 3 costs us nothing while passing the top of the RB tier costs a real starter.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At the 49/52 turn take a QB from tier 3 (Hurts 98.3%, Daniels 96%, or Burrow 76.7% survival) and a TE from tier 3 (Kraft 98.3%, Warren 80.3%), with a tier-9/10 RB or WR such as Montgomery, Swift or TreVeyon Henderson as the fallback if a tier-3 TE unexpectedly clears out; that fills QB, TE and leaves 69/72 for FLEX bodies.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 33 and 48, needs RB:medium and QB:high with two backs already - the most likely team to take Williams or Irving immediately."
+      },
+      {
+        "rosterId": 5,
+        "why": "Picks 36 and 45 with RB:high behind only Breece Hall; a direct competitor for the last tier-9 backs."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks 38 and 43 with RB:high behind Gibbs alone and identical hero-RB shape to ours."
+      },
+      {
+        "rosterId": 1,
+        "why": "Picks 40 and 41 back-to-back with RB:high and WR:high; can clear two of our targets in a row."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 35 and 46 with RB:high behind McCaffrey and QB already filled, so he spends purely on RB/WR/TE."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 39 and 42 but holds RB3 with WR:critical - unlikely to take our back, which improves Williams's odds only marginally."
+      }
+    ]
+  },
+  "rawResponse": {
+    "playerId": "x",
+    "recommendedPlayerId": "jfp:7588",
+    "alternatives": [
+      {
+        "playerId": "jfp:11584",
+        "reason": "Bucky Irving is the next RB in the same tier 9 with only 9.3% survival, so he is the other back who cannot be waited on."
+      },
+      {
+        "playerId": "jfp:12481",
+        "reason": "Cam Skattebo actually projects higher (178.4 vs 186.9 is close) and at 40.7% survival is a coin flip to return, but he is the fallback if the two top backs are gone."
+      }
+    ],
+    "confidence": 76,
+    "decision": "DRAFT_NOW",
+    "strategy": "Hero RB (Saquon) with two strong WRs already rostered; this pick converts the empty RB2 slot into a real starter before the last members of RB tier 9 clear, leaving QB and TE - both genuinely flat here - for our 49/52 back-to-back turn.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Our lineup shows RB=EMPTY behind Saquon plus two FLEX holes; Javonte Williams at 186.9 projected is the top remaining RB projection and fills the RB2 slot immediately."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "He is First Seed's best available at rank 32 with fsGap 0 - this is the board pick, not a reach."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 9 has 7 left with a 9.3-point gap after it, and with 16 selections before pick 49 the expected number of tier-9 backs remaining is only 2.6, all of them lower-projected than Williams."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Williams survives just 5.7% of runs and Irving 9.3%; both are gone together in 85.7% of simulations, so the top of this tier does not come back to us."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "QB tier 3 has 4 members with 100% chance at least one survives (Hurts 98.3%, Daniels 96%, Burrow 76.7%) and TE tier 3 keeps a member 100% of runs (Kraft 98.3%), so both holes are cheaply fillable at 49/52 while this RB is not."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Teams 1, 3, 5, 6 and 8 all list RB:high or medium and pick eight times before us; teams 2 and 4 already hold three backs each and will chase WR/QB, but that still leaves five RB-hungry rosters ahead."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:11564",
+      "why": "Drake Maye is QB tier 3's best at 309.6 projected with tier 3 flagged atRisk and only 64% survival, and he would fill our empty QB slot with a genuine weekly edge."
+    },
+    "strongestCounterargument": "RB tier 9 shows eitherRemains 99.3% with an expected 2.6 members still available at pick 49 - Judkins 56.7%, Montgomery 70.3%, Swift 66.7% - so we can very likely still get a startable tier-9 back next turn, while Drake Maye survives only 64% and QB tier 3 is flagged atRisk.",
+    "whyRecommendationStillWins": "The 2.6 expected survivors are the bottom of the tier (Swift 173.1, Montgomery 175.2) and we will still need two of RB/QB/TE at 49 and 52 regardless; in a 1QB league the drop from Maye 309.6 to Hurts 309.6 / Daniels 306.5 / Burrow 300.3 - three quarterbacks with 76-98% survival - is essentially zero, so \"atRisk\" on QB tier 3 costs us nothing while passing the top of the RB tier costs a real starter.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At the 49/52 turn take a QB from tier 3 (Hurts 98.3%, Daniels 96%, or Burrow 76.7% survival) and a TE from tier 3 (Kraft 98.3%, Warren 80.3%), with a tier-9/10 RB or WR such as Montgomery, Swift or TreVeyon Henderson as the fallback if a tier-3 TE unexpectedly clears out; that fills QB, TE and leaves 69/72 for FLEX bodies.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 33 and 48, needs RB:medium and QB:high with two backs already - the most likely team to take Williams or Irving immediately."
+      },
+      {
+        "rosterId": 5,
+        "why": "Picks 36 and 45 with RB:high behind only Breece Hall; a direct competitor for the last tier-9 backs."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks 38 and 43 with RB:high behind Gibbs alone and identical hero-RB shape to ours."
+      },
+      {
+        "rosterId": 1,
+        "why": "Picks 40 and 41 back-to-back with RB:high and WR:high; can clear two of our targets in a row."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 35 and 46 with RB:high behind McCaffrey and QB already filled, so he spends purely on RB/WR/TE."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 39 and 42 but holds RB3 with WR:critical - unlikely to take our back, which improves Williams's odds only marginally."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "playerId": "x",
+        "recommendedPlayerId": "jfp:7588",
+        "alternatives": [
+          {
+            "playerId": "jfp:11584",
+            "reason": "Bucky Irving is the next RB in the same tier 9 with only 9.3% survival, so he is the other back who cannot be waited on."
+          },
+          {
+            "playerId": "jfp:12481",
+            "reason": "Cam Skattebo actually projects higher (178.4 vs 186.9 is close) and at 40.7% survival is a coin flip to return, but he is the fallback if the two top backs are gone."
+          }
+        ],
+        "confidence": 76,
+        "decision": "DRAFT_NOW",
+        "strategy": "Hero RB (Saquon) with two strong WRs already rostered; this pick converts the empty RB2 slot into a real starter before the last members of RB tier 9 clear, leaving QB and TE - both genuinely flat here - for our 49/52 back-to-back turn.",
+        "reasons": [
+          {
+            "code": "starter_need",
+            "detail": "Our lineup shows RB=EMPTY behind Saquon plus two FLEX holes; Javonte Williams at 186.9 projected is the top remaining RB projection and fills the RB2 slot immediately."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "He is First Seed's best available at rank 32 with fsGap 0 - this is the board pick, not a reach."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "RB tier 9 has 7 left with a 9.3-point gap after it, and with 16 selections before pick 49 the expected number of tier-9 backs remaining is only 2.6, all of them lower-projected than Williams."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Williams survives just 5.7% of runs and Irving 9.3%; both are gone together in 85.7% of simulations, so the top of this tier does not come back to us."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "QB tier 3 has 4 members with 100% chance at least one survives (Hurts 98.3%, Daniels 96%, Burrow 76.7%) and TE tier 3 keeps a member 100% of runs (Kraft 98.3%), so both holes are cheaply fillable at 49/52 while this RB is not."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Teams 1, 3, 5, 6 and 8 all list RB:high or medium and pick eight times before us; teams 2 and 4 already hold three backs each and will chase WR/QB, but that still leaves five RB-hungry rosters ahead."
+          }
+        ],
+        "strongestAlternative": {
+          "playerId": "jfp:11564",
+          "why": "Drake Maye is QB tier 3's best at 309.6 projected with tier 3 flagged atRisk and only 64% survival, and he would fill our empty QB slot with a genuine weekly edge."
+        },
+        "strongestCounterargument": "RB tier 9 shows eitherRemains 99.3% with an expected 2.6 members still available at pick 49 - Judkins 56.7%, Montgomery 70.3%, Swift 66.7% - so we can very likely still get a startable tier-9 back next turn, while Drake Maye survives only 64% and QB tier 3 is flagged atRisk.",
+        "whyRecommendationStillWins": "The 2.6 expected survivors are the bottom of the tier (Swift 173.1, Montgomery 175.2) and we will still need two of RB/QB/TE at 49 and 52 regardless; in a 1QB league the drop from Maye 309.6 to Hurts 309.6 / Daniels 306.5 / Burrow 300.3 - three quarterbacks with 76-98% survival - is essentially zero, so \"atRisk\" on QB tier 3 costs us nothing while passing the top of the RB tier costs a real starter.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At the 49/52 turn take a QB from tier 3 (Hurts 98.3%, Daniels 96%, or Burrow 76.7% survival) and a TE from tier 3 (Kraft 98.3%, Warren 80.3%), with a tier-9/10 RB or WR such as Montgomery, Swift or TreVeyon Henderson as the fallback if a tier-3 TE unexpectedly clears out; that fills QB, TE and leaves 69/72 for FLEX bodies.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 8,
+            "why": "Picks 33 and 48, needs RB:medium and QB:high with two backs already - the most likely team to take Williams or Irving immediately."
+          },
+          {
+            "rosterId": 5,
+            "why": "Picks 36 and 45 with RB:high behind only Breece Hall; a direct competitor for the last tier-9 backs."
+          },
+          {
+            "rosterId": 3,
+            "why": "Picks 38 and 43 with RB:high behind Gibbs alone and identical hero-RB shape to ours."
+          },
+          {
+            "rosterId": 1,
+            "why": "Picks 40 and 41 back-to-back with RB:high and WR:high; can clear two of our targets in a row."
+          },
+          {
+            "rosterId": 6,
+            "why": "Picks 35 and 46 with RB:high behind McCaffrey and QB already filled, so he spends purely on RB/WR/TE."
+          },
+          {
+            "rosterId": 2,
+            "why": "Picks 39 and 42 but holds RB3 with WR:critical - unlikely to take our back, which improves Williams's odds only marginally."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 18006,
+        "outputTokens": 2021
+      },
+      "latencyMs": 28316,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 18006,
+    "outputTokens": 2021
+  },
+  "latencyMs": 28316,
+  "error": null,
+  "cachedAt": "2026-08-27T15:34:26.510Z",
+  "key": "d24f73b27c90b9405cf2c3ec4346ffbf",
+  "label": "1398448522730221568 p32 claude-opus-5/playbook-v1"
+}
