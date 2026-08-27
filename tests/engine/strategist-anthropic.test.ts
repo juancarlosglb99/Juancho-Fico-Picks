@@ -97,13 +97,14 @@ const respond = (
     { playerId: 'alt-2', reason: 'Third best.' },
   ],
   confidence: 72,
-  decision: 'WAIT',
+  urgency: 'likely_to_return',
   strategy: 'Hero RB, now filling the last startable receiver slot.',
   reasons: [
     { code: 'starter_need', detail: 'Our second receiver slot is empty.' },
     { code: 'tier_cliff', detail: 'Two players left in this tier.' },
   ],
-  strongestAlternative: { playerId: 'alt-1', why: 'Fills the same slot a round later.' },
+  strongestAlternativePlayerId: 'alt-1',
+  strongestAlternativeWhy: 'Fills the same slot a round later.',
   strongestCounterargument: 'He is 84% to survive to our next turn.',
   whyRecommendationStillWins: 'The tier behind him empties first, so the slot is the scarce thing.',
   firstSeedDeviationReason: null,
@@ -178,12 +179,13 @@ describe('the response contract', () => {
       'recommendedPlayerId',
       'alternatives',
       'confidence',
-      'decision',
+      'urgency',
       'strategy',
       'reasons',
       // Forced self-criticism: the model must name the fact that most threatens
       // its own answer and engage with it, rather than only its supporting case.
-      'strongestAlternative',
+      'strongestAlternativePlayerId',
+      'strongestAlternativeWhy',
       'strongestCounterargument',
       'whyRecommendationStillWins',
       'firstSeedDeviationReason',
@@ -201,7 +203,11 @@ describe('the response contract', () => {
     expect(properties.alternatives.maxItems).toBe(2);
     expect(properties.confidence.minimum).toBe(0);
     expect(properties.confidence.maximum).toBe(100);
-    expect(properties.decision.enum).toEqual(['DRAFT_NOW', 'WAIT']);
+    expect(properties.urgency.enum).toEqual([
+      'must_take_now',
+      'likely_to_return',
+      'neutral',
+    ]);
   });
 });
 
@@ -218,7 +224,7 @@ describe('turning a response into advice', () => {
     expect(advice.confidence).toBeCloseTo(0.72);
     expect(advice.primary.confidence).toBeCloseTo(0.72);
     expect(advice.primary.reasonCodes).toEqual(['starter_need', 'tier_cliff']);
-    expect(advice.decision).toBe('WAIT');
+    expect(advice.urgency).toBe('likely_to_return');
     expect(advice.strategy).toContain('Hero RB');
     expect(advice.expectedNextPickPlan).toBeTruthy();
     expect(advice.opponentsThatMatter).toHaveLength(1);

@@ -468,14 +468,21 @@ export interface StrategistAdvice {
 
   /* --- richer fields, present when the strategist supplies them --- */
 
-  /** Whether this player must be taken now or is merely the best choice. */
-  decision?: 'DRAFT_NOW' | 'WAIT';
+  /**
+   * How much the timing matters, separately from the choice of player.
+   *
+   * Not the deterministic engine's `RecommendationAction`, which annotates
+   * every candidate on the board and is unchanged. This describes the single
+   * selection the strategist named.
+   */
+  urgency?: 'must_take_now' | 'likely_to_return' | 'neutral';
   /** The roster shape this pick serves, named concretely. */
   strategy?: string;
   /** Required when the pick reaches meaningfully past First Seed. */
   firstSeedDeviationReason?: string | null;
   /** The best selection other than this one. */
-  strongestAlternative?: { playerId: string; why: string };
+  strongestAlternativePlayerId?: string;
+  strongestAlternativeWhy?: string;
   /** The fact that most threatens this pick, stated at full strength. */
   strongestCounterargument?: string;
   /** The direct answer to it. */

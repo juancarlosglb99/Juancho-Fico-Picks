@@ -45,8 +45,15 @@ describe('ranking and projection conflicts', () => {
     expect(warning.code).toBe('ranking_projection_conflict');
     expect(warning.projection).toBe(30);
     expect(warning.shortfallRatio).toBeGreaterThan(2);
-    expect(warning.detail).toContain('disagree');
-    // Says what it is without telling anyone what to do about it.
+    expect(warning.detail).toContain('materially disagree');
+    /*
+     * Stated neutrally on purpose. A rank legitimately encodes role and risk
+     * that a point projection does not, so the gap may be entirely intended -
+     * calling the ranking unreliable would decide for the strategist the one
+     * question it is better placed to answer.
+     */
+    expect(warning.detail).toContain('consider both signals');
+    expect(warning.detail).not.toMatch(/unreliable|wrong|error/i);
     expect(warning.detail).toContain('neither has been altered');
   });
 
@@ -99,7 +106,7 @@ describe('ranking and projection conflicts', () => {
     board[9] = { ...board[9], projection: 30 };
     const warning = detectDataWarnings(board).get('RB10')!;
     expect(warning.neighbourMedianProjection).toBeGreaterThan(100);
-    expect(warning.detail).toContain('40.4'.slice(0, 0) + '30');
-    expect(warning.detail).toMatch(/ranks him 10 at RB/);
+    expect(warning.detail).toContain('30');
+    expect(warning.detail).toMatch(/rank him 10 at RB/);
   });
 });

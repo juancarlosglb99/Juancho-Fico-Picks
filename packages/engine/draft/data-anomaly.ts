@@ -1,23 +1,25 @@
 /**
- * When First Seed's own two signals disagree about the same player.
+ * When First Seed's own two signals point different ways about a player.
  *
  * First Seed publishes a rank and a projection, and they normally move
  * together: the higher-ranked back projects more points than the one below him.
  * Occasionally they do not. James Conner sits at rank 99 while projecting 40.4,
- * against running backs ranked well below him projecting over a hundred - and
- * both the engine and the strategist took the pair at face value, one anchoring
- * to the rank and the other reasoning about sequencing a player worth a quarter
- * of the alternative.
+ * against running backs ranked near him projecting around ninety - and both the
+ * engine and the strategist took the pair at face value, one anchoring to the
+ * rank and the other reasoning carefully about sequencing a player worth a
+ * quarter of the alternative. Neither noticed the two numbers disagreed.
  *
- * A conflict like that usually means the two numbers were produced under
- * different assumptions - a projection adjusted for missed games against a rank
- * that is not, most often - so neither is simply wrong and neither should be
- * discarded. What is wrong is presenting them as though they agreed.
+ * The disagreement is reported NEUTRALLY, and that is deliberate. It is not
+ * evidence that the ranking is wrong: a rank legitimately encodes things a
+ * point projection does not - role, risk, expected availability - so a gap
+ * between them may be entirely intended. Calling the rank unreliable would
+ * substitute our judgement for the strategist's on exactly the question it is
+ * better placed to answer.
  *
- * So this detects the disagreement and says so. It changes nothing, rejects
- * nobody, and never edits First Seed's data. Purely a flag, raised from the
- * relationship between a player and his own positional neighbours rather than
- * from anything specific to a player or a season.
+ * So this says only that the signals differ, and by how much. It changes
+ * nothing, rejects nobody, and never edits First Seed's data - a flag raised
+ * from a player's relationship to his own rank neighbours rather than from
+ * anything specific to a player or a season.
  */
 import type { Position } from '../../players/types';
 
@@ -106,12 +108,11 @@ export function detectDataWarnings(
       warnings.set(candidate.playerId, {
         code: 'ranking_projection_conflict',
         detail:
-          `First Seed ranks him ${candidate.firstSeedRank} at ${position} but projects only ` +
+          `First Seed rank and projection materially disagree; consider both signals. ` +
+          `They rank him ${candidate.firstSeedRank} at ${position} while projecting ` +
           `${round1(candidate.projection)} points, against a median of ${round1(median)} among the ` +
-          `${neighbours.length} ${position}s they rank nearest him. The rank and the projection ` +
-          `disagree; they were probably not produced on the same basis (a missed-games ` +
-          `adjustment in one and not the other is the usual cause). Both are shown as ` +
-          `published - neither has been altered.`,
+          `${neighbours.length} ${position}s they rank nearest him. Both numbers are shown as ` +
+          `published and neither has been altered.`,
         projection: round1(candidate.projection),
         neighbourMedianProjection: round1(median),
         shortfallRatio: round1(ratio),

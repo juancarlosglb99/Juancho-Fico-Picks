@@ -91,13 +91,14 @@ function sound(overrides: Partial<Record<keyof StrategistResponse, unknown>> = {
       { playerId: third, reason: 'Third best.' },
     ],
     confidence: 72,
-    decision: 'WAIT',
+    urgency: 'likely_to_return',
     strategy: 'Hero RB, filling the last startable receiver slot.',
     reasons: [
       { code: 'starter_need', detail: 'Our second receiver slot is empty.' },
       { code: 'tier_cliff', detail: 'Two players left in this tier.' },
     ],
-    strongestAlternative: { playerId: second, why: 'Same slot, one round later.' },
+    strongestAlternativePlayerId: second,
+    strongestAlternativeWhy: 'Same slot, one round later.',
     strongestCounterargument: 'He is 84% to survive to our next turn.',
     whyRecommendationStillWins: 'The tier behind him empties first.',
     firstSeedDeviationReason: null,
@@ -148,25 +149,25 @@ describe('one repair attempt', () => {
   });
 
   it('repairs a response that dropped a required field', async () => {
-    // The exact failure seen twice in production: no `decision`.
+    // The exact failure seen twice in production: a required field simply absent.
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     const { strategist, requests } = scriptedStrategist([broken, sound()]);
     const result = await strategist.call(brief);
 
     expect(requests).toHaveLength(2);
     expect(result.repairAttempted).toBe(true);
     expect(result.attempts).toHaveLength(2);
-    expect(result.attempts[0].problems.map((problem) => problem.path)).toEqual(['decision']);
+    expect(result.attempts[0].problems.map((problem) => problem.path)).toEqual(['urgency']);
     expect(result.attempts[1].problems).toEqual([]);
     expect(result.advice).not.toBeNull();
     expect(result.error).toBeNull();
-    expect(result.response!.decision).toBe('WAIT');
+    expect(result.response!.urgency).toBe('likely_to_return');
   });
 
   it('tells the model exactly what was wrong, and to keep its analysis', async () => {
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     const { strategist, requests } = scriptedStrategist([broken, sound()]);
     await strategist.call(brief);
 
@@ -180,14 +181,14 @@ describe('one repair attempt', () => {
     const toolResult = (repairTurn[2].content as { type: string; content: string; is_error: boolean }[])[0];
     expect(toolResult.type).toBe('tool_result');
     expect(toolResult.is_error).toBe(true);
-    expect(toolResult.content).toContain('decision');
+    expect(toolResult.content).toContain('urgency');
     expect(toolResult.content).toContain('not in question');
     expect(toolResult.content).toContain('COMPLETE payload');
   });
 
   it('gives up after the second failure rather than trying again', async () => {
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     const { strategist, requests } = scriptedStrategist([broken, broken, sound()]);
     const result = await strategist.call(brief);
 
@@ -195,13 +196,13 @@ describe('one repair attempt', () => {
     expect(result.repairAttempted).toBe(true);
     expect(result.advice).toBeNull();
     expect(result.response).toBeNull();
-    expect(result.problems.map((problem) => problem.path)).toEqual(['decision']);
+    expect(result.problems.map((problem) => problem.path)).toEqual(['urgency']);
     expect(result.error).toContain('did not satisfy the contract');
   });
 
   it('falls back to the deterministic pick when repair fails', async () => {
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     const { strategist } = scriptedStrategist([broken, broken]);
     const result = await strategist.call(brief);
 
@@ -223,12 +224,12 @@ describe('one repair attempt', () => {
       source: 'deterministic',
     });
     expect(decision.audit.repair).toMatchObject({ attempted: true, succeeded: false, attempts: 2 });
-    expect(decision.audit.repair!.firstAttemptProblems[0].path).toBe('decision');
+    expect(decision.audit.repair!.firstAttemptProblems[0].path).toBe('urgency');
   });
 
   it('records a successful repair in the audit rather than hiding it', async () => {
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     const { strategist } = scriptedStrategist([broken, sound()]);
     const result = await strategist.call(brief);
 
@@ -256,19 +257,19 @@ describe('one repair attempt', () => {
      * from a real answer.
      */
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     const { strategist } = scriptedStrategist([broken, broken]);
     const result = await strategist.call(brief);
 
     expect(result.advice).toBeNull();
     expect(result.response).toBeNull();
     expect(result.rawResponse).toMatchObject({ recommendedPlayerId: first });
-    expect((result.rawResponse as Record<string, unknown>).decision).toBeUndefined();
+    expect((result.rawResponse as Record<string, unknown>).urgency).toBeUndefined();
   });
 
   it('sums tokens and latency across both attempts', async () => {
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     const { strategist } = scriptedStrategist([broken, sound()]);
     const result = await strategist.call(brief);
 
@@ -279,7 +280,7 @@ describe('one repair attempt', () => {
 
   it('repairs a different kind of fault just as readily', async () => {
     const { strategist, requests } = scriptedStrategist([
-      sound({ confidence: 150, decision: 'MAYBE' }),
+      sound({ confidence: 150, urgency: 'MAYBE' }),
       sound(),
     ]);
     const result = await strategist.call(brief);
@@ -315,7 +316,7 @@ describe('one repair attempt', () => {
 describe('the repair instruction', () => {
   it('lists every fault, not just the first', () => {
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     delete broken.strategy;
     const problems = validateStrategistResponse(broken, ids).problems;
     const instruction = repairInstruction(problems);
@@ -326,7 +327,7 @@ describe('the repair instruction', () => {
 
   it('asks for the whole payload rather than a patch', () => {
     const instruction = repairInstruction([
-      { code: 'missing_field', path: 'decision', message: 'x' },
+      { code: 'missing_field', path: 'urgency', message: 'x' },
     ]);
     expect(instruction).toContain('COMPLETE payload');
     expect(instruction).toContain('every required field');

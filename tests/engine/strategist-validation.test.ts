@@ -95,13 +95,14 @@ function sound(overrides: Partial<Record<keyof StrategistResponse, unknown>> = {
       { playerId: third, reason: 'Third best.' },
     ],
     confidence: 72,
-    decision: 'WAIT',
+    urgency: 'likely_to_return',
     strategy: 'Hero RB, filling the last startable receiver slot.',
     reasons: [
       { code: 'starter_need', detail: 'Our second receiver slot is empty.' },
       { code: 'tier_cliff', detail: 'Two players left in this tier.' },
     ],
-    strongestAlternative: { playerId: second, why: 'Fills the same slot a round later.' },
+    strongestAlternativePlayerId: second,
+    strongestAlternativeWhy: 'Fills the same slot a round later.',
     strongestCounterargument: 'He is 84% to survive to our next turn, so waiting may be free.',
     whyRecommendationStillWins: 'The tier behind him empties first, so the slot is the scarce thing.',
     firstSeedDeviationReason: null,
@@ -137,17 +138,17 @@ describe('a sound response', () => {
 /* --------------------------------------------------------------- missing fields */
 
 describe('missing fields', () => {
-  it('rejects the exact failure seen in production: no decision', () => {
-    const { decision, ...withoutDecision } = sound();
-    void decision;
-    const result = check(withoutDecision);
+  it('rejects the exact failure seen in production: a required field absent', () => {
+    const { urgency, ...withoutUrgency } = sound();
+    void urgency;
+    const result = check(withoutUrgency);
     expect(result.ok).toBe(false);
     expect(result.response).toBeNull();
     expect(result.problems).toEqual([
       {
         code: 'missing_field',
-        path: 'decision',
-        message: 'Required field "decision" was not returned.',
+        path: 'urgency',
+        message: 'Required field "urgency" was not returned.',
       },
     ]);
   });
@@ -174,7 +175,7 @@ describe('missing fields', () => {
 
   it('reports every problem at once rather than stopping at the first', () => {
     const broken = sound();
-    delete broken.decision;
+    delete broken.urgency;
     delete broken.strategy;
     broken.confidence = 500;
     expect(check(broken).problems.length).toBeGreaterThanOrEqual(3);
@@ -184,17 +185,20 @@ describe('missing fields', () => {
 /* ------------------------------------------------------------------- bad enums */
 
 describe('enums', () => {
-  it('rejects a decision outside the two allowed values', () => {
-    for (const value of ['draft_now', 'DRAFT', 'MAYBE', '', 'WAIT ', 1, null]) {
-      expect(codes(sound({ decision: value })), `accepted ${JSON.stringify(value)}`).toContain(
+  it('rejects an urgency outside the three allowed values', () => {
+    // Includes the two values this field used to carry, so a model working from
+    // a stale idea of the contract is caught rather than quietly accepted.
+    for (const value of ['DRAFT_NOW', 'WAIT', 'must take now', 'MUST_TAKE_NOW', '', 1, null]) {
+      expect(codes(sound({ urgency: value })), `accepted ${JSON.stringify(value)}`).toContain(
         'invalid_enum',
       );
     }
   });
 
-  it('accepts exactly the two allowed values', () => {
-    expect(check(sound({ decision: 'DRAFT_NOW' })).ok).toBe(true);
-    expect(check(sound({ decision: 'WAIT' })).ok).toBe(true);
+  it('accepts exactly the three allowed values', () => {
+    for (const value of ['must_take_now', 'likely_to_return', 'neutral']) {
+      expect(check(sound({ urgency: value })).ok, value).toBe(true);
+    }
   });
 });
 
@@ -300,7 +304,8 @@ describe('malformed arrays', () => {
 describe('the strongest counterargument', () => {
   it('cannot be omitted', () => {
     for (const field of [
-      'strongestAlternative',
+      'strongestAlternativePlayerId',
+      'strongestAlternativeWhy',
       'strongestCounterargument',
       'whyRecommendationStillWins',
     ]) {
@@ -314,28 +319,41 @@ describe('the strongest counterargument', () => {
   it('cannot be empty prose', () => {
     expect(codes(sound({ strongestCounterargument: '   ' }))).toContain('empty_string');
     expect(codes(sound({ whyRecommendationStillWins: '' }))).toContain('empty_string');
-    expect(
-      codes(sound({ strongestAlternative: { playerId: second, why: '' } })),
-    ).toContain('empty_string');
+    expect(codes(sound({ strongestAlternativeWhy: '' }))).toContain('empty_string');
+    expect(codes(sound({ strongestAlternativePlayerId: '  ' }))).toContain('empty_string');
   });
 
   it('names a real player on the board', () => {
-    expect(
-      codes(sound({ strongestAlternative: { playerId: 'jfp:invented', why: 'x' } })),
-    ).toContain('unknown_player');
-    expect(codes(sound({ strongestAlternative: second }))).toContain('wrong_type');
-    expect(codes(sound({ strongestAlternative: { why: 'x' } }))).toContain('wrong_type');
+    expect(codes(sound({ strongestAlternativePlayerId: 'jfp:invented' }))).toContain(
+      'unknown_player',
+    );
+    expect(codes(sound({ strongestAlternativePlayerId: 42 }))).toContain('wrong_type');
+  });
+
+  it('rejects the old nested shape, which is what kept failing', () => {
+    /*
+     * Three of four malformed calls in production emitted this field as a JSON
+     * string rather than an object, twice truncated. Flattening it removes the
+     * shape entirely - and an object here is now simply the wrong type.
+     */
+    const nested = sound();
+    delete nested.strongestAlternativePlayerId;
+    delete nested.strongestAlternativeWhy;
+    nested.strongestAlternative = { playerId: second, why: 'x' };
+    const problems = check(nested).problems;
+    expect(problems.map((problem) => problem.path).sort()).toEqual([
+      'strongestAlternativePlayerId',
+      'strongestAlternativeWhy',
+    ]);
   });
 
   it('rejects naming the recommendation as its own strongest rival', () => {
     // An alternative that is the pick itself answers nothing, and would let the
     // field be satisfied without engaging with anything.
-    const result = check(
-      sound({ strongestAlternative: { playerId: first, why: 'He is also the best.' } }),
-    );
+    const result = check(sound({ strongestAlternativePlayerId: first }));
     expect(result.ok).toBe(false);
     expect(result.problems.map((problem) => problem.path)).toContain(
-      'strongestAlternative.playerId',
+      'strongestAlternativePlayerId',
     );
   });
 });
@@ -412,7 +430,7 @@ describe('partial and degenerate tool responses', () => {
 
   it('summarises every problem in one readable line', () => {
     const summary = describeProblems(check({}).problems);
-    expect(summary).toContain('decision');
+    expect(summary).toContain('urgency');
     expect(summary).toContain('recommendedPlayerId');
   });
 });
@@ -422,7 +440,7 @@ describe('partial and degenerate tool responses', () => {
 describe('failing closed', () => {
   it('records the failure and shows the deterministic pick', () => {
     const malformed = sound();
-    delete malformed.decision;
+    delete malformed.urgency;
     const validation = check(malformed);
     expect(validation.ok).toBe(false);
 
@@ -461,17 +479,17 @@ describe('failing closed', () => {
      * is exactly the failure mode this whole file exists to prevent.
      */
     const malformed = sound();
-    delete malformed.decision;
+    delete malformed.urgency;
     const validation = check(malformed);
     expect(validation.response).toBeNull();
     expect(validation.problems).toHaveLength(1);
   });
 
   it('only builds advice from a response that passed', () => {
-    const validation = check(sound({ decision: 'DRAFT_NOW' }));
+    const validation = check(sound({ urgency: 'must_take_now' }));
     expect(validation.ok).toBe(true);
     const advice = toAdvice(validation.response!, brief, 'test-model');
-    expect(advice.decision).toBe('DRAFT_NOW');
+    expect(advice.urgency).toBe('must_take_now');
     expect(advice.confidence).toBeCloseTo(0.72);
   });
 });

@@ -85,7 +85,7 @@ export function renderEvaluatedPick(evaluated: EvaluatedPick): string[] {
   lines.push(
     `  CLAUDE       ${chosen ? `${chosen.name} (${chosen.position})` : response.recommendedPlayerId}` +
       (chosen ? `  ${describeGap(chosen)}  ${describePlan(chosen)}` : '  [not on the board]') +
-      `  ·  ${response.decision}  ·  ${response.confidence}% confident`,
+      `  ·  ${response.urgency}  ·  ${response.confidence}% confident`,
   );
 
   const agreement =
@@ -106,13 +106,13 @@ export function renderEvaluatedPick(evaluated: EvaluatedPick): string[] {
   if (response.firstSeedDeviationReason) {
     lines.push(`  FS deviation ${wrap(response.firstSeedDeviationReason, 15)}`);
   }
-  if (response.strongestAlternative) {
+  if (response.strongestAlternativePlayerId) {
     const rival = evaluated.brief.candidates.find(
-      (candidate) => candidate.playerId === response.strongestAlternative.playerId,
+      (candidate) => candidate.playerId === response.strongestAlternativePlayerId,
     );
     lines.push(
-      `  strongest    ${rival ? `${rival.name} (${rival.position})` : response.strongestAlternative.playerId} — ` +
-        `${wrap(response.strongestAlternative.why, 15)}`,
+      `  strongest    ${rival ? `${rival.name} (${rival.position})` : response.strongestAlternativePlayerId} — ` +
+        `${wrap(response.strongestAlternativeWhy, 15)}`,
     );
   }
   if (response.strongestCounterargument) {

@@ -46,11 +46,18 @@ export const SUBMIT_RECOMMENDATION_TOOL = {
         description:
           'How confident you are that this is the best selection. Low when the top options are genuinely close.',
       },
-      decision: {
+      urgency: {
         type: 'string',
-        enum: ['DRAFT_NOW', 'WAIT'],
+        enum: ['must_take_now', 'likely_to_return', 'neutral'],
         description:
-          'DRAFT_NOW when this player must be taken at this selection or lost. WAIT when he is likely to survive and the pick is being made for other reasons.',
+          'How much the TIMING matters, separately from whether he is the right pick - ' +
+          'recommendedPlayerId already says he is. must_take_now: waiting carries real risk ' +
+          'or opportunity cost. likely_to_return: still the best pick, but he would reasonably ' +
+          'likely survive to our next selection. neutral: urgency is not part of why he is the ' +
+          'best pick, which is normally the case at our final selection. Weigh the survival and ' +
+          'joint-availability figures as evidence, but do not read the answer off a threshold - ' +
+          'a player at 80% can be must_take_now if losing him has no replacement, and one at 30% ' +
+          'can be neutral if the pick is right regardless.',
       },
       strategy: {
         type: 'string',
@@ -77,19 +84,15 @@ export const SUBMIT_RECOMMENDATION_TOOL = {
           additionalProperties: false,
         },
       },
-      strongestAlternative: {
-        type: 'object',
+      strongestAlternativePlayerId: {
+        type: 'string',
         description:
-          'The single best selection other than your recommendation. Never the same player.',
-        properties: {
-          playerId: { type: 'string', description: 'Board table id, copied exactly.' },
-          why: {
-            type: 'string',
-            description: 'One sentence on what makes him the strongest competing case.',
-          },
-        },
-        required: ['playerId', 'why'],
-        additionalProperties: false,
+          'The single best selection other than your recommendation, as a board table id ' +
+          'copied exactly. Never the same player as recommendedPlayerId.',
+      },
+      strongestAlternativeWhy: {
+        type: 'string',
+        description: 'One sentence on what makes him the strongest competing case.',
       },
       strongestCounterargument: {
         type: 'string',
@@ -143,10 +146,11 @@ export const SUBMIT_RECOMMENDATION_TOOL = {
       'recommendedPlayerId',
       'alternatives',
       'confidence',
-      'decision',
+      'urgency',
       'strategy',
       'reasons',
-      'strongestAlternative',
+      'strongestAlternativePlayerId',
+      'strongestAlternativeWhy',
       'strongestCounterargument',
       'whyRecommendationStillWins',
       'firstSeedDeviationReason',
@@ -163,11 +167,26 @@ export interface StrategistResponse {
   alternatives: { playerId: string; reason: string }[];
   /** 0-100, as the model reports it. */
   confidence: number;
-  decision: 'DRAFT_NOW' | 'WAIT';
+  /**
+   * How much the timing matters, separately from whether he is the right pick.
+   *
+   * Replaces a DRAFT_NOW/WAIT flag that could not mean anything here:
+   * `recommendedPlayerId` already says which player to select, so "wait" had no
+   * operational reading - and the model duly returned DRAFT_NOW fourteen times
+   * out of fourteen, including for players at 72-80% survival.
+   */
+  urgency: 'must_take_now' | 'likely_to_return' | 'neutral';
   strategy: string;
   reasons: { code: string; detail: string }[];
-  /** The best selection other than the recommendation. */
-  strongestAlternative: { playerId: string; why: string };
+  /**
+   * The best selection other than the recommendation, as two flat fields.
+   *
+   * It was one nested object, and that shape alone accounted for three of the
+   * four malformed tool calls: the model emitted it as a JSON string, twice
+   * truncated mid-value. No array-of-objects field has ever failed.
+   */
+  strongestAlternativePlayerId: string;
+  strongestAlternativeWhy: string;
   /** The fact that most threatens the recommendation, stated at full strength. */
   strongestCounterargument: string;
   /** The direct answer to it. */

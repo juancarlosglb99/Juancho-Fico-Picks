@@ -61,7 +61,7 @@ const REASONS_MAX = properties.reasons.maxItems as number;
 const OPPONENTS_MAX = properties.opponentsThatMatter.maxItems as number;
 const CONFIDENCE_MIN = properties.confidence.minimum as number;
 const CONFIDENCE_MAX = properties.confidence.maximum as number;
-const DECISIONS = properties.decision.enum as string[];
+const URGENCIES = properties.urgency.enum as string[];
 /** Read from the schema, so the two contracts cannot drift apart again. */
 const CONFIDENCE_INTEGER = properties.confidence.type === 'integer';
 
@@ -181,11 +181,11 @@ export function validateStrategistResponse(
     }
   }
 
-  if ('decision' in value && !DECISIONS.includes(value.decision as string)) {
+  if ('urgency' in value && !URGENCIES.includes(value.urgency as string)) {
     fail(
       'invalid_enum',
-      'decision',
-      `Expected one of ${DECISIONS.join(' | ')}, got ${describe(value.decision)}.`,
+      'urgency',
+      `Expected one of ${URGENCIES.join(' | ')}, got ${describe(value.urgency)}.`,
     );
   }
 
@@ -227,34 +227,41 @@ export function validateStrategistResponse(
    * next turn - and never mentioned it. A model is not obliged to notice the
    * fact that most threatens its own answer unless it is asked to name it.
    */
-  if ('strongestAlternative' in value) {
-    const alternative = value.strongestAlternative;
-    if (typeof alternative !== 'object' || alternative === null || Array.isArray(alternative)) {
-      fail('wrong_type', 'strongestAlternative', 'Expected an object with playerId and why.');
-    } else {
-      const entry = alternative as Record<string, unknown>;
-      const playerId = entry.playerId;
-      if (typeof playerId !== 'string') {
-        fail('wrong_type', 'strongestAlternative.playerId', 'Expected a player id string.');
-      } else if (playerId.trim() === '') {
-        fail('empty_string', 'strongestAlternative.playerId', 'The player id was empty.');
-      } else if (!board.has(playerId)) {
-        fail(
-          'unknown_player',
-          'strongestAlternative.playerId',
-          `"${playerId}" is not an id on the board the strategist was shown.`,
-        );
-      } else if (playerId === recommended) {
-        // Naming your own pick as its own strongest rival answers nothing.
-        fail(
-          'wrong_type',
-          'strongestAlternative.playerId',
-          'The strongest alternative cannot be the recommended player.',
-        );
-      }
-      requireText(entry.why, 'strongestAlternative.why', fail);
+  /*
+   * Two flat fields rather than one nested object.
+   *
+   * The nested shape accounted for three of the four malformed tool calls in
+   * production - emitted as a JSON string, twice truncated mid-value - while no
+   * array-of-objects field has ever failed. Same meaning, a shape the model
+   * serialises reliably.
+   */
+  if ('strongestAlternativePlayerId' in value) {
+    const playerId = value.strongestAlternativePlayerId;
+    if (typeof playerId !== 'string') {
+      fail('wrong_type', 'strongestAlternativePlayerId', 'Expected a player id string.');
+    } else if (playerId.trim() === '') {
+      fail('empty_string', 'strongestAlternativePlayerId', 'The player id was empty.');
+    } else if (!board.has(playerId)) {
+      fail(
+        'unknown_player',
+        'strongestAlternativePlayerId',
+        `"${playerId}" is not an id on the board the strategist was shown.`,
+      );
+    } else if (playerId === recommended) {
+      // Naming your own pick as its own strongest rival answers nothing.
+      fail(
+        'wrong_type',
+        'strongestAlternativePlayerId',
+        'The strongest alternative cannot be the recommended player.',
+      );
     }
   }
+  requireText(
+    value.strongestAlternativeWhy,
+    'strongestAlternativeWhy',
+    fail,
+    'strongestAlternativeWhy' in value,
+  );
 
   requireText(
     value.strongestCounterargument,
