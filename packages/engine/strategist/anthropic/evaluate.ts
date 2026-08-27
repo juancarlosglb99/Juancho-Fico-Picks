@@ -228,7 +228,12 @@ export async function evaluatePick(
   const brief = buildBriefAtPick(input, overallPick);
   if (!brief) return null;
 
-  const payload = buildStrategistPromptContext(brief);
+  /*
+   * Keyed on the payload this strategist will actually send, options included.
+   * Building it with defaults gave blind and open runs the same key, so a blind
+   * experiment was quietly answered from the open cache.
+   */
+  const payload = buildStrategistPromptContext(brief, options.strategist.promptContext);
   const key = cacheKey({ model: options.model, payload });
   const label =
     `${input.regression.draftId} p${overallPick} ${strategistFingerprint(options.model)}` +

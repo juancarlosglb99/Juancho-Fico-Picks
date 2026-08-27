@@ -107,7 +107,13 @@ export class AnthropicStrategist implements StrategistClient {
   private readonly model: string;
   private readonly maxTokens: number;
   private readonly thinkingBudget: number;
-  private readonly promptContext: Partial<PromptContextOptions>;
+  /**
+   * Public so a caller can key a cache on the payload this strategist will
+   * actually send. Deriving it with default options instead produced identical
+   * keys for blind and open runs, which silently served open-context answers to
+   * a blind experiment.
+   */
+  readonly promptContext: Partial<PromptContextOptions>;
   /** True when the deterministic verdict is withheld from the payload. */
   readonly isBlind: boolean;
 
