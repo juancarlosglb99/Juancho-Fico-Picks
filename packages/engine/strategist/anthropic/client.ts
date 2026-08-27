@@ -15,6 +15,11 @@ import type { DraftBrief, StrategistAdvice, StrategistClient } from '../types';
 import { buildStrategistPromptContext, type PromptContextOptions } from '../prompt-context';
 import { PLAYBOOK_VERSION, STRATEGIST_SYSTEM_PROMPT } from './playbook';
 import { SUBMIT_RECOMMENDATION_TOOL, type StrategistResponse } from './schema';
+import {
+  describeProblems,
+  validateStrategistResponse,
+  type ResponseProblem,
+} from './validate';
 
 /** Changed with `JUANCHO_STRATEGIST_MODEL`; never hardcoded at a call site. */
 export const DEFAULT_STRATEGIST_MODEL = 'claude-opus-5';
@@ -31,8 +36,17 @@ export interface AnthropicStrategistOptions {
 
 export interface StrategistCallResult {
   advice: StrategistAdvice | null;
-  /** The raw tool input, kept verbatim for auditing. */
+  /** The validated tool input, kept verbatim for auditing. Null if it failed. */
   response: StrategistResponse | null;
+  /**
+   * The unvalidated tool input, kept even when validation rejected it.
+   *
+   * A response that fails is the only evidence of HOW it failed, so it is
+   * preserved for the audit rather than discarded with the advice.
+   */
+  rawResponse: unknown;
+  /** Everything wrong with the response. Empty when it was accepted. */
+  problems: ResponseProblem[];
   /** The model's own reasoning, when extended thinking is on. */
   thinking: string | null;
   model: string;
@@ -150,6 +164,8 @@ export class AnthropicStrategist implements StrategistClient {
         return {
           advice: null,
           response: null,
+          rawResponse: null,
+          problems: [],
           thinking: thinking || null,
           model: this.model,
           usage: usageOf(message),
@@ -158,10 +174,38 @@ export class AnthropicStrategist implements StrategistClient {
         };
       }
 
-      const response = toolUse.input as StrategistResponse;
+      /*
+       * The schema is a request, not a guarantee.
+       *
+       * The first evaluation run had the model omit `decision` entirely despite
+       * it being required, and nothing noticed - it flowed through as
+       * `undefined` and printed as "undefined". So the response is checked
+       * against the published contract before it is allowed to become advice,
+       * and a failure produces no advice at all rather than a partial one.
+       */
+      const validation = validateStrategistResponse(
+        toolUse.input,
+        brief.candidates.map((candidate) => candidate.playerId),
+      );
+      if (!validation.ok) {
+        return {
+          advice: null,
+          response: null,
+          rawResponse: toolUse.input,
+          problems: validation.problems,
+          thinking: thinking || null,
+          model: this.model,
+          usage: usageOf(message),
+          latencyMs,
+          error: `The strategist's response did not satisfy the contract. ${describeProblems(validation.problems)}`,
+        };
+      }
+
       return {
-        advice: toAdvice(response, brief, this.model),
-        response,
+        advice: toAdvice(validation.response, brief, this.model),
+        response: validation.response,
+        rawResponse: toolUse.input,
+        problems: [],
         thinking: thinking || null,
         model: this.model,
         usage: usageOf(message),
@@ -172,6 +216,8 @@ export class AnthropicStrategist implements StrategistClient {
       return {
         advice: null,
         response: null,
+        rawResponse: null,
+        problems: [],
         thinking: null,
         model: this.model,
         usage: null,

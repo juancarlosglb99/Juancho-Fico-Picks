@@ -1,0 +1,102 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 88,
+      "currentOverallPick": 89,
+      "currentRound": 9,
+      "boardFingerprint": "2g-64279b21",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:13286",
+      "reasoning": "starter_need: Our lineup is complete - QB Hurts, RB Barkley/Javonte, WR Nacua/Pickens, TE Warren, FLEX Judkins, FLEX Flowers - so this is a pure best-bench-value pick, and Price's 156 projected points is the highest of any non-QB on the board by 32 points over Alec Pierce (117.8). tier_cliff: Price is the last player in RB tier 10 with a 7.9-point gap to the next tier, while TE tier 4 still has 17 players (LaPorta, Kincaid, Andrews, Goedert, Kittle, Kelce) and cannot run dry before our 92, 109 and 112 picks.",
+      "reasonCodes": [
+        "starter_need",
+        "tier_cliff"
+      ],
+      "confidence": 0.67
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:12533",
+        "reasoning": "Jacory Croskey-Merritt is the next-best upside RB body (120.2 proj, tier 13 with only 4 left) and would give the same flex/injury insurance if Price is gone.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:10859",
+        "reasoning": "Sam LaPorta is First Seed's best available (rank 85) and a genuine TE2/upgrade over Tyler Warren, but a second TE cannot start in this 2xFLEX lineup and he has a 76.9% chance of surviving to 92.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Holds both picks 90 and 91 back-to-back; already has RB Jeanty/Montgomery/Corum and TE Brock Bowers, listed need TE:medium, so they are far more likely to take a TE or WR than Price - but with two consecutive picks and an RB-heavy room tendency (41% RB share) they can comfortably take one RB flier, which is exactly the risk to Price. Roster 8: Picks at 93 immediately after our 92 with RB5 already rostered and needs WR/TE - they will not take Price but will compete for LaPorta/Kincaid at TE, which is why we want the RB now and the TE next.",
+    "confidence": 0.67,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all nine non-K/DEF starting slots filled; this pick starts the bench by taking the highest-projected startable-quality body left (RB), because in standard scoring a fourth RB with real volume upside is the only bench piece that can actually replace a starter in our two FLEX slots.",
+    "firstSeedDeviationReason": "Only a 1-rank reach past First Seed's best available (Price fsRank 86 vs LaPorta 85), so no meaningful deviation; Juancho's own simulation also has Price at dPlan +21.5 and dDec 0, the top of the penalty-adjusted board.",
+    "expectedNextPickPlan": "At 92 we expect Sam LaPorta (76.9% survival) or Dalton Kincaid (79.5%) to still be there for a TE upgrade/handcuff on Tyler Warren, with Marvin Harrison Jr. (81.8%) and Chris Godwin (87.4%) as WR-depth fallbacks; at 109/112 we take a second QB or upside RB, and we reserve 129/132/149 for the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Holds both picks 90 and 91 back-to-back; already has RB Jeanty/Montgomery/Corum and TE Brock Bowers, listed need TE:medium, so they are far more likely to take a TE or WR than Price - but with two consecutive picks and an RB-heavy room tendency (41% RB share) they can comfortably take one RB flier, which is exactly the risk to Price."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks at 93 immediately after our 92 with RB5 already rostered and needs WR/TE - they will not take Price but will compete for LaPorta/Kincaid at TE, which is why we want the RB now and the TE next."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:13286",
+    "alternatives": [
+      {
+        "playerId": "jfp:12533",
+        "reason": "Jacory Croskey-Merritt is the next-best upside RB body (120.2 proj, tier 13 with only 4 left) and would give the same flex/injury insurance if Price is gone."
+      },
+      {
+        "playerId": "jfp:10859",
+        "reason": "Sam LaPorta is First Seed's best available (rank 85) and a genuine TE2/upgrade over Tyler Warren, but a second TE cannot start in this 2xFLEX lineup and he has a 76.9% chance of surviving to 92."
+      }
+    ],
+    "confidence": 67,
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all nine non-K/DEF starting slots filled; this pick starts the bench by taking the highest-projected startable-quality body left (RB), because in standard scoring a fourth RB with real volume upside is the only bench piece that can actually replace a starter in our two FLEX slots.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Our lineup is complete - QB Hurts, RB Barkley/Javonte, WR Nacua/Pickens, TE Warren, FLEX Judkins, FLEX Flowers - so this is a pure best-bench-value pick, and Price's 156 projected points is the highest of any non-QB on the board by 32 points over Alec Pierce (117.8)."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "Price is the last player in RB tier 10 with a 7.9-point gap to the next tier, while TE tier 4 still has 17 players (LaPorta, Kincaid, Andrews, Goedert, Kittle, Kelce) and cannot run dry before our 92, 109 and 112 picks."
+      }
+    ],
+    "firstSeedDeviationReason": "Only a 1-rank reach past First Seed's best available (Price fsRank 86 vs LaPorta 85), so no meaningful deviation; Juancho's own simulation also has Price at dPlan +21.5 and dDec 0, the top of the penalty-adjusted board.",
+    "expectedNextPickPlan": "At 92 we expect Sam LaPorta (76.9% survival) or Dalton Kincaid (79.5%) to still be there for a TE upgrade/handcuff on Tyler Warren, with Marvin Harrison Jr. (81.8%) and Chris Godwin (87.4%) as WR-depth fallbacks; at 109/112 we take a second QB or upside RB, and we reserve 129/132/149 for the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Holds both picks 90 and 91 back-to-back; already has RB Jeanty/Montgomery/Corum and TE Brock Bowers, listed need TE:medium, so they are far more likely to take a TE or WR than Price - but with two consecutive picks and an RB-heavy room tendency (41% RB share) they can comfortably take one RB flier, which is exactly the risk to Price."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks at 93 immediately after our 92 with RB5 already rostered and needs WR/TE - they will not take Price but will compete for LaPorta/Kincaid at TE, which is why we want the RB now and the TE next."
+      }
+    ]
+  },
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 15586,
+    "outputTokens": 1268
+  },
+  "latencyMs": 19761,
+  "error": null,
+  "cachedAt": "2026-08-27T00:57:48.809Z",
+  "key": "642f2fda30dbb81582efc9a2d05d0c7a",
+  "label": "1398448522730221568 p89 claude-opus-5/playbook-v1"
+}

@@ -22,6 +22,7 @@ import { buildStrategistPromptContext } from '../prompt-context';
 import type { BriefCandidate, DraftBrief } from '../types';
 import { cacheKey, readCached, writeCached, type CachedCall } from './cache';
 import { AnthropicStrategist, strategistFingerprint } from './client';
+import { describeProblems, validateStrategistResponse } from './validate';
 
 /** Why a selection was picked out for evaluation. */
 export type InterestReason =
@@ -171,6 +172,36 @@ export interface EvaluateOptions {
 }
 
 /**
+ * Re-checks an answer against the contract, however it arrived.
+ *
+ * Validity is a property of the RESPONSE, not of when it was received. Answers
+ * cached before the validator existed - including the one that omitted
+ * `decision` entirely - would otherwise keep being served as though they were
+ * sound, and tightening the contract later would silently not apply to them.
+ *
+ * Cheap enough to run on every read, and it means the cache can never be a way
+ * around the rules.
+ */
+function enforceContract(call: CachedCall, brief: DraftBrief): CachedCall {
+  if (call.response === null || call.response === undefined) {
+    return { ...call, problems: call.problems ?? [] };
+  }
+  const validation = validateStrategistResponse(
+    call.response,
+    brief.candidates.map((candidate) => candidate.playerId),
+  );
+  if (validation.ok) return { ...call, problems: [] };
+  return {
+    ...call,
+    advice: null,
+    response: null,
+    rawResponse: call.response,
+    problems: validation.problems,
+    error: `The strategist's response did not satisfy the contract. ${describeProblems(validation.problems)}`,
+  };
+}
+
+/**
  * Evaluates one selection, reusing a stored answer when there is one.
  *
  * The cache key is the exact payload the model would be sent, so a change to
@@ -190,13 +221,15 @@ export async function evaluatePick(
   const label = `${input.regression.draftId} p${overallPick} ${strategistFingerprint(options.model)}`;
 
   const cached = options.refresh ? null : readCached(key);
-  const call =
-    cached ??
-    writeCached(key, label, await options.strategist.call(brief), options.now);
+  const call = enforceContract(
+    cached ?? writeCached(key, label, await options.strategist.call(brief), options.now),
+    brief,
+  );
 
   const decision = resolveStrategistDecision({
     brief,
     advice: call.advice,
+    responseProblems: call.problems,
     latencyMs: call.latencyMs,
     strategistId: `anthropic:${options.model}`,
   });

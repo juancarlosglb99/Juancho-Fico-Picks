@@ -48,6 +48,7 @@ export { resolveStrategistDecision, summarizeAudit } from './audit';
 export type {
   ChosenPlayer,
   ResolveStrategistInput,
+  ResponseValidationProblem,
   StrategistAuditRecord,
   StrategistDecision,
   StrategistOutcome,

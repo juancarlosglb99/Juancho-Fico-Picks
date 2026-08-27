@@ -20,6 +20,8 @@ import type { DraftBrief, StrategistAdvice, StrategistPick } from './types';
 export type StrategistOutcome =
   /** No strategist ran, or it returned nothing. */
   | 'ai_unavailable'
+  /** It answered, but not in the shape it was asked to answer in. */
+  | 'ai_malformed'
   /** It answered about a board that no longer exists. */
   | 'ai_stale'
   /** It agreed with the deterministic engine. */
@@ -46,6 +48,14 @@ export interface StrategistAuditRecord {
   deterministic: DraftBrief['deterministic']['recommended'];
   advice: StrategistAdvice | null;
   adviceConfidence: number | null;
+  /**
+   * Why a response was thrown away before it became advice.
+   *
+   * Recorded rather than merely logged: a malformed answer is a fact about the
+   * strategist that a later review needs, and it is invisible from the outside
+   * because the deterministic pick is shown either way.
+   */
+  responseProblems: ResponseValidationProblem[];
   /** The strategist's structured reasons, kept verbatim. */
   reasons: { playerId: string; reasonCodes: string[]; reasoning: string }[];
   guardrail: GuardrailResult | null;
@@ -64,10 +74,31 @@ export interface StrategistDecision {
   audit: StrategistAuditRecord;
 }
 
+/**
+ * A structural failure in the strategist's response.
+ *
+ * Kept structurally identical to the validator's own type but declared here so
+ * the audit record never has to import the Anthropic module - which reads the
+ * API key and must not be reachable from a browser bundle.
+ */
+export interface ResponseValidationProblem {
+  code: string;
+  path: string;
+  message: string;
+}
+
 export interface ResolveStrategistInput {
   brief: DraftBrief;
   /** Null whenever no strategist ran, it failed, or it was aborted. */
   advice: StrategistAdvice | null;
+  /**
+   * Set when a response arrived but failed validation.
+   *
+   * Distinguishes "the strategist answered badly" from "the strategist never
+   * answered", which need different responses: one is a contract problem worth
+   * investigating, the other is an outage.
+   */
+  responseProblems?: ResponseValidationProblem[];
   latencyMs?: number | null;
   strategistId?: string | null;
   /**
@@ -101,6 +132,7 @@ export function resolveStrategistDecision(
     deterministic,
     advice,
     adviceConfidence: advice?.confidence ?? null,
+    responseProblems: input.responseProblems ?? [],
     reasons:
       advice === null
         ? []
@@ -119,7 +151,9 @@ export function resolveStrategistDecision(
       guardrail: null,
       alternativeGuardrails: [],
       staleness: null,
-      outcome: 'ai_unavailable',
+      // A response that arrived and was rejected is a different event from one
+      // that never arrived, and only the first is worth investigating.
+      outcome: (input.responseProblems?.length ?? 0) > 0 ? 'ai_malformed' : 'ai_unavailable',
       final: fallback,
     });
   }

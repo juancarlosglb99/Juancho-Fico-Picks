@@ -17,7 +17,8 @@
     "test:regression": "vitest run --config vitest.config.ts tests/regression",
     "tune:consensus": "node scripts/tune-consensus.mjs",
     "brief": "node scripts/brief.mjs",
-    "strategist:eval": "node scripts/strategist-eval.mjs"
+    "strategist:eval": "node scripts/strategist-eval.mjs",
+    "calibration": "npx vitest run --config vitest.config.ts tests/regression/survival-calibration.test.ts --reporter=verbose"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.121.0",

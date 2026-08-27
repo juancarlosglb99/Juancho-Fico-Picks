@@ -16,5 +16,10 @@ export type { AnthropicStrategistOptions, StrategistCallResult } from './client'
 export { PLAYBOOK_VERSION, STRATEGIST_SYSTEM_PROMPT } from './playbook';
 export { SUBMIT_RECOMMENDATION_TOOL } from './schema';
 export type { StrategistResponse } from './schema';
+export {
+  describeProblems,
+  validateStrategistResponse,
+} from './validate';
+export type { ResponseProblem, ResponseProblemCode, ValidationResult } from './validate';
 export { CACHE_DIRECTORY, cacheKey, listCached, readCached, writeCached } from './cache';
 export type { CachedCall } from './cache';

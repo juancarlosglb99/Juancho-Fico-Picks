@@ -54,6 +54,13 @@ export function renderEvaluatedPick(evaluated: EvaluatedPick): string[] {
 
   if (call.error) {
     lines.push(`  CLAUDE       call failed — ${call.error}`);
+    for (const problem of call.problems ?? []) {
+      lines.push(`    REJECTED   ${problem.code} at ${problem.path || '<root>'}: ${problem.message}`);
+    }
+    lines.push(`  GUARDRAIL    ${decision.outcome}`);
+    lines.push(
+      `  SHOWN        ${decision.final ? `${decision.final.name} (${decision.final.source})` : '—'}`,
+    );
     return lines;
   }
   if (!response) {
