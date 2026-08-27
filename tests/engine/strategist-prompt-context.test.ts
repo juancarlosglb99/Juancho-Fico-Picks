@@ -121,7 +121,7 @@ describe('the strategist prompt context', () => {
       context.board,
       context.room.recent,
       context.room.tierCliffs,
-      context.juancho.top,
+      context.juancho!.top,
     ]) {
       for (const name of table.columns) {
         expect(table.legend[name], `${name} has no legend entry`).toBeTruthy();
@@ -175,8 +175,8 @@ describe('the strategist prompt context', () => {
   it('keeps Juancho\'s recommendation and the rules the guardrails enforce', () => {
     const brief = briefAfter(30);
     const context = buildStrategistPromptContext(brief);
-    expect(context.juancho.recommended!.playerId).toBe(brief.deterministic.recommended!.playerId);
-    expect(context.juancho.top.rows.length).toBeGreaterThan(0);
+    expect(context.juancho!.recommended!.playerId).toBe(brief.deterministic.recommended!.playerId);
+    expect(context.juancho!.top.rows.length).toBeGreaterThan(0);
     expect(context.rules.selectionsRemaining).toBe(brief.constraints.rosterSpotsRemaining);
     expect(context.rules.usableCapacity).toEqual(brief.constraints.usableCapacity);
     expect(context.rules.blocked).toHaveLength(brief.constraints.blockedPositions.length);
@@ -218,6 +218,65 @@ describe('the strategist prompt context', () => {
     for (const entry of brief.deterministic.top) {
       expect(ids, `Juancho ranked ${entry.name} but the board dropped him`).toContain(entry.playerId);
     }
+  });
+
+  it('withholds the verdict in blind mode while keeping all of its evidence', () => {
+    const brief = briefAfter(30);
+    const open = buildStrategistPromptContext(brief);
+    const blind = buildStrategistPromptContext(brief, { blind: true });
+    const serialised = JSON.stringify(blind);
+
+    /* ------------------------------------------------- the verdict is gone */
+
+    expect(blind.juancho, 'the deterministic conclusion must not be present').toBeUndefined();
+    expect(blind.board.columns).not.toContain('jRec');
+    expect(blind.board.columns).not.toContain('act');
+    expect(blind.board.columns).not.toContain('dDec');
+    // And it must not survive anywhere else in the payload by another name.
+    expect(serialised).not.toContain('recommendedPlayerId');
+    expect(serialised).not.toContain('DRAFT_NOW');
+
+    /*
+     * The subtle leak: dPlan is measured FROM the recommended pick, so the row
+     * reading zero identifies it. Re-based to the best final roster, zero means
+     * "the best simulated outcome" and names nobody's preference.
+     */
+    expect(blind.board.columns).not.toContain('dPlan');
+    expect(blind.board.columns).toContain('simGap');
+    const gapIndex = blind.board.columns.indexOf('simGap');
+    const gaps = blind.board.rows
+      .map((row) => row[gapIndex])
+      .filter((value): value is number => typeof value === 'number');
+    expect(gaps.every((value) => value <= 0), 'measured from the best outcome').toBe(true);
+    expect(Math.max(...gaps)).toBe(0);
+
+    /* -------------------------------------------------- the evidence stays */
+
+    expect(blind.board.rows).toHaveLength(open.board.rows.length);
+    for (const field of ['fsRank', 'fsGap', 'proj', 'tier', 'left', 'surv', 'gain', 'warn']) {
+      expect(blind.board.columns, `${field} is evidence, not a verdict`).toContain(field);
+    }
+    expect(blind.jointAvailability).not.toBeNull();
+    expect(blind.opponents).toHaveLength(open.opponents.length);
+    expect(blind.room.tierCliffs.rows).toHaveLength(open.room.tierCliffs.rows.length);
+    expect(blind.us.positions.length).toBeGreaterThan(0);
+    expect(blind.rules.usableCapacity).toEqual(open.rules.usableCapacity);
+    // First Seed's own best available is THEIR signal, not our conclusion.
+    expect(blind.simulation!.firstSeedBestAvailable).toEqual(
+      open.juancho!.firstSeedBestAvailable,
+    );
+    expect(blind.simulation!.bestFinalRosterValue).toBeTypeOf('number');
+    expect(blind.omitted.join(' ')).toContain('deterministic ranking');
+  });
+
+  it('leaves the open context exactly as it was', () => {
+    // The non-blind payload must not shift, or the runs already recorded
+    // against it stop being comparable.
+    const context = buildStrategistPromptContext(briefAfter(30));
+    expect(context.simulation).toBeUndefined();
+    expect(context.juancho).toBeDefined();
+    expect(context.board.columns).toContain('jRec');
+    expect(context.board.columns).toContain('dDec');
   });
 
   it('does not clutter every roster with a kicker need nobody can act on', () => {

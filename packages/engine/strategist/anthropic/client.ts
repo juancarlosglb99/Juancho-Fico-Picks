@@ -108,6 +108,8 @@ export class AnthropicStrategist implements StrategistClient {
   private readonly maxTokens: number;
   private readonly thinkingBudget: number;
   private readonly promptContext: Partial<PromptContextOptions>;
+  /** True when the deterministic verdict is withheld from the payload. */
+  readonly isBlind: boolean;
 
   constructor(options: AnthropicStrategistOptions = {}) {
     const apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY;
@@ -125,6 +127,7 @@ export class AnthropicStrategist implements StrategistClient {
       this.thinkingBudget > 0 ? this.thinkingBudget + DEFAULT_MAX_TOKENS : 0,
     );
     this.promptContext = options.promptContext ?? {};
+    this.isBlind = this.promptContext.blind === true;
     this.client = new Anthropic({ apiKey });
     this.id = `anthropic:${this.model}`;
   }

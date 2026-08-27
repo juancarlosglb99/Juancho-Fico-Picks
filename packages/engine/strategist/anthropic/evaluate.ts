@@ -230,7 +230,9 @@ export async function evaluatePick(
 
   const payload = buildStrategistPromptContext(brief);
   const key = cacheKey({ model: options.model, payload });
-  const label = `${input.regression.draftId} p${overallPick} ${strategistFingerprint(options.model)}`;
+  const label =
+    `${input.regression.draftId} p${overallPick} ${strategistFingerprint(options.model)}` +
+    (options.strategist.isBlind ? ' blind' : '');
 
   const cached = options.refresh ? null : readCached(key);
   const call = enforceContract(

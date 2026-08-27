@@ -165,12 +165,33 @@ export interface StrategistPromptContext {
     fallbacks: CompactTable;
   } | null;
 
-  juancho: {
+  /**
+   * The deterministic engine's conclusion. Absent in blind mode.
+   *
+   * Its evidence is spread through the board and the simulation block either
+   * way; this is only the verdict.
+   */
+  juancho?: {
     recommended: { playerId: string; name: string; position: Position; action: string } | null;
     firstSeedBestAvailable: { playerId: string; name: string; rank: number } | null;
     /** Absolute final-roster value of the recommended pick, so deltas have scale. */
     recommendedPlanValue: number | null;
     top: CompactTable;
+  };
+
+  /**
+   * Simulation evidence with no verdict attached. Present in blind mode.
+   *
+   * `simGap` on the board is measured from the best final roster any candidate
+   * produces, which is a property of the simulation rather than of anyone's
+   * preference - unlike the deltas used elsewhere, which are measured from the
+   * recommended pick and therefore identify it.
+   */
+  simulation?: {
+    /** The highest completed-roster value any candidate reaches, for scale. */
+    bestFinalRosterValue: number | null;
+    /** First Seed's own best available player - their signal, not ours. */
+    firstSeedBestAvailable: { playerId: string; name: string; rank: number } | null;
   };
 
   rules: {
@@ -201,6 +222,26 @@ export interface PromptContextOptions {
   recentPicks: number;
   /** Each opponent's last few selections, for reading their direction. */
   opponentRecentPicks: number;
+  /**
+   * Withhold the deterministic engine's CONCLUSION while keeping its evidence.
+   *
+   * The strategist exists to arbitrate the draft state independently, and it
+   * cannot do that while being shown the answer first. Benchmarking Sonnet made
+   * the problem concrete: it agreed with the engine on five decisions out of
+   * five and cited "Juancho ranks this first" as a reason, which turns an
+   * independent recommender into a ratifier of what we already computed.
+   *
+   * What is removed is only the verdict - the named pick, the ranked list, the
+   * per-candidate recommendation rank and action label, and the penalty-adjusted
+   * ordering that produces them. Everything the verdict was DERIVED from stays:
+   * First Seed's rank and projection, tiers, survival, joint availability,
+   * opponent rosters, roster utility, the completed-roster simulation and the
+   * anomaly warnings.
+   *
+   * The engine's recommendation still exists outside the prompt, as the
+   * fallback and the guardrail.
+   */
+  blind: boolean;
 }
 
 export const DEFAULT_PROMPT_CONTEXT: PromptContextOptions = {
@@ -208,6 +249,7 @@ export const DEFAULT_PROMPT_CONTEXT: PromptContextOptions = {
   deterministicDepth: 10,
   recentPicks: 15,
   opponentRecentPicks: 4,
+  blind: false,
 };
 
 const BOARD_LEGEND: Record<string, string> = {
@@ -225,6 +267,11 @@ const BOARD_LEGEND: Record<string, string> = {
   surv: '% chance he is still available at our next selection',
   conf: 'confidence in that survival estimate',
   jRank: "Juancho's projection rank across the whole pool",
+  projRank: 'rank by projected points across the whole available pool',
+  simGap:
+    'final-roster points below the best completed roster any candidate on this ' +
+    'board produces - a simulation result, measured from the best outcome rather ' +
+    'than from any preferred pick',
   posRank: 'rank within his own position',
   jRec: "position in Juancho's ranked recommendations; blank means unranked",
   act: 'DRAFT_NOW or WAIT',
@@ -257,6 +304,28 @@ export function buildStrategistPromptContext(
     opts.maxCandidates === null
       ? brief.candidates
       : keepBest(brief.candidates, opts.maxCandidates, protectedIds);
+
+  /*
+   * The reference the blind board measures from: the best completed roster any
+   * candidate produces. A simulation result, not a preference - unlike the
+   * recommended pick's value, which is only special because it was chosen.
+   */
+  const bestFinalRosterValue = brief.candidates.reduce<number | null>(
+    (best, candidate) =>
+      candidate.juancho.planValue === null
+        ? best
+        : best === null
+          ? candidate.juancho.planValue
+          : Math.max(best, candidate.juancho.planValue),
+    null,
+  );
+  const firstSeedBest = brief.deterministic.bestAvailableFirstSeed
+    ? {
+        playerId: brief.deterministic.bestAvailableFirstSeed.playerId,
+        name: brief.deterministic.bestAvailableFirstSeed.name,
+        rank: brief.deterministic.bestAvailableFirstSeed.rank,
+      }
+    : null;
 
   const teamsBefore = new Map(
     brief.room.teamsBeforeOurNextPick.map((team) => [team.rosterId, team]),
@@ -318,7 +387,7 @@ export function buildStrategistPromptContext(
       tierCliffs: tierCliffTable(brief),
     },
 
-    board: boardTable(candidates),
+    board: boardTable(candidates, opts.blind, bestFinalRosterValue),
     jointAvailability: jointTables(brief),
     dataWarnings: candidates
       .filter((candidate) => candidate.dataWarning !== null)
@@ -330,25 +399,28 @@ export function buildStrategistPromptContext(
         detail: candidate.dataWarning!.detail,
       })),
 
-    juancho: {
-      recommended: recommended
-        ? {
-            playerId: recommended.playerId,
-            name: recommended.name,
-            position: recommended.position,
-            action: recommended.action,
-          }
-        : null,
-      firstSeedBestAvailable: brief.deterministic.bestAvailableFirstSeed
-        ? {
-            playerId: brief.deterministic.bestAvailableFirstSeed.playerId,
-            name: brief.deterministic.bestAvailableFirstSeed.name,
-            rank: brief.deterministic.bestAvailableFirstSeed.rank,
-          }
-        : null,
-      recommendedPlanValue: recommendedPlan,
-      top: deterministicTable(brief, opts.deterministicDepth),
-    },
+    ...(opts.blind
+      ? {
+          simulation: {
+            bestFinalRosterValue: bestFinalRosterValue,
+            firstSeedBestAvailable: firstSeedBest,
+          },
+        }
+      : {
+          juancho: {
+            recommended: recommended
+              ? {
+                  playerId: recommended.playerId,
+                  name: recommended.name,
+                  position: recommended.position,
+                  action: recommended.action,
+                }
+              : null,
+            firstSeedBestAvailable: firstSeedBest,
+            recommendedPlanValue: recommendedPlan,
+            top: deterministicTable(brief, opts.deterministicDepth),
+          },
+        }),
 
     rules: {
       selectionsRemaining: brief.constraints.rosterSpotsRemaining,
@@ -373,11 +445,20 @@ export function buildStrategistPromptContext(
     playerNews: brief.playerNews,
 
     omitted: [
+      ...(opts.blind
+        ? [
+            'A deterministic ranking of these candidates is not included in this context.',
+          ]
+        : []),
       'Board fingerprint and brief version: our own request bookkeeping.',
       'Sleeper ids: the player id identifies him for both of us.',
       'Why each candidate is in the pool: audit metadata with no bearing on the pick.',
       "First Seed's upstream expert rank: provenance behind fsRank, not a separate signal.",
-      "Juancho's 0-100 score: strictly less informative than jRec, dPlan and dDec together.",
+      ...(opts.blind
+        ? []
+        : [
+            "Juancho's 0-100 score: strictly less informative than jRec, dPlan and dDec together.",
+          ]),
       'Absolute plan and decision values per candidate: carried once as recommendedPlanValue, then as deltas.',
       'Weighted intervening demand: the team count it is derived from is in the survival columns.',
       'The list of drafted players: every one of them appears on exactly one roster above.',
@@ -389,12 +470,65 @@ export function buildStrategistPromptContext(
 
 /* ------------------------------------------------------------------- tables */
 
-function boardTable(candidates: BriefCandidate[]): CompactTable {
-  const columns = [
-    'id', 'name', 'pos', 'tm', 'fsRank', 'fsGap', 'fsVal', 'fsMine', 'proj',
-    'tier', 'left', 'surv', 'conf', 'jRank', 'posRank', 'jRec', 'act',
-    'dPlan', 'dDec', 'gain', 'age', 'note', 'warn',
-  ];
+function boardTable(
+  candidates: BriefCandidate[],
+  blind: boolean,
+  bestFinalRosterValue: number | null,
+): CompactTable {
+  /*
+   * Blind mode drops three columns and re-bases a fourth.
+   *
+   * `jRec` and `act` are the verdict itself. `dDec` is the penalty-adjusted
+   * ordering that produces it - the engine's judgement rather than its
+   * simulation. And `dPlan` is measured FROM the recommended pick, so the row
+   * reading zero is the recommendation: Sonnet spotted exactly that and wrote
+   * "dPlan=0 (the baseline)" as a reason to follow it. Re-based to the best
+   * final roster any candidate reaches, the same number becomes a simulation
+   * result that names nobody's preference.
+   */
+  const columns = blind
+    ? [
+        'id', 'name', 'pos', 'tm', 'fsRank', 'fsGap', 'fsVal', 'fsMine', 'proj',
+        'tier', 'left', 'surv', 'conf', 'projRank', 'posRank',
+        'simGap', 'gain', 'age', 'note', 'warn',
+      ]
+    : [
+        'id', 'name', 'pos', 'tm', 'fsRank', 'fsGap', 'fsVal', 'fsMine', 'proj',
+        'tier', 'left', 'surv', 'conf', 'jRank', 'posRank', 'jRec', 'act',
+        'dPlan', 'dDec', 'gain', 'age', 'note', 'warn',
+      ];
+
+  if (blind) {
+    return {
+      columns,
+      legend: Object.fromEntries(columns.map((column) => [column, BOARD_LEGEND[column]])),
+      rows: candidates.map((candidate) => [
+        candidate.playerId,
+        candidate.name,
+        candidate.position,
+        candidate.team,
+        candidate.firstSeed.rank,
+        candidate.firstSeed.rankGapFromBestAvailable,
+        candidate.firstSeed.valueDelta,
+        candidate.firstSeed.landmineScore,
+        candidate.juancho.projectedPoints,
+        candidate.juancho.tier,
+        candidate.juancho.playersRemainingInTier,
+        candidate.survival.probability,
+        candidate.survival.confidence === 'high' ? null : candidate.survival.confidence,
+        candidate.juancho.boardRank,
+        candidate.juancho.positionalRank,
+        candidate.juancho.planValue === null || bestFinalRosterValue === null
+          ? null
+          : Math.round((candidate.juancho.planValue - bestFinalRosterValue) * 10) / 10,
+        candidate.juancho.immediateRosterGain,
+        candidate.age,
+        candidate.status && candidate.status !== 'Active' ? candidate.status : null,
+        candidate.dataWarning ? candidate.dataWarning.code : null,
+      ]),
+    };
+  }
+
   return {
     columns,
     legend: Object.fromEntries(columns.map((column) => [column, BOARD_LEGEND[column]])),
