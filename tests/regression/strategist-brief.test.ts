@@ -221,6 +221,80 @@ describe('the brief on real drafts', () => {
     expect(found!.reasons).toContain('simulation_disagrees');
   });
 
+  /**
+   * The comparison the strategist got wrong from marginals alone.
+   *
+   * At pick 52 it argued "two TEs cannot both survive sixteen selections" from
+   * Warren at 10% and Kraft at 72% - a joint claim read off two marginals. The
+   * runs contain the actual answer, and it is not the product of the two.
+   */
+  it('answers the pick-52 tight end question from the runs, not from marginals', () => {
+    const entry = cases.find((item) => item.draftId === '1398448522730221568');
+    if (!entry) return;
+    const brief = buildBriefAtPick(inputFor(entry), 52)!;
+    const joint = brief.jointAvailability;
+    expect(joint, 'the simulation should expose its futures').not.toBeNull();
+
+    const tierPair = joint!.pairs.find(
+      (pair) =>
+        pair.reason === 'same_tier_alternatives' &&
+        pair.a.position === 'TE' &&
+        pair.b.position === 'TE',
+    );
+    expect(tierPair, 'the two remaining tier-3 tight ends should be paired').toBeTruthy();
+
+    const names = [tierPair!.a.name, tierPair!.b.name].sort();
+    expect(names).toEqual(['Tucker Kraft', 'Tyler Warren']);
+
+    // The marginals the strategist had, unchanged.
+    const marginal = (name: string) =>
+      brief.candidates.find((candidate) => candidate.name === name)!.survival.probability!;
+    expect(tierPair!.aSurvives).toBeCloseTo(marginal(tierPair!.a.name), 1);
+    expect(tierPair!.bSurvives).toBeCloseTo(marginal(tierPair!.b.name), 1);
+
+    /*
+     * The claim it could not previously check. "Both survive" is low, which is
+     * what it guessed - but "either survives" is high, which is the number the
+     * decision actually turns on and which no pair of marginals implies.
+     */
+    expect(tierPair!.bothSurvive).toBeLessThan(15);
+    expect(tierPair!.atLeastOneSurvives).toBeGreaterThan(60);
+    expect(
+      tierPair!.atLeastOneSurvives + tierPair!.neitherSurvives,
+      'either and neither must partition the runs',
+    ).toBeCloseTo(100, 0);
+
+    // And it is genuinely not independence.
+    const independent = (tierPair!.aSurvives / 100) * (tierPair!.bSurvives / 100) * 100;
+    expect(Math.abs(tierPair!.bothSurvive - independent)).toBeGreaterThan(0.5);
+
+    // The tier outlook says the same thing in the form the question was asked.
+    const teTier = joint!.scenarios.tiers.find((tier) => tier.position === 'TE')!;
+    expect(teTier.members).toHaveLength(2);
+    expect(teTier.atLeastOneRemains).toBeCloseTo(tierPair!.atLeastOneSurvives, 0);
+  });
+
+  it('keeps the joint section bounded rather than quadratic', () => {
+    for (const entry of cases) {
+      for (const overallPick of ourPickNumbers(entry).slice(0, 6)) {
+        const brief = buildBriefAtPick(inputFor(entry), overallPick);
+        const joint = brief?.jointAvailability;
+        if (!joint) continue;
+        // A pool of eighty players is 3,160 pairs; only the contested handful
+        // are worth a row.
+        expect(joint.pairs.length, `p${overallPick}`).toBeLessThanOrEqual(12);
+        expect(joint.scenarios.tiers.length).toBeLessThanOrEqual(6);
+        expect(joint.scenarios.likelyBestAvailable.length).toBeLessThanOrEqual(5);
+        // Every pair must name players the strategist can actually see.
+        const ids = new Set(brief!.candidates.map((candidate) => candidate.playerId));
+        for (const pair of joint.pairs) {
+          expect(ids.has(pair.a.playerId)).toBe(true);
+          expect(ids.has(pair.b.playerId)).toBe(true);
+        }
+      }
+    }
+  });
+
   it('reports what a real brief contains', () => {
     const wanted = process.env.JUANCHO_BRIEF_DRAFT;
     const entry = (wanted ? cases.find((item) => item.draftId === wanted) : cases[0]) ?? cases[0];

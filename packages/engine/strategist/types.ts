@@ -30,6 +30,7 @@ import type {
   StarterQuality,
 } from '../draft/roster-state';
 import type { RecommendationAction } from '../draft/types';
+import type { JointAvailability } from './joint';
 
 /** Bumped when the brief's shape changes in a way a stored one cannot satisfy. */
 export const DRAFT_BRIEF_VERSION = 1;
@@ -387,6 +388,14 @@ export interface DraftBrief {
   opponents: BriefTeam[];
   room: BriefRoomState;
   candidates: BriefCandidate[];
+  /**
+   * Availability questions about more than one player at a time.
+   *
+   * Counted from the same simulated futures as the marginal survival numbers,
+   * so "will either of these reach us" can be read rather than inferred.
+   * Null when the availability model has no futures to count.
+   */
+  jointAvailability: JointAvailability | null;
   deterministic: BriefDeterministicView;
   constraints: BriefConstraints;
   strategyContext: StrategyContext | null;

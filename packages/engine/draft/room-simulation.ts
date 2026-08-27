@@ -144,6 +144,31 @@ export interface RoomSimulationResult {
   selectionsSimulated: number;
   /** 0-100 chance the player is still on the board at our next selection. */
   survival: Map<string, number>;
+  /** The individual futures, kept so joint questions can be answered exactly. */
+  outcomes: RoomOutcomes;
+}
+
+/**
+ * What happened in each simulated future, rather than only the average of them.
+ *
+ * A marginal probability cannot answer "will at least ONE of these two tight
+ * ends reach us?" - that depends on whether the same selections remove both,
+ * and the events are strongly coupled: a room that takes Warren has one fewer
+ * pick left to take Kraft. Multiplying marginals assumes independence and gets
+ * it wrong in the direction that matters.
+ *
+ * The runs already contain the answer. Keeping which players survived in each
+ * one turns any joint question into counting, with no modelling assumption
+ * added on top.
+ */
+export interface RoomOutcomes {
+  runs: number;
+  /** Player id to a per-run flag: 1 if he was still there at our next pick. */
+  survivalByRun: Map<string, Uint8Array>;
+  /** The best-ranked survivor in each run, or null if the board emptied. */
+  bestAvailableByRun: (string | null)[];
+  /** The same, per position. */
+  bestAvailableByPositionByRun: Map<Position, (string | null)[]>;
 }
 
 export interface SimulatedPick {
@@ -167,16 +192,25 @@ export function simulateRoom(input: RoomSimulationInput): RoomSimulationResult {
   // Nobody picks in between, so everybody is available. Exactly, not probably.
   if (input.selections.length === 0) {
     for (const candidate of input.available) survival.set(candidate.playerId, 100);
-    return { runs, selectionsSimulated: 0, survival };
+    const outcomes = emptyOutcomes(input.available, runs);
+    const board = [...input.available].sort((a, b) => a.consensusRank - b.consensusRank);
+    for (let run = 0; run < runs; run += 1) recordBestAvailable(outcomes, board, new Set(), run);
+    return { runs, selectionsSimulated: 0, survival, outcomes };
   }
 
   const takenCount = new Map<string, number>();
   const random = mulberry32(input.seed);
+  const outcomes = emptyOutcomes(input.available, runs);
+  const board = [...input.available].sort((a, b) => a.consensusRank - b.consensusRank);
 
   for (let run = 0; run < runs; run += 1) {
+    const taken = new Set<string>();
     for (const pick of simulateOnce(input, random)) {
       takenCount.set(pick.playerId, (takenCount.get(pick.playerId) ?? 0) + 1);
+      taken.add(pick.playerId);
+      outcomes.survivalByRun.get(pick.playerId)![run] = 0;
     }
+    recordBestAvailable(outcomes, board, taken, run);
   }
 
   for (const candidate of input.available) {
@@ -184,7 +218,48 @@ export function simulateRoom(input: RoomSimulationInput): RoomSimulationResult {
     survival.set(candidate.playerId, round1((1 - taken / runs) * 100));
   }
 
-  return { runs, selectionsSimulated: input.selections.length, survival };
+  return { runs, selectionsSimulated: input.selections.length, survival, outcomes };
+}
+
+function emptyOutcomes(available: SimulationCandidate[], runs: number): RoomOutcomes {
+  const survivalByRun = new Map<string, Uint8Array>();
+  for (const candidate of available) {
+    // Everyone survives until a run says otherwise, which is the cheap
+    // direction: a run removes at most one player per selection.
+    survivalByRun.set(candidate.playerId, new Uint8Array(runs).fill(1));
+  }
+  const positions = new Set(available.map((candidate) => candidate.position));
+  const bestAvailableByPositionByRun = new Map<Position, (string | null)[]>();
+  for (const position of positions) {
+    bestAvailableByPositionByRun.set(position, new Array(runs).fill(null));
+  }
+  return {
+    runs,
+    survivalByRun,
+    bestAvailableByRun: new Array(runs).fill(null),
+    bestAvailableByPositionByRun,
+  };
+}
+
+/** One pass down the board per run, stopping once every position is answered. */
+function recordBestAvailable(
+  outcomes: RoomOutcomes,
+  board: SimulationCandidate[],
+  taken: Set<string>,
+  run: number,
+): void {
+  const remaining = new Set(outcomes.bestAvailableByPositionByRun.keys());
+  for (const candidate of board) {
+    if (taken.has(candidate.playerId)) continue;
+    if (outcomes.bestAvailableByRun[run] === null) {
+      outcomes.bestAvailableByRun[run] = candidate.playerId;
+    }
+    if (remaining.has(candidate.position)) {
+      outcomes.bestAvailableByPositionByRun.get(candidate.position)![run] = candidate.playerId;
+      remaining.delete(candidate.position);
+      if (remaining.size === 0) return;
+    }
+  }
 }
 
 /**

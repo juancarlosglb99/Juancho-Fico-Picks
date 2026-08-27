@@ -1307,6 +1307,7 @@ export function generateDraftRecommendations({
     ourSelections: selectionRounds,
     ourFuturePicks,
     candidatePool: plannable,
+    roomOutcomes: roomSimulation?.outcomes ?? null,
     kickersAndDefensesAllowed: allowKickersAndDefense,
     bestAvailableConsensusRank: Number.isFinite(bestConsensusRank) ? bestConsensusRank : null,
     bestAvailableConsensusPlayerId: bestConsensusPlayerId,

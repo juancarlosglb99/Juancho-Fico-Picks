@@ -19,7 +19,10 @@ import {
   validateStrategistResponse,
 } from '../../packages/engine/strategist/anthropic/validate';
 import { toAdvice } from '../../packages/engine/strategist/anthropic/client';
-import type { StrategistResponse } from '../../packages/engine/strategist/anthropic/schema';
+import {
+  SUBMIT_RECOMMENDATION_TOOL,
+  type StrategistResponse,
+} from '../../packages/engine/strategist/anthropic/schema';
 import type { DraftBrief } from '../../packages/engine/strategist/types';
 import type { SleeperDraftPick } from '../../packages/sleeper/types';
 import {
@@ -212,6 +215,15 @@ describe('confidence', () => {
   it('accepts the boundaries', () => {
     expect(check(sound({ confidence: 0 })).ok).toBe(true);
     expect(check(sound({ confidence: 100 })).ok).toBe(true);
+  });
+
+  it('enforces the integer the schema asks for', () => {
+    // The published contract and the enforced one have to be the same contract.
+    // Whichever is chosen, maintaining two is the actual defect.
+    expect(SUBMIT_RECOMMENDATION_TOOL.input_schema.properties.confidence.type).toBe('integer');
+    for (const value of [78.5, 0.5, 99.9]) {
+      expect(codes(sound({ confidence: value })), `accepted ${value}`).toContain('wrong_type');
+    }
   });
 });
 

@@ -130,6 +130,25 @@ export interface StrategistPromptContext {
   /** Every available player the strategist may choose from. */
   board: CompactTable;
 
+  /**
+   * Availability for more than one player at a time.
+   *
+   * The board's `surv` column is marginal: it says whether ONE player reaches
+   * us. Questions like "will either of these two tight ends be there" are not
+   * answerable from it, and multiplying the two would assume an independence
+   * the draft does not have - a room that spends a pick on one has one fewer
+   * pick for the other. Every figure here is counted from the same simulated
+   * futures the marginals come from.
+   */
+  jointAvailability: {
+    runs: number;
+    interveningSelections: number;
+    pairs: CompactTable;
+    tiers: CompactTable;
+    nextPickBoard: CompactTable;
+    fallbacks: CompactTable;
+  } | null;
+
   juancho: {
     recommended: { playerId: string; name: string; position: Position; action: string } | null;
     firstSeedBestAvailable: { playerId: string; name: string; rank: number } | null;
@@ -283,6 +302,7 @@ export function buildStrategistPromptContext(
     },
 
     board: boardTable(candidates),
+    jointAvailability: jointTables(brief),
 
     juancho: {
       recommended: recommended
@@ -462,6 +482,103 @@ function deterministicTable(brief: DraftBrief, depth: number): CompactTable {
         entry.planValue,
         entry.decisionValueDelta,
       ]),
+  };
+}
+
+/* ------------------------------------------------------ joint availability */
+
+/**
+ * The joint figures, as four small tables.
+ *
+ * Kept to the comparisons a decision turns on rather than a matrix over the
+ * board: ten to fifteen rows against twenty thousand, and the rows are the ones
+ * the pick is actually being decided between.
+ */
+function jointTables(brief: DraftBrief): StrategistPromptContext['jointAvailability'] {
+  const joint = brief.jointAvailability;
+  if (!joint) return null;
+
+  const pairColumns = ['a', 'b', 'aSurv', 'bSurv', 'both', 'either', 'neither', 'bIfAGone', 'why'];
+  const tierColumns = ['pos', 'tier', 'members', 'eitherRemains', 'allRemain', 'expected'];
+  const boardColumns = ['name', 'pos', 'chanceBestAvailable'];
+  const fallbackColumns = ['pos', 'name', 'survives', 'chanceBestAtPos'];
+
+  return {
+    runs: joint.scenarios.runs,
+    interveningSelections: joint.scenarios.interveningSelections,
+    pairs: {
+      columns: pairColumns,
+      legend: {
+        a: 'first player',
+        b: 'second player',
+        aSurv: '% of runs A was still available at our next selection',
+        bSurv: '% of runs B was still available',
+        both: '% of runs BOTH were still available - not aSurv x bSurv, counted',
+        either: '% of runs at least one was still available',
+        neither: '% of runs both were gone',
+        bIfAGone: '% of the runs where A was taken in which B still survived',
+        why: 'why this comparison is here',
+      },
+      rows: joint.pairs.map((pair) => [
+        `${pair.a.name} (${pair.a.position})`,
+        `${pair.b.name} (${pair.b.position})`,
+        pair.aSurvives,
+        pair.bSurvives,
+        pair.bothSurvive,
+        pair.atLeastOneSurvives,
+        pair.neitherSurvives,
+        pair.bSurvivesGivenAGone,
+        pair.reason,
+      ]),
+    },
+    tiers: {
+      columns: tierColumns,
+      legend: {
+        pos: 'position',
+        tier: 'the best tier still available there',
+        members: 'who is in it, with each one\'s own survival %',
+        eitherRemains: '% of runs at least one member was still available',
+        allRemain: '% of runs every member was still available',
+        expected: 'average number of members still available',
+      },
+      rows: joint.scenarios.tiers.map((tier) => [
+        tier.position,
+        tier.tier,
+        tier.members.map((member) => `${member.name} ${member.survives}%`).join(', '),
+        tier.atLeastOneRemains,
+        tier.allRemain,
+        tier.expectedSurvivors,
+      ]),
+    },
+    nextPickBoard: {
+      columns: boardColumns,
+      legend: {
+        name: 'player',
+        pos: 'position',
+        chanceBestAvailable:
+          '% of runs he was the best-ranked player left when our turn came',
+      },
+      rows: joint.scenarios.likelyBestAvailable.map((entry) => [
+        entry.name,
+        entry.position,
+        entry.frequency,
+      ]),
+    },
+    fallbacks: {
+      columns: fallbackColumns,
+      legend: {
+        pos: 'a position we can still start somebody at',
+        name: 'the best player there who is NOT the deterministic pick',
+        survives: '% of runs he was still available at our next selection',
+        chanceBestAtPos: '% of runs he was the best of his position still left',
+      },
+      rows: joint.scenarios.fallbacks.map((fallback) => [
+        fallback.position,
+        fallback.name,
+        fallback.survives,
+        fallback.isBestOfPositionAtNextPick,
+      ]),
+    },
   };
 }
 

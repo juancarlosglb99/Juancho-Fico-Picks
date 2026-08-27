@@ -26,6 +26,7 @@ import {
   DEFAULT_CANDIDATE_POOL,
   type CandidatePoolOptions,
 } from './candidates';
+import { buildJointAvailability } from './joint';
 import { buildDraftStateVersion } from './state-version';
 import { buildTeamModels } from './teams';
 import {
@@ -184,6 +185,19 @@ export function buildDraftBrief(input: BuildDraftBriefInput): DraftBrief | null 
     opponents,
     room,
     candidates,
+    jointAvailability: buildJointAvailability({
+      internals,
+      candidates,
+      recommendedPlayerId: result.recommendations[0]?.player.id ?? null,
+      firstSeedBestPlayerId: internals.bestAvailableConsensusPlayerId,
+      rankedTop: result.recommendations.map((recommendation) => recommendation.player.id),
+      // Only positions we could still start somebody at: a tier breaking at a
+      // position we have saturated is not a decision.
+      openPositions: ourTeam.needs
+        .filter((need) => need.openStartingSlots > 0 || need.depthNeed !== 'none')
+        .map((need) => need.position),
+      interveningSelections: draftState.interveningSelections.length,
+    }),
     deterministic: buildDeterministicView(
       result,
       internals,

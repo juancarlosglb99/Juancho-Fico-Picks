@@ -28,6 +28,7 @@ import type { LineupPlayer, LineupSlots } from './lineup';
 import type { InterveningTeam, RoomBehavior } from './room-behavior';
 import type { RosterConstructionState } from './roster-state';
 import type { PlannablePlayer } from './roster-plan';
+import type { RoomOutcomes } from './room-simulation';
 import type { ProjectionTier } from './tiers';
 
 /** What the engine worked out about one candidate it fully planned. */
@@ -71,6 +72,15 @@ export interface DraftDecisionInternals {
   ourFuturePicks: number[];
   /** Every available, projected player - not just the shortlist. */
   candidatePool: PlannablePlayer[];
+  /**
+   * The individual simulated futures behind the survival numbers.
+   *
+   * Null when the availability model is the old independent hazard, which has
+   * no futures to expose. Joint questions - will BOTH of these reach us, will
+   * EITHER - are answered by counting these runs rather than by multiplying
+   * marginals, which would assume an independence the draft does not have.
+   */
+  roomOutcomes: RoomOutcomes | null;
   /** True while kickers and defenses may be selected. */
   kickersAndDefensesAllowed: boolean;
   /**

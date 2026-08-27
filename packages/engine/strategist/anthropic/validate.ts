@@ -62,6 +62,8 @@ const OPPONENTS_MAX = properties.opponentsThatMatter.maxItems as number;
 const CONFIDENCE_MIN = properties.confidence.minimum as number;
 const CONFIDENCE_MAX = properties.confidence.maximum as number;
 const DECISIONS = properties.decision.enum as string[];
+/** Read from the schema, so the two contracts cannot drift apart again. */
+const CONFIDENCE_INTEGER = properties.confidence.type === 'integer';
 
 export function validateStrategistResponse(
   raw: unknown,
@@ -163,12 +165,20 @@ export function validateStrategistResponse(
         'confidence',
         `Expected ${CONFIDENCE_MIN}-${CONFIDENCE_MAX}, got ${confidence}.`,
       );
+    } else if (CONFIDENCE_INTEGER && !Number.isInteger(confidence)) {
+      /*
+       * The schema and the validator have to agree.
+       *
+       * This used to tolerate 78.5 against a schema that asked for an integer,
+       * on the reasoning that rejecting a sound recommendation over half a
+       * point costs more than it protects. That reasoning is fine; keeping two
+       * different contracts is not, because the published one is what the model
+       * is told and the enforced one is what actually happens. The schema says
+       * integer, so integer is enforced - and nothing is lost, since a
+       * subjective 0-100 judgement carries no information in its fraction.
+       */
+      fail('wrong_type', 'confidence', `Expected a whole number, got ${confidence}.`);
     }
-    /*
-     * A non-integer confidence is tolerated. The schema asks for an integer, but
-     * the value is only ever used as a ratio, and throwing away an otherwise
-     * sound recommendation over 78.5 versus 78 would cost more than it protects.
-     */
   }
 
   if ('decision' in value && !DECISIONS.includes(value.decision as string)) {
