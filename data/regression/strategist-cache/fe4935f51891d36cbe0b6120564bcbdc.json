@@ -1,0 +1,225 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 71,
+      "currentOverallPick": 72,
+      "currentRound": 8,
+      "boardFingerprint": "1z-ecf20012",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:6904",
+      "reasoning": "starter_need: QB is our only skill starting slot still EMPTY (lineup shows QB=EMPTY) with RB, WR, TE and both FLEX spots already filled by Barkley, Javonte, Judkins, Nacua, Pickens, Flowers and Warren. tier_cliff: Hurts is the last QB in tier 3 with a 12.9-point gap to tier 4, and the tier is flagged atRisk; he projects 309.6 versus 287.4 for Dak, the best tier-4 arm. survives_to_next_turn: Hurts has just 2.3% survival to pick 89, 16 selections away, so this is effectively our only chance at him. opponent_demand: Five of the eight teams picking before us (1, 2, 4, 5, and rosters still QB-less) carry QB:high, and the room has already taken Burrow at 58 and Daniels at 71 - the QB market is actively moving. opportunity_cost: Passing costs us little at RB/WR: Dowdle (145.3) or Odunze (123.8) would be our RB4/WR4 and never start, while the QB we would settle for at 89 (Herbert/Caleb/Dak tier 4) is roughly 25-30 projected points worse than Hurts. first_seed_prior: fsGap is only 6 ranks past Dowdle (fsRank 70 vs 76) with a positive fsVal of 0.36 and low landmine score 4.9 - this is following the board, not reaching.",
+      "reasonCodes": [
+        "starter_need",
+        "tier_cliff",
+        "survives_to_next_turn",
+        "opponent_demand",
+        "opportunity_cost",
+        "first_seed_prior"
+      ],
+      "confidence": 0.78
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9484",
+        "reasoning": "Tucker Kraft is the last player in TE tier 3 with a 10.6-point cliff after him, and at 0.7% survival he is gone if we pass, giving us a genuine TE2/flex-quality upgrade over Warren.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7021",
+        "reasoning": "Rico Dowdle is First Seed's best available (rank 70) and a startable RB4 with only 2% survival, but a fourth back behind Barkley/Judkins/Javonte cannot crack our lineup.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 1: QB:high with two picks at 80 and 81 and no quarterback on a seven-man roster; Hurts is exactly their target. Roster 2: QB:high, no QB after seven picks, and owns 79 and 82 at the turn - most likely to take Hurts before we pick again. Roster 4: QB:high and WR:high with six RBs and no quarterback; picks 77 and 84 and must address QB soon. Roster 5: QB:high with no quarterback, picks 76 and 85, and is also a threat to Dowdle and the last TE tier. Roster 3: RB:high and TE:high with picks 78 and 83 - the team most likely to remove Dowdle/Hubbard and Kraft, but has Burrow so cannot use Hurts. Roster 8: WR:high at pick 73 and TE:medium; will take Odunze or Metcalf, confirming the WR alternatives here do not survive either.",
+    "confidence": 0.78,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all seven skill starters filled at strong quality; this pick converts our last truly empty non-K/DEF starting slot (QB) by taking the only remaining tier-3 quarterback rather than adding a fourth RB or WR who cannot start.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 89 and 92 (back-to-back turn) we take the best remaining TE upgrade or high-upside RB/WR depth - Kyle Pitts, Sam LaPorta, Mark Andrews or Kittle at TE (23-90% survival) plus a bench RB such as Jacory Croskey-Merritt (93.7%), Jordan Mason (98%) or a WR like Alec Pierce (91.3%) / Michael Pittman (100%), leaving K and DEF for the final two rounds.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 1,
+        "why": "QB:high with two picks at 80 and 81 and no quarterback on a seven-man roster; Hurts is exactly their target."
+      },
+      {
+        "rosterId": 2,
+        "why": "QB:high, no QB after seven picks, and owns 79 and 82 at the turn - most likely to take Hurts before we pick again."
+      },
+      {
+        "rosterId": 4,
+        "why": "QB:high and WR:high with six RBs and no quarterback; picks 77 and 84 and must address QB soon."
+      },
+      {
+        "rosterId": 5,
+        "why": "QB:high with no quarterback, picks 76 and 85, and is also a threat to Dowdle and the last TE tier."
+      },
+      {
+        "rosterId": 3,
+        "why": "RB:high and TE:high with picks 78 and 83 - the team most likely to remove Dowdle/Hubbard and Kraft, but has Burrow so cannot use Hurts."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:high at pick 73 and TE:medium; will take Odunze or Metcalf, confirming the WR alternatives here do not survive either."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:6904",
+    "alternatives": [
+      {
+        "playerId": "jfp:9484",
+        "reason": "Tucker Kraft is the last player in TE tier 3 with a 10.6-point cliff after him, and at 0.7% survival he is gone if we pass, giving us a genuine TE2/flex-quality upgrade over Warren."
+      },
+      {
+        "playerId": "jfp:7021",
+        "reason": "Rico Dowdle is First Seed's best available (rank 70) and a startable RB4 with only 2% survival, but a fourth back behind Barkley/Judkins/Javonte cannot crack our lineup."
+      }
+    ],
+    "confidence": 78,
+    "strategy": "Balanced roster with all seven skill starters filled at strong quality; this pick converts our last truly empty non-K/DEF starting slot (QB) by taking the only remaining tier-3 quarterback rather than adding a fourth RB or WR who cannot start.",
+    "decision": "DRAFT_NOW",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "QB is our only skill starting slot still EMPTY (lineup shows QB=EMPTY) with RB, WR, TE and both FLEX spots already filled by Barkley, Javonte, Judkins, Nacua, Pickens, Flowers and Warren."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "Hurts is the last QB in tier 3 with a 12.9-point gap to tier 4, and the tier is flagged atRisk; he projects 309.6 versus 287.4 for Dak, the best tier-4 arm."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Hurts has just 2.3% survival to pick 89, 16 selections away, so this is effectively our only chance at him."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Five of the eight teams picking before us (1, 2, 4, 5, and rosters still QB-less) carry QB:high, and the room has already taken Burrow at 58 and Daniels at 71 - the QB market is actively moving."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing costs us little at RB/WR: Dowdle (145.3) or Odunze (123.8) would be our RB4/WR4 and never start, while the QB we would settle for at 89 (Herbert/Caleb/Dak tier 4) is roughly 25-30 projected points worse than Hurts."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 6 ranks past Dowdle (fsRank 70 vs 76) with a positive fsVal of 0.36 and low landmine score 4.9 - this is following the board, not reaching."
+      }
+    ],
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 89 and 92 (back-to-back turn) we take the best remaining TE upgrade or high-upside RB/WR depth - Kyle Pitts, Sam LaPorta, Mark Andrews or Kittle at TE (23-90% survival) plus a bench RB such as Jacory Croskey-Merritt (93.7%), Jordan Mason (98%) or a WR like Alec Pierce (91.3%) / Michael Pittman (100%), leaving K and DEF for the final two rounds.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 1,
+        "why": "QB:high with two picks at 80 and 81 and no quarterback on a seven-man roster; Hurts is exactly their target."
+      },
+      {
+        "rosterId": 2,
+        "why": "QB:high, no QB after seven picks, and owns 79 and 82 at the turn - most likely to take Hurts before we pick again."
+      },
+      {
+        "rosterId": 4,
+        "why": "QB:high and WR:high with six RBs and no quarterback; picks 77 and 84 and must address QB soon."
+      },
+      {
+        "rosterId": 5,
+        "why": "QB:high with no quarterback, picks 76 and 85, and is also a threat to Dowdle and the last TE tier."
+      },
+      {
+        "rosterId": 3,
+        "why": "RB:high and TE:high with picks 78 and 83 - the team most likely to remove Dowdle/Hubbard and Kraft, but has Burrow so cannot use Hurts."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:high at pick 73 and TE:medium; will take Odunze or Metcalf, confirming the WR alternatives here do not survive either."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:6904",
+    "alternatives": [
+      {
+        "playerId": "jfp:9484",
+        "reason": "Tucker Kraft is the last player in TE tier 3 with a 10.6-point cliff after him, and at 0.7% survival he is gone if we pass, giving us a genuine TE2/flex-quality upgrade over Warren."
+      },
+      {
+        "playerId": "jfp:7021",
+        "reason": "Rico Dowdle is First Seed's best available (rank 70) and a startable RB4 with only 2% survival, but a fourth back behind Barkley/Judkins/Javonte cannot crack our lineup."
+      }
+    ],
+    "confidence": 78,
+    "strategy": "Balanced roster with all seven skill starters filled at strong quality; this pick converts our last truly empty non-K/DEF starting slot (QB) by taking the only remaining tier-3 quarterback rather than adding a fourth RB or WR who cannot start.",
+    "decision": "DRAFT_NOW",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "QB is our only skill starting slot still EMPTY (lineup shows QB=EMPTY) with RB, WR, TE and both FLEX spots already filled by Barkley, Javonte, Judkins, Nacua, Pickens, Flowers and Warren."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "Hurts is the last QB in tier 3 with a 12.9-point gap to tier 4, and the tier is flagged atRisk; he projects 309.6 versus 287.4 for Dak, the best tier-4 arm."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Hurts has just 2.3% survival to pick 89, 16 selections away, so this is effectively our only chance at him."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Five of the eight teams picking before us (1, 2, 4, 5, and rosters still QB-less) carry QB:high, and the room has already taken Burrow at 58 and Daniels at 71 - the QB market is actively moving."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing costs us little at RB/WR: Dowdle (145.3) or Odunze (123.8) would be our RB4/WR4 and never start, while the QB we would settle for at 89 (Herbert/Caleb/Dak tier 4) is roughly 25-30 projected points worse than Hurts."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 6 ranks past Dowdle (fsRank 70 vs 76) with a positive fsVal of 0.36 and low landmine score 4.9 - this is following the board, not reaching."
+      }
+    ],
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 89 and 92 (back-to-back turn) we take the best remaining TE upgrade or high-upside RB/WR depth - Kyle Pitts, Sam LaPorta, Mark Andrews or Kittle at TE (23-90% survival) plus a bench RB such as Jacory Croskey-Merritt (93.7%), Jordan Mason (98%) or a WR like Alec Pierce (91.3%) / Michael Pittman (100%), leaving K and DEF for the final two rounds.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 1,
+        "why": "QB:high with two picks at 80 and 81 and no quarterback on a seven-man roster; Hurts is exactly their target."
+      },
+      {
+        "rosterId": 2,
+        "why": "QB:high, no QB after seven picks, and owns 79 and 82 at the turn - most likely to take Hurts before we pick again."
+      },
+      {
+        "rosterId": 4,
+        "why": "QB:high and WR:high with six RBs and no quarterback; picks 77 and 84 and must address QB soon."
+      },
+      {
+        "rosterId": 5,
+        "why": "QB:high with no quarterback, picks 76 and 85, and is also a threat to Dowdle and the last TE tier."
+      },
+      {
+        "rosterId": 3,
+        "why": "RB:high and TE:high with picks 78 and 83 - the team most likely to remove Dowdle/Hubbard and Kraft, but has Burrow so cannot use Hurts."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:high at pick 73 and TE:medium; will take Odunze or Metcalf, confirming the WR alternatives here do not survive either."
+      }
+    ]
+  },
+  "problems": [],
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 15500,
+    "outputTokens": 1604
+  },
+  "latencyMs": 25116,
+  "error": null,
+  "cachedAt": "2026-08-27T14:48:20.166Z",
+  "key": "fe4935f51891d36cbe0b6120564bcbdc",
+  "label": "1398448522730221568 p72 claude-opus-5/playbook-v1"
+}

@@ -1,0 +1,191 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11604",
+      "reasoning": "tier_cliff: TE tier 1 has exactly 1 player left (Bowers) and a 15.7-point gap to the next tier, and the cliff is flagged atRisk; the next TEs are Colston Loveland 120.4 and Tyler Warren 116.8 versus Bowers' 143.7. positional_scarcity: Every remaining opponent except roster 1 lists TE:high, so the one separating TE at the position will not fall back to us at 49 or 52 — waiting means paying tier-3 prices for a ~25-point downgrade. opportunity_cost: Passing Pickens costs little: the WR board behind him is tier 8 with 16 players left (Higgins 148, Rice 146.5, Zay Flowers 144, DeVonta Smith 143.4, McConkey 142.1), so a WR2 at 32 or 49 is nearly as good in standard scoring. survives_to_next_turn: Only two selections (roster 10, picks 30 and 31) precede our 32; RB tier 9 has 7 left (Javonte 186.9, Judkins 180.3, Skattebo 178.4, Montgomery 175.2, Irving 174.6, Swift 173.1, Etienne 170.6) with 85-98% survival, so a strong RB2 is essentially guaranteed at 32. first_seed_prior: fsGap is only 1 rank behind Pickens with fsVal +0.71 and landmine 5.0 — this is not a reach, it is the second name on First Seed's board taken for a slot with no replacement. opponent_demand: Roster 10 picks twice back-to-back at 30-31 with QB/RB/WR/TE all high; a TE-then-RB or RB-then-TE double there would take Bowers off the board before pick 32.",
+      "reasonCodes": [
+        "tier_cliff",
+        "positional_scarcity",
+        "opportunity_cost",
+        "survives_to_next_turn",
+        "first_seed_prior",
+        "opponent_demand"
+      ],
+      "confidence": 0.67
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reasoning": "George Pickens is First Seed's best available (fsRank 28, fsGap 0) and would fill our second WR slot in a standard-scoring league where his 151.7 projection leads the remaining receivers.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7588",
+        "reasoning": "Javonte Williams is the top remaining RB by projection (186.9) and Juancho's raw simulation likes him best (dPlan +12.2), filling our RB2 slot.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Owns both picks 30 and 31 with QB:high RB:high WR:high TE:high and only WR Jaxon Smith-Njigba plus RB Ashton Jeanty rostered; a back-to-back turn is exactly where the last elite TE gets taken, and they can also use any RB or WR we might wait on. Roster 8: Picks at 33, right after our 32, with TE:high and QB:high — confirms Bowers would not last past our next turn even if roster 10 passed. Roster 2: Picks 39 with WR:critical and TE:high after three straight RBs; they will strip the tier-8 WR pool but cannot touch the RB tier we plan to use at 32.",
+    "confidence": 0.67,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced build off Puka Nacua and Saquon Barkley: take the last player in the only 1-deep TE tier now, then use picks 32/49/52 to fill RB2, WR2 and the two flexes from a tier-8/tier-9 pool that is 16-23 players deep.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best remaining RB from tier 9 — Javonte Williams (86% survival) or, if roster 10 takes him, Quinshon Judkins (98%), Cam Skattebo (94%) or David Montgomery (98%) — then at 49/52 pair a tier-8 WR2 (Higgins, Rice, Flowers, DeVonta Smith all 97%+ survival) with another RB/WR flex; QB waits until 69/72 where Dak, Purdy, Nix, Goff and Stroud all project within ~35 points of Drake Maye.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both picks 30 and 31 with QB:high RB:high WR:high TE:high and only WR Jaxon Smith-Njigba plus RB Ashton Jeanty rostered; a back-to-back turn is exactly where the last elite TE gets taken, and they can also use any RB or WR we might wait on."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks at 33, right after our 32, with TE:high and QB:high — confirms Bowers would not last past our next turn even if roster 10 passed."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 39 with WR:critical and TE:high after three straight RBs; they will strip the tier-8 WR pool but cannot touch the RB tier we plan to use at 32."
+      }
+    ]
+  },
+  "response": {
+    "playerId": "jfp:11604",
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "George Pickens is First Seed's best available (fsRank 28, fsGap 0) and would fill our second WR slot in a standard-scoring league where his 151.7 projection leads the remaining receivers."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams is the top remaining RB by projection (186.9) and Juancho's raw simulation likes him best (dPlan +12.2), filling our RB2 slot."
+      }
+    ],
+    "confidence": 67,
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced build off Puka Nacua and Saquon Barkley: take the last player in the only 1-deep TE tier now, then use picks 32/49/52 to fill RB2, WR2 and the two flexes from a tier-8/tier-9 pool that is 16-23 players deep.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 1 has exactly 1 player left (Bowers) and a 15.7-point gap to the next tier, and the cliff is flagged atRisk; the next TEs are Colston Loveland 120.4 and Tyler Warren 116.8 versus Bowers' 143.7."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Every remaining opponent except roster 1 lists TE:high, so the one separating TE at the position will not fall back to us at 49 or 52 — waiting means paying tier-3 prices for a ~25-point downgrade."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing Pickens costs little: the WR board behind him is tier 8 with 16 players left (Higgins 148, Rice 146.5, Zay Flowers 144, DeVonta Smith 143.4, McConkey 142.1), so a WR2 at 32 or 49 is nearly as good in standard scoring."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Only two selections (roster 10, picks 30 and 31) precede our 32; RB tier 9 has 7 left (Javonte 186.9, Judkins 180.3, Skattebo 178.4, Montgomery 175.2, Irving 174.6, Swift 173.1, Etienne 170.6) with 85-98% survival, so a strong RB2 is essentially guaranteed at 32."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 1 rank behind Pickens with fsVal +0.71 and landmine 5.0 — this is not a reach, it is the second name on First Seed's board taken for a slot with no replacement."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Roster 10 picks twice back-to-back at 30-31 with QB/RB/WR/TE all high; a TE-then-RB or RB-then-TE double there would take Bowers off the board before pick 32."
+      }
+    ],
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best remaining RB from tier 9 — Javonte Williams (86% survival) or, if roster 10 takes him, Quinshon Judkins (98%), Cam Skattebo (94%) or David Montgomery (98%) — then at 49/52 pair a tier-8 WR2 (Higgins, Rice, Flowers, DeVonta Smith all 97%+ survival) with another RB/WR flex; QB waits until 69/72 where Dak, Purdy, Nix, Goff and Stroud all project within ~35 points of Drake Maye.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both picks 30 and 31 with QB:high RB:high WR:high TE:high and only WR Jaxon Smith-Njigba plus RB Ashton Jeanty rostered; a back-to-back turn is exactly where the last elite TE gets taken, and they can also use any RB or WR we might wait on."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks at 33, right after our 32, with TE:high and QB:high — confirms Bowers would not last past our next turn even if roster 10 passed."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 39 with WR:critical and TE:high after three straight RBs; they will strip the tier-8 WR pool but cannot touch the RB tier we plan to use at 32."
+      }
+    ]
+  },
+  "rawResponse": {
+    "playerId": "jfp:11604",
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "George Pickens is First Seed's best available (fsRank 28, fsGap 0) and would fill our second WR slot in a standard-scoring league where his 151.7 projection leads the remaining receivers."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams is the top remaining RB by projection (186.9) and Juancho's raw simulation likes him best (dPlan +12.2), filling our RB2 slot."
+      }
+    ],
+    "confidence": 67,
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced build off Puka Nacua and Saquon Barkley: take the last player in the only 1-deep TE tier now, then use picks 32/49/52 to fill RB2, WR2 and the two flexes from a tier-8/tier-9 pool that is 16-23 players deep.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 1 has exactly 1 player left (Bowers) and a 15.7-point gap to the next tier, and the cliff is flagged atRisk; the next TEs are Colston Loveland 120.4 and Tyler Warren 116.8 versus Bowers' 143.7."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Every remaining opponent except roster 1 lists TE:high, so the one separating TE at the position will not fall back to us at 49 or 52 — waiting means paying tier-3 prices for a ~25-point downgrade."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing Pickens costs little: the WR board behind him is tier 8 with 16 players left (Higgins 148, Rice 146.5, Zay Flowers 144, DeVonta Smith 143.4, McConkey 142.1), so a WR2 at 32 or 49 is nearly as good in standard scoring."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Only two selections (roster 10, picks 30 and 31) precede our 32; RB tier 9 has 7 left (Javonte 186.9, Judkins 180.3, Skattebo 178.4, Montgomery 175.2, Irving 174.6, Swift 173.1, Etienne 170.6) with 85-98% survival, so a strong RB2 is essentially guaranteed at 32."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 1 rank behind Pickens with fsVal +0.71 and landmine 5.0 — this is not a reach, it is the second name on First Seed's board taken for a slot with no replacement."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Roster 10 picks twice back-to-back at 30-31 with QB/RB/WR/TE all high; a TE-then-RB or RB-then-TE double there would take Bowers off the board before pick 32."
+      }
+    ],
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best remaining RB from tier 9 — Javonte Williams (86% survival) or, if roster 10 takes him, Quinshon Judkins (98%), Cam Skattebo (94%) or David Montgomery (98%) — then at 49/52 pair a tier-8 WR2 (Higgins, Rice, Flowers, DeVonta Smith all 97%+ survival) with another RB/WR flex; QB waits until 69/72 where Dak, Purdy, Nix, Goff and Stroud all project within ~35 points of Drake Maye.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both picks 30 and 31 with QB:high RB:high WR:high TE:high and only WR Jaxon Smith-Njigba plus RB Ashton Jeanty rostered; a back-to-back turn is exactly where the last elite TE gets taken, and they can also use any RB or WR we might wait on."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks at 33, right after our 32, with TE:high and QB:high — confirms Bowers would not last past our next turn even if roster 10 passed."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 39 with WR:critical and TE:high after three straight RBs; they will strip the tier-8 WR pool but cannot touch the RB tier we plan to use at 32."
+      }
+    ]
+  },
+  "problems": [],
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 15361,
+    "outputTokens": 1637
+  },
+  "latencyMs": 24100,
+  "error": null,
+  "cachedAt": "2026-08-27T14:48:20.166Z",
+  "key": "17a086026e46562a4edbdce0155a913d",
+  "label": "1398448522730221568 p29 claude-opus-5/playbook-v1"
+}
