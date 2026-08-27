@@ -1,0 +1,275 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 51,
+      "currentOverallPick": 52,
+      "currentRound": 6,
+      "boardFingerprint": "1f-400a7bf0",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:9997",
+      "reasoning": "tier_cliff: WR tier 8 has 7 players left but Zay Flowers has only 4% survival to our next pick at 69, the lowest of the group, meaning he is gone if not taken now. first_seed_prior: First Seed ranks Flowers 52nd overall with fsGap 0, exactly matching this pick slot - zero reach required. juancho_agreement: Juancho's own DRAFT_NOW recommendation and top plan value (1362.5) both point to Flowers as the correct pick right now, with dPlan/dDec both at 0 (no penalty). positional_scarcity: Our WR corps is only Nacua and Pickens (2/2 starters filled) but FLEX is empty and WR quality/dropoff is steep past this tier (only Christian Watson at 71% survival and Mike Evans at 38% remain safer, both lower-projected at 133/131 pts vs Flowers's 144). survives_to_next_turn: Compare to Rhamondre Stevenson (30% survival) and Tyler Warren (10% survival) - Flowers at 4% survival is the most urgent name on the board bar none. opportunity_cost: Passing Flowers for TE (Tyler Warren) or QB (Joe Burrow) is defensible since those tiers, while thin, still have some survival odds (10% and 7.3%), whereas WR depth of this caliber vanishes entirely after this pick.",
+      "reasonCodes": [
+        "tier_cliff",
+        "first_seed_prior",
+        "juancho_agreement",
+        "positional_scarcity",
+        "survives_to_next_turn",
+        "opportunity_cost"
+      ],
+      "confidence": 0.78
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8228",
+        "reasoning": "Jaylen Warren offers RB depth with 64% survival and strong dPlan of 9.6, a fine fallback if Flowers is somehow gone.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:12518",
+        "reasoning": "Tyler Warren is the top TE in a thin tier (only 2 left) with atRisk flagged, filling our empty TE need if we pivot positions.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 8: Picks 53 immediately next, has WR:high need and could take a WR before our next turn but is more likely rb_heavy leaning; doesn't directly threaten Flowers since he's on the clock right after us. Roster 1: Picks 60 and 61 (two picks) before our next turn, needs WR:medium and TE:medium, could grab Tyler Warren or a WR we're targeting like Mike Evans. Roster 10: Picks at 70 right after our next turn but has QB:high need only, unlikely to compete for our targets before then.",
+    "confidence": 0.78,
+    "model": "claude-sonnet-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with elite RB/WR core already set (Barkley, Judkins, Javonte at RB; Nacua, Pickens at WR); this pick adds a third quality WR to bolster the FLEX/WR depth before Zero-RB-style receiver depth dries up, while QB and TE get addressed later off flatter tiers.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternativePlayerId": "jfp:12518",
+    "strongestAlternativeWhy": "Tyler Warren is the clear TE1 remaining in a tier with only 2 players left and atRisk=1, directly filling our empty TE starting slot which currently shows 0 quality.",
+    "strongestCounterargument": "Tyler Warren has only 10% survival to pick 69 and TE is our only true zero-quality starting hole (need:high), so waiting on WR (where Christian Watson still survives 71% and Mike Evans 38%) to grab the last quality TE now could be argued as the bigger urgency.",
+    "whyRecommendationStillWins": "Even if we miss Tyler Warren, Tucker Kraft (72.3% survival) and other TE bodies (Kraft, Loveland already gone, Fannin, LaPorta) remain playable fallbacks late, per the same-tier-alternatives data showing Kraft survives 72.3% if Warren goes; but Zay Flowers-caliber WR depth simply does not exist past this pick (next best WR options Jameson Williams 5.7% and DeVonta Smith 11.3% survival are barely better than Flowers himself), so the WR scarcity is more absolute than the TE scarcity.",
+    "expectedNextPickPlan": "At pick 69 we expect Tyler Warren likely gone (10% survival) but Tucker Kraft (72.3% survival) or another mid-tier TE, plus a QB from the Hurts/Daniels/Burrow tier (each 60-90% survival) to still be available; we will prioritize locking in our starting QB and TE slots then, likely taking the better-surviving QB (Jayden Daniels or Jalen Hurts) or Tucker Kraft depending on what's left.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 53 immediately next, has WR:high need and could take a WR before our next turn but is more likely rb_heavy leaning; doesn't directly threaten Flowers since he's on the clock right after us."
+      },
+      {
+        "rosterId": 1,
+        "why": "Picks 60 and 61 (two picks) before our next turn, needs WR:medium and TE:medium, could grab Tyler Warren or a WR we're targeting like Mike Evans."
+      },
+      {
+        "rosterId": 10,
+        "why": "Picks at 70 right after our next turn but has QB:high need only, unlikely to compete for our targets before then."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:9997",
+    "alternatives": [
+      {
+        "playerId": "jfp:8228",
+        "reason": "Jaylen Warren offers RB depth with 64% survival and strong dPlan of 9.6, a fine fallback if Flowers is somehow gone."
+      },
+      {
+        "playerId": "jfp:12518",
+        "reason": "Tyler Warren is the top TE in a thin tier (only 2 left) with atRisk flagged, filling our empty TE need if we pivot positions."
+      }
+    ],
+    "confidence": 78,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with elite RB/WR core already set (Barkley, Judkins, Javonte at RB; Nacua, Pickens at WR); this pick adds a third quality WR to bolster the FLEX/WR depth before Zero-RB-style receiver depth dries up, while QB and TE get addressed later off flatter tiers.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "WR tier 8 has 7 players left but Zay Flowers has only 4% survival to our next pick at 69, the lowest of the group, meaning he is gone if not taken now."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed ranks Flowers 52nd overall with fsGap 0, exactly matching this pick slot - zero reach required."
+      },
+      {
+        "code": "juancho_agreement",
+        "detail": "Juancho's own DRAFT_NOW recommendation and top plan value (1362.5) both point to Flowers as the correct pick right now, with dPlan/dDec both at 0 (no penalty)."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Our WR corps is only Nacua and Pickens (2/2 starters filled) but FLEX is empty and WR quality/dropoff is steep past this tier (only Christian Watson at 71% survival and Mike Evans at 38% remain safer, both lower-projected at 133/131 pts vs Flowers's 144)."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Compare to Rhamondre Stevenson (30% survival) and Tyler Warren (10% survival) - Flowers at 4% survival is the most urgent name on the board bar none."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing Flowers for TE (Tyler Warren) or QB (Joe Burrow) is defensible since those tiers, while thin, still have some survival odds (10% and 7.3%), whereas WR depth of this caliber vanishes entirely after this pick."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:12518",
+    "strongestAlternativeWhy": "Tyler Warren is the clear TE1 remaining in a tier with only 2 players left and atRisk=1, directly filling our empty TE starting slot which currently shows 0 quality.",
+    "strongestCounterargument": "Tyler Warren has only 10% survival to pick 69 and TE is our only true zero-quality starting hole (need:high), so waiting on WR (where Christian Watson still survives 71% and Mike Evans 38%) to grab the last quality TE now could be argued as the bigger urgency.",
+    "whyRecommendationStillWins": "Even if we miss Tyler Warren, Tucker Kraft (72.3% survival) and other TE bodies (Kraft, Loveland already gone, Fannin, LaPorta) remain playable fallbacks late, per the same-tier-alternatives data showing Kraft survives 72.3% if Warren goes; but Zay Flowers-caliber WR depth simply does not exist past this pick (next best WR options Jameson Williams 5.7% and DeVonta Smith 11.3% survival are barely better than Flowers himself), so the WR scarcity is more absolute than the TE scarcity.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 69 we expect Tyler Warren likely gone (10% survival) but Tucker Kraft (72.3% survival) or another mid-tier TE, plus a QB from the Hurts/Daniels/Burrow tier (each 60-90% survival) to still be available; we will prioritize locking in our starting QB and TE slots then, likely taking the better-surviving QB (Jayden Daniels or Jalen Hurts) or Tucker Kraft depending on what's left.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 53 immediately next, has WR:high need and could take a WR before our next turn but is more likely rb_heavy leaning; doesn't directly threaten Flowers since he's on the clock right after us."
+      },
+      {
+        "rosterId": 1,
+        "why": "Picks 60 and 61 (two picks) before our next turn, needs WR:medium and TE:medium, could grab Tyler Warren or a WR we're targeting like Mike Evans."
+      },
+      {
+        "rosterId": 10,
+        "why": "Picks at 70 right after our next turn but has QB:high need only, unlikely to compete for our targets before then."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:9997",
+    "alternatives": [
+      {
+        "playerId": "jfp:8228",
+        "reason": "Jaylen Warren offers RB depth with 64% survival and strong dPlan of 9.6, a fine fallback if Flowers is somehow gone."
+      },
+      {
+        "playerId": "jfp:12518",
+        "reason": "Tyler Warren is the top TE in a thin tier (only 2 left) with atRisk flagged, filling our empty TE need if we pivot positions."
+      }
+    ],
+    "confidence": 78,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with elite RB/WR core already set (Barkley, Judkins, Javonte at RB; Nacua, Pickens at WR); this pick adds a third quality WR to bolster the FLEX/WR depth before Zero-RB-style receiver depth dries up, while QB and TE get addressed later off flatter tiers.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "WR tier 8 has 7 players left but Zay Flowers has only 4% survival to our next pick at 69, the lowest of the group, meaning he is gone if not taken now."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed ranks Flowers 52nd overall with fsGap 0, exactly matching this pick slot - zero reach required."
+      },
+      {
+        "code": "juancho_agreement",
+        "detail": "Juancho's own DRAFT_NOW recommendation and top plan value (1362.5) both point to Flowers as the correct pick right now, with dPlan/dDec both at 0 (no penalty)."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Our WR corps is only Nacua and Pickens (2/2 starters filled) but FLEX is empty and WR quality/dropoff is steep past this tier (only Christian Watson at 71% survival and Mike Evans at 38% remain safer, both lower-projected at 133/131 pts vs Flowers's 144)."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Compare to Rhamondre Stevenson (30% survival) and Tyler Warren (10% survival) - Flowers at 4% survival is the most urgent name on the board bar none."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing Flowers for TE (Tyler Warren) or QB (Joe Burrow) is defensible since those tiers, while thin, still have some survival odds (10% and 7.3%), whereas WR depth of this caliber vanishes entirely after this pick."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:12518",
+    "strongestAlternativeWhy": "Tyler Warren is the clear TE1 remaining in a tier with only 2 players left and atRisk=1, directly filling our empty TE starting slot which currently shows 0 quality.",
+    "strongestCounterargument": "Tyler Warren has only 10% survival to pick 69 and TE is our only true zero-quality starting hole (need:high), so waiting on WR (where Christian Watson still survives 71% and Mike Evans 38%) to grab the last quality TE now could be argued as the bigger urgency.",
+    "whyRecommendationStillWins": "Even if we miss Tyler Warren, Tucker Kraft (72.3% survival) and other TE bodies (Kraft, Loveland already gone, Fannin, LaPorta) remain playable fallbacks late, per the same-tier-alternatives data showing Kraft survives 72.3% if Warren goes; but Zay Flowers-caliber WR depth simply does not exist past this pick (next best WR options Jameson Williams 5.7% and DeVonta Smith 11.3% survival are barely better than Flowers himself), so the WR scarcity is more absolute than the TE scarcity.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 69 we expect Tyler Warren likely gone (10% survival) but Tucker Kraft (72.3% survival) or another mid-tier TE, plus a QB from the Hurts/Daniels/Burrow tier (each 60-90% survival) to still be available; we will prioritize locking in our starting QB and TE slots then, likely taking the better-surviving QB (Jayden Daniels or Jalen Hurts) or Tucker Kraft depending on what's left.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 53 immediately next, has WR:high need and could take a WR before our next turn but is more likely rb_heavy leaning; doesn't directly threaten Flowers since he's on the clock right after us."
+      },
+      {
+        "rosterId": 1,
+        "why": "Picks 60 and 61 (two picks) before our next turn, needs WR:medium and TE:medium, could grab Tyler Warren or a WR we're targeting like Mike Evans."
+      },
+      {
+        "rosterId": 10,
+        "why": "Picks at 70 right after our next turn but has QB:high need only, unlikely to compete for our targets before then."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:9997",
+        "alternatives": [
+          {
+            "playerId": "jfp:8228",
+            "reason": "Jaylen Warren offers RB depth with 64% survival and strong dPlan of 9.6, a fine fallback if Flowers is somehow gone."
+          },
+          {
+            "playerId": "jfp:12518",
+            "reason": "Tyler Warren is the top TE in a thin tier (only 2 left) with atRisk flagged, filling our empty TE need if we pivot positions."
+          }
+        ],
+        "confidence": 78,
+        "urgency": "must_take_now",
+        "strategy": "Balanced build with elite RB/WR core already set (Barkley, Judkins, Javonte at RB; Nacua, Pickens at WR); this pick adds a third quality WR to bolster the FLEX/WR depth before Zero-RB-style receiver depth dries up, while QB and TE get addressed later off flatter tiers.",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "WR tier 8 has 7 players left but Zay Flowers has only 4% survival to our next pick at 69, the lowest of the group, meaning he is gone if not taken now."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "First Seed ranks Flowers 52nd overall with fsGap 0, exactly matching this pick slot - zero reach required."
+          },
+          {
+            "code": "juancho_agreement",
+            "detail": "Juancho's own DRAFT_NOW recommendation and top plan value (1362.5) both point to Flowers as the correct pick right now, with dPlan/dDec both at 0 (no penalty)."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "Our WR corps is only Nacua and Pickens (2/2 starters filled) but FLEX is empty and WR quality/dropoff is steep past this tier (only Christian Watson at 71% survival and Mike Evans at 38% remain safer, both lower-projected at 133/131 pts vs Flowers's 144)."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Compare to Rhamondre Stevenson (30% survival) and Tyler Warren (10% survival) - Flowers at 4% survival is the most urgent name on the board bar none."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Passing Flowers for TE (Tyler Warren) or QB (Joe Burrow) is defensible since those tiers, while thin, still have some survival odds (10% and 7.3%), whereas WR depth of this caliber vanishes entirely after this pick."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:12518",
+        "strongestAlternativeWhy": "Tyler Warren is the clear TE1 remaining in a tier with only 2 players left and atRisk=1, directly filling our empty TE starting slot which currently shows 0 quality.",
+        "strongestCounterargument": "Tyler Warren has only 10% survival to pick 69 and TE is our only true zero-quality starting hole (need:high), so waiting on WR (where Christian Watson still survives 71% and Mike Evans 38%) to grab the last quality TE now could be argued as the bigger urgency.",
+        "whyRecommendationStillWins": "Even if we miss Tyler Warren, Tucker Kraft (72.3% survival) and other TE bodies (Kraft, Loveland already gone, Fannin, LaPorta) remain playable fallbacks late, per the same-tier-alternatives data showing Kraft survives 72.3% if Warren goes; but Zay Flowers-caliber WR depth simply does not exist past this pick (next best WR options Jameson Williams 5.7% and DeVonta Smith 11.3% survival are barely better than Flowers himself), so the WR scarcity is more absolute than the TE scarcity.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At pick 69 we expect Tyler Warren likely gone (10% survival) but Tucker Kraft (72.3% survival) or another mid-tier TE, plus a QB from the Hurts/Daniels/Burrow tier (each 60-90% survival) to still be available; we will prioritize locking in our starting QB and TE slots then, likely taking the better-surviving QB (Jayden Daniels or Jalen Hurts) or Tucker Kraft depending on what's left.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 8,
+            "why": "Picks 53 immediately next, has WR:high need and could take a WR before our next turn but is more likely rb_heavy leaning; doesn't directly threaten Flowers since he's on the clock right after us."
+          },
+          {
+            "rosterId": 1,
+            "why": "Picks 60 and 61 (two picks) before our next turn, needs WR:medium and TE:medium, could grab Tyler Warren or a WR we're targeting like Mike Evans."
+          },
+          {
+            "rosterId": 10,
+            "why": "Picks at 70 right after our next turn but has QB:high need only, unlikely to compete for our targets before then."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 17946,
+        "outputTokens": 1880
+      },
+      "latencyMs": 22560,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-sonnet-5",
+  "usage": {
+    "inputTokens": 17946,
+    "outputTokens": 1880
+  },
+  "latencyMs": 22560,
+  "error": null,
+  "cachedAt": "2026-08-27T19:37:22.179Z",
+  "key": "96ec48f7b27b9a5a5d855880caa79179",
+  "label": "1398448522730221568 p52 claude-sonnet-5/playbook-v1"
+}

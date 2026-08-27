@@ -1,0 +1,246 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8137",
+      "reasoning": "tier_cliff: Pickens is fsRank 28, the single best player left on the board by First Seed and Juancho's own top recommendation (jRec 1, DRAFT_NOW). survives_to_next_turn: Pickens only has 78.3% survival to our pick at 32, the lowest survival of any top candidate (Javonte Williams 86%, Bowers 74.3%, Drake Maye 97%), meaning waiting risks losing him outright. positional_scarcity: WR tier 5 after Pickens (A.J. Brown, 86.3% survival) is thinner than the RB tier 9 (7 players left, Javonte Williams/Judkins/Skattebo etc. all with 92-98% survival), so WR misses hurt more than RB misses right now. opportunity_cost: Taking Pickens now versus Javonte Williams costs only 10.1 points in Juancho's dDec penalty-adjusted plan (1317.7 vs 1329.9), a near-toss-up, but Javonte Williams has much higher survival (86%) to grab at pick 32. starter_need: We have both WR2 and RB2/FLEX slots empty; Pickens directly fills a starting WR slot with WR2 tier quality (proj 151.7) well above the RB tier 9 options (proj ~150-186 but far more replaceable given 7 similar bodies left).",
+      "reasonCodes": [
+        "tier_cliff",
+        "survives_to_next_turn",
+        "positional_scarcity",
+        "opportunity_cost",
+        "starter_need"
+      ],
+      "confidence": 0.82
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:7588",
+        "reasoning": "Javonte Williams is the top remaining RB and fills our second RB/FLEX need with 86% survival if we waited, but Pickens is the clear best-player-available now.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:11604",
+        "reasoning": "Brock Bowers is the only elite TE left (tier of 1) and would lock in a massive positional edge at a scarce position.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks at 30 and 31 (both immediately before our pick 32), needs QB/RB/WR/TE across the board and could take a RB like Javonte Williams or a WR like A.J. Brown, directly competing for our next-turn targets. Roster 2: Picks at 39, already RB-heavy (3 RBs) with critical WR need, unlikely to touch our RB targets but could grab A.J. Brown before our turn 2 picks away complicates things minimally.",
+    "confidence": 0.82,
+    "model": "claude-sonnet-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with elite WR1 (Nacua) and RB1 (Saquon) already locked; take the best player available now (Pickens) to build a strong WR corps, then use our very next pick (32, only 2 selections away) to grab the best surviving RB or TE off the board.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternativePlayerId": "jfp:7588",
+    "strongestAlternativeWhy": "Javonte Williams actually scores higher in Juancho's raw plan (1329.9 vs 1317.7) and fills our second RB/FLEX need, with strong 86% survival odds if we waited instead.",
+    "strongestCounterargument": "Javonte Williams has 86% survival to pick 32 and Juancho's raw (non-penalized) plan value actually favors him over Pickens by 12.2 points, suggesting we could take Pickens later or skip him entirely for a 'sure things exist elsewhere' argument.",
+    "whyRecommendationStillWins": "The raw plan edge for Javonte Williams is wiped out by Juancho's own reach penalty (dDec -10.1), and more importantly Pickens has meaningfully lower survival (78.3% vs 86%) - if we wait on Pickens we have a real chance of losing the best player on the board, while Javonte Williams remains highly likely to be sitting at pick 32 for us to grab as RB2.",
+    "expectedNextPickPlan": "At pick 32 (2 selections away), we expect the RB tier 9 (Javonte Williams ~86% survival, Judkins ~98%, Skattebo ~93.7%) or A.J. Brown (86.3% survival) to still be available; we will take the best surviving RB to fill our RB2/FLEX slot, or pivot to A.J. Brown/Bowers if the board breaks unexpectedly in our favor.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks at 30 and 31 (both immediately before our pick 32), needs QB/RB/WR/TE across the board and could take a RB like Javonte Williams or a WR like A.J. Brown, directly competing for our next-turn targets."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks at 39, already RB-heavy (3 RBs) with critical WR need, unlikely to touch our RB targets but could grab A.J. Brown before our turn 2 picks away complicates things minimally."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8137",
+    "alternatives": [
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams is the top remaining RB and fills our second RB/FLEX need with 86% survival if we waited, but Pickens is the clear best-player-available now."
+      },
+      {
+        "playerId": "jfp:11604",
+        "reason": "Brock Bowers is the only elite TE left (tier of 1) and would lock in a massive positional edge at a scarce position."
+      }
+    ],
+    "confidence": 82,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with elite WR1 (Nacua) and RB1 (Saquon) already locked; take the best player available now (Pickens) to build a strong WR corps, then use our very next pick (32, only 2 selections away) to grab the best surviving RB or TE off the board.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Pickens is fsRank 28, the single best player left on the board by First Seed and Juancho's own top recommendation (jRec 1, DRAFT_NOW)."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Pickens only has 78.3% survival to our pick at 32, the lowest survival of any top candidate (Javonte Williams 86%, Bowers 74.3%, Drake Maye 97%), meaning waiting risks losing him outright."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "WR tier 5 after Pickens (A.J. Brown, 86.3% survival) is thinner than the RB tier 9 (7 players left, Javonte Williams/Judkins/Skattebo etc. all with 92-98% survival), so WR misses hurt more than RB misses right now."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Taking Pickens now versus Javonte Williams costs only 10.1 points in Juancho's dDec penalty-adjusted plan (1317.7 vs 1329.9), a near-toss-up, but Javonte Williams has much higher survival (86%) to grab at pick 32."
+      },
+      {
+        "code": "starter_need",
+        "detail": "We have both WR2 and RB2/FLEX slots empty; Pickens directly fills a starting WR slot with WR2 tier quality (proj 151.7) well above the RB tier 9 options (proj ~150-186 but far more replaceable given 7 similar bodies left)."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:7588",
+    "strongestAlternativeWhy": "Javonte Williams actually scores higher in Juancho's raw plan (1329.9 vs 1317.7) and fills our second RB/FLEX need, with strong 86% survival odds if we waited instead.",
+    "strongestCounterargument": "Javonte Williams has 86% survival to pick 32 and Juancho's raw (non-penalized) plan value actually favors him over Pickens by 12.2 points, suggesting we could take Pickens later or skip him entirely for a 'sure things exist elsewhere' argument.",
+    "whyRecommendationStillWins": "The raw plan edge for Javonte Williams is wiped out by Juancho's own reach penalty (dDec -10.1), and more importantly Pickens has meaningfully lower survival (78.3% vs 86%) - if we wait on Pickens we have a real chance of losing the best player on the board, while Javonte Williams remains highly likely to be sitting at pick 32 for us to grab as RB2.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 32 (2 selections away), we expect the RB tier 9 (Javonte Williams ~86% survival, Judkins ~98%, Skattebo ~93.7%) or A.J. Brown (86.3% survival) to still be available; we will take the best surviving RB to fill our RB2/FLEX slot, or pivot to A.J. Brown/Bowers if the board breaks unexpectedly in our favor.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks at 30 and 31 (both immediately before our pick 32), needs QB/RB/WR/TE across the board and could take a RB like Javonte Williams or a WR like A.J. Brown, directly competing for our next-turn targets."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks at 39, already RB-heavy (3 RBs) with critical WR need, unlikely to touch our RB targets but could grab A.J. Brown before our turn 2 picks away complicates things minimally."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8137",
+    "alternatives": [
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams is the top remaining RB and fills our second RB/FLEX need with 86% survival if we waited, but Pickens is the clear best-player-available now."
+      },
+      {
+        "playerId": "jfp:11604",
+        "reason": "Brock Bowers is the only elite TE left (tier of 1) and would lock in a massive positional edge at a scarce position."
+      }
+    ],
+    "confidence": 82,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with elite WR1 (Nacua) and RB1 (Saquon) already locked; take the best player available now (Pickens) to build a strong WR corps, then use our very next pick (32, only 2 selections away) to grab the best surviving RB or TE off the board.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Pickens is fsRank 28, the single best player left on the board by First Seed and Juancho's own top recommendation (jRec 1, DRAFT_NOW)."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Pickens only has 78.3% survival to our pick at 32, the lowest survival of any top candidate (Javonte Williams 86%, Bowers 74.3%, Drake Maye 97%), meaning waiting risks losing him outright."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "WR tier 5 after Pickens (A.J. Brown, 86.3% survival) is thinner than the RB tier 9 (7 players left, Javonte Williams/Judkins/Skattebo etc. all with 92-98% survival), so WR misses hurt more than RB misses right now."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Taking Pickens now versus Javonte Williams costs only 10.1 points in Juancho's dDec penalty-adjusted plan (1317.7 vs 1329.9), a near-toss-up, but Javonte Williams has much higher survival (86%) to grab at pick 32."
+      },
+      {
+        "code": "starter_need",
+        "detail": "We have both WR2 and RB2/FLEX slots empty; Pickens directly fills a starting WR slot with WR2 tier quality (proj 151.7) well above the RB tier 9 options (proj ~150-186 but far more replaceable given 7 similar bodies left)."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:7588",
+    "strongestAlternativeWhy": "Javonte Williams actually scores higher in Juancho's raw plan (1329.9 vs 1317.7) and fills our second RB/FLEX need, with strong 86% survival odds if we waited instead.",
+    "strongestCounterargument": "Javonte Williams has 86% survival to pick 32 and Juancho's raw (non-penalized) plan value actually favors him over Pickens by 12.2 points, suggesting we could take Pickens later or skip him entirely for a 'sure things exist elsewhere' argument.",
+    "whyRecommendationStillWins": "The raw plan edge for Javonte Williams is wiped out by Juancho's own reach penalty (dDec -10.1), and more importantly Pickens has meaningfully lower survival (78.3% vs 86%) - if we wait on Pickens we have a real chance of losing the best player on the board, while Javonte Williams remains highly likely to be sitting at pick 32 for us to grab as RB2.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 32 (2 selections away), we expect the RB tier 9 (Javonte Williams ~86% survival, Judkins ~98%, Skattebo ~93.7%) or A.J. Brown (86.3% survival) to still be available; we will take the best surviving RB to fill our RB2/FLEX slot, or pivot to A.J. Brown/Bowers if the board breaks unexpectedly in our favor.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks at 30 and 31 (both immediately before our pick 32), needs QB/RB/WR/TE across the board and could take a RB like Javonte Williams or a WR like A.J. Brown, directly competing for our next-turn targets."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks at 39, already RB-heavy (3 RBs) with critical WR need, unlikely to touch our RB targets but could grab A.J. Brown before our turn 2 picks away complicates things minimally."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8137",
+        "alternatives": [
+          {
+            "playerId": "jfp:7588",
+            "reason": "Javonte Williams is the top remaining RB and fills our second RB/FLEX need with 86% survival if we waited, but Pickens is the clear best-player-available now."
+          },
+          {
+            "playerId": "jfp:11604",
+            "reason": "Brock Bowers is the only elite TE left (tier of 1) and would lock in a massive positional edge at a scarce position."
+          }
+        ],
+        "confidence": 82,
+        "urgency": "must_take_now",
+        "strategy": "Balanced build with elite WR1 (Nacua) and RB1 (Saquon) already locked; take the best player available now (Pickens) to build a strong WR corps, then use our very next pick (32, only 2 selections away) to grab the best surviving RB or TE off the board.",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "Pickens is fsRank 28, the single best player left on the board by First Seed and Juancho's own top recommendation (jRec 1, DRAFT_NOW)."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Pickens only has 78.3% survival to our pick at 32, the lowest survival of any top candidate (Javonte Williams 86%, Bowers 74.3%, Drake Maye 97%), meaning waiting risks losing him outright."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "WR tier 5 after Pickens (A.J. Brown, 86.3% survival) is thinner than the RB tier 9 (7 players left, Javonte Williams/Judkins/Skattebo etc. all with 92-98% survival), so WR misses hurt more than RB misses right now."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Taking Pickens now versus Javonte Williams costs only 10.1 points in Juancho's dDec penalty-adjusted plan (1317.7 vs 1329.9), a near-toss-up, but Javonte Williams has much higher survival (86%) to grab at pick 32."
+          },
+          {
+            "code": "starter_need",
+            "detail": "We have both WR2 and RB2/FLEX slots empty; Pickens directly fills a starting WR slot with WR2 tier quality (proj 151.7) well above the RB tier 9 options (proj ~150-186 but far more replaceable given 7 similar bodies left)."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:7588",
+        "strongestAlternativeWhy": "Javonte Williams actually scores higher in Juancho's raw plan (1329.9 vs 1317.7) and fills our second RB/FLEX need, with strong 86% survival odds if we waited instead.",
+        "strongestCounterargument": "Javonte Williams has 86% survival to pick 32 and Juancho's raw (non-penalized) plan value actually favors him over Pickens by 12.2 points, suggesting we could take Pickens later or skip him entirely for a 'sure things exist elsewhere' argument.",
+        "whyRecommendationStillWins": "The raw plan edge for Javonte Williams is wiped out by Juancho's own reach penalty (dDec -10.1), and more importantly Pickens has meaningfully lower survival (78.3% vs 86%) - if we wait on Pickens we have a real chance of losing the best player on the board, while Javonte Williams remains highly likely to be sitting at pick 32 for us to grab as RB2.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At pick 32 (2 selections away), we expect the RB tier 9 (Javonte Williams ~86% survival, Judkins ~98%, Skattebo ~93.7%) or A.J. Brown (86.3% survival) to still be available; we will take the best surviving RB to fill our RB2/FLEX slot, or pivot to A.J. Brown/Bowers if the board breaks unexpectedly in our favor.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks at 30 and 31 (both immediately before our pick 32), needs QB/RB/WR/TE across the board and could take a RB like Javonte Williams or a WR like A.J. Brown, directly competing for our next-turn targets."
+          },
+          {
+            "rosterId": 2,
+            "why": "Picks at 39, already RB-heavy (3 RBs) with critical WR need, unlikely to touch our RB targets but could grab A.J. Brown before our turn 2 picks away complicates things minimally."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 17397,
+        "outputTokens": 1716
+      },
+      "latencyMs": 19308,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-sonnet-5",
+  "usage": {
+    "inputTokens": 17397,
+    "outputTokens": 1716
+  },
+  "latencyMs": 19308,
+  "error": null,
+  "cachedAt": "2026-08-27T19:37:22.179Z",
+  "key": "dd83a9f6b6bde86c05174359bea36964",
+  "label": "1398448522730221568 p29 claude-sonnet-5/playbook-v1"
+}
