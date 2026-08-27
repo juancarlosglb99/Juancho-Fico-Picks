@@ -14,7 +14,11 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { DraftBrief, StrategistAdvice, StrategistClient } from '../types';
 import { buildStrategistPromptContext, type PromptContextOptions } from '../prompt-context';
 import { PLAYBOOK_VERSION, STRATEGIST_SYSTEM_PROMPT } from './playbook';
-import { SUBMIT_RECOMMENDATION_TOOL, type StrategistResponse } from './schema';
+import {
+  recommendationTool,
+  type RecommendationTool,
+  type StrategistResponse,
+} from './schema';
 import {
   describeProblems,
   validateStrategistResponse,
@@ -32,6 +36,14 @@ export interface AnthropicStrategistOptions {
   /** Extended thinking budget in tokens. Zero or undefined disables it. */
   thinkingBudget?: number;
   promptContext?: Partial<PromptContextOptions>;
+  /**
+   * Ask for the short form of the same contract.
+   *
+   * Identical fields, requirements and enums - only the room for prose differs.
+   * The screen shows a player and a few lines, so a six-paragraph justification
+   * is output tokens nobody reads.
+   */
+  concise?: boolean;
 }
 
 /** What one request to the model produced, before or after repair. */
@@ -116,6 +128,9 @@ export class AnthropicStrategist implements StrategistClient {
   readonly promptContext: Partial<PromptContextOptions>;
   /** True when the deterministic verdict is withheld from the payload. */
   readonly isBlind: boolean;
+  /** The contract this strategist asks for. Part of what the cache keys on. */
+  readonly tool: RecommendationTool;
+  readonly isConcise: boolean;
 
   constructor(options: AnthropicStrategistOptions = {}) {
     const apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY;
@@ -134,6 +149,8 @@ export class AnthropicStrategist implements StrategistClient {
     );
     this.promptContext = options.promptContext ?? {};
     this.isBlind = this.promptContext.blind === true;
+    this.isConcise = options.concise === true;
+    this.tool = recommendationTool(this.isConcise);
     this.client = new Anthropic({ apiKey });
     this.id = `anthropic:${this.model}`;
   }
@@ -201,7 +218,7 @@ export class AnthropicStrategist implements StrategistClient {
         );
       }
 
-      const validation = validateStrategistResponse(outcome.toolUse.input, boardIds);
+      const validation = validateStrategistResponse(outcome.toolUse.input, boardIds, this.tool);
       attempts.push({
         problems: validation.problems,
         rawResponse: outcome.toolUse.input,
@@ -266,7 +283,7 @@ export class AnthropicStrategist implements StrategistClient {
           model: this.model,
           max_tokens: this.maxTokens,
           system: STRATEGIST_SYSTEM_PROMPT,
-          tools: [SUBMIT_RECOMMENDATION_TOOL],
+          tools: [this.tool],
           /*
            * Forced when we can force it, so there is no path to a prose answer.
            * Extended thinking does not permit forced tool use, so with thinking
@@ -276,7 +293,7 @@ export class AnthropicStrategist implements StrategistClient {
           tool_choice:
             this.thinkingBudget > 0
               ? { type: 'auto' as const }
-              : { type: 'tool' as const, name: SUBMIT_RECOMMENDATION_TOOL.name },
+              : { type: 'tool' as const, name: this.tool.name },
           ...(this.thinkingBudget > 0
             ? { thinking: { type: 'enabled' as const, budget_tokens: this.thinkingBudget } }
             : {}),

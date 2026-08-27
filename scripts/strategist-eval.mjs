@@ -8,6 +8,7 @@
  *     npm run strategist:eval -- <draftId> --list        find them, call nothing
  *     npm run strategist:eval -- <draftId> 69 --refresh  ignore the cache
  *     npm run strategist:eval -- <draftId> 69 --blind    hide the deterministic verdict
+ *     npm run strategist:eval -- <draftId> 69 --concise  ask for the short response contract
  *
  * Nothing here touches the live recommendation path. The strategist's answer is
  * computed, put through the guardrails and printed for comparison against First
@@ -70,6 +71,7 @@ const result = spawnSync(
       JUANCHO_EVAL_LIST: flags.has('--list') ? '1' : '',
       JUANCHO_EVAL_REFRESH: flags.has('--refresh') ? '1' : '',
       JUANCHO_EVAL_BLIND: flags.has('--blind') ? '1' : '',
+      JUANCHO_EVAL_CONCISE: flags.has('--concise') ? '1' : '',
     },
   },
 );

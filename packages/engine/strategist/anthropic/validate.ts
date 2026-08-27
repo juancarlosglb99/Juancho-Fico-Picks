@@ -19,7 +19,11 @@
  * produces a confident-looking answer that nobody can tell apart from a real
  * one, which is far worse.
  */
-import { SUBMIT_RECOMMENDATION_TOOL, type StrategistResponse } from './schema';
+import {
+  SUBMIT_RECOMMENDATION_TOOL,
+  type RecommendationTool,
+  type StrategistResponse,
+} from './schema';
 
 export type ResponseProblemCode =
   | 'not_an_object'
@@ -29,6 +33,7 @@ export type ResponseProblemCode =
   | 'invalid_enum'
   | 'wrong_length'
   | 'empty_string'
+  | 'too_long'
   | 'unknown_player';
 
 export interface ResponseProblem {
@@ -44,35 +49,74 @@ export type ValidationResult =
 
 /* -------------------------------------------------------- the contract itself */
 
-const schema = SUBMIT_RECOMMENDATION_TOOL.input_schema;
-const properties = schema.properties as Record<string, Record<string, unknown>>;
-
 /**
- * Bounds read from the published schema rather than restated here.
+ * Every bound, read from the tool that was actually sent.
  *
- * Two copies of "at least two reasons" would eventually disagree, and the copy
- * the model is shown is the one that matters.
+ * Previously these were module constants taken from the one schema that
+ * existed. With two variants of the contract that would validate a concise
+ * answer against the long contract's limits - which is exactly the
+ * two-contracts problem this file exists to prevent, one layer up.
  */
-const REQUIRED_FIELDS = schema.required as (keyof StrategistResponse)[];
-const ALTERNATIVES_MIN = properties.alternatives.minItems as number;
-const ALTERNATIVES_MAX = properties.alternatives.maxItems as number;
-const REASONS_MIN = properties.reasons.minItems as number;
-const REASONS_MAX = properties.reasons.maxItems as number;
-const OPPONENTS_MAX = properties.opponentsThatMatter.maxItems as number;
-const CONFIDENCE_MIN = properties.confidence.minimum as number;
-const CONFIDENCE_MAX = properties.confidence.maximum as number;
-const URGENCIES = properties.urgency.enum as string[];
-/** Read from the schema, so the two contracts cannot drift apart again. */
-const CONFIDENCE_INTEGER = properties.confidence.type === 'integer';
+function boundsOf(tool: RecommendationTool) {
+  const schema = tool.input_schema;
+  const properties = schema.properties as Record<string, Record<string, unknown>>;
+  return {
+    required: schema.required as (keyof StrategistResponse)[],
+    alternativesMin: properties.alternatives.minItems as number,
+    alternativesMax: properties.alternatives.maxItems as number,
+    reasonsMin: properties.reasons.minItems as number,
+    reasonsMax: properties.reasons.maxItems as number,
+    opponentsMax: properties.opponentsThatMatter.maxItems as number,
+    confidenceMin: properties.confidence.minimum as number,
+    confidenceMax: properties.confidence.maximum as number,
+    confidenceInteger: properties.confidence.type === 'integer',
+    urgencies: properties.urgency.enum as string[],
+    /** Ceilings by field path; absent means unbounded. */
+    maxLength: {
+      strategy: properties.strategy.maxLength as number | undefined,
+      strongestAlternativeWhy: properties.strongestAlternativeWhy.maxLength as number | undefined,
+      strongestCounterargument: properties.strongestCounterargument.maxLength as
+        | number
+        | undefined,
+      whyRecommendationStillWins: properties.whyRecommendationStillWins.maxLength as
+        | number
+        | undefined,
+      firstSeedDeviationReason: properties.firstSeedDeviationReason.maxLength as
+        | number
+        | undefined,
+      expectedNextPickPlan: properties.expectedNextPickPlan.maxLength as number | undefined,
+      alternativeReason: itemMax(properties.alternatives, 'reason'),
+      reasonCode: itemMax(properties.reasons, 'code'),
+      reasonDetail: itemMax(properties.reasons, 'detail'),
+      opponentWhy: itemMax(properties.opponentsThatMatter, 'why'),
+    },
+  };
+}
+
+function itemMax(arrayProperty: Record<string, unknown>, field: string): number | undefined {
+  const items = arrayProperty.items as Record<string, unknown> | undefined;
+  const properties = items?.properties as Record<string, Record<string, unknown>> | undefined;
+  return properties?.[field]?.maxLength as number | undefined;
+}
 
 export function validateStrategistResponse(
   raw: unknown,
   /** Ids from the board the model was shown. Anything else is invented. */
   boardPlayerIds: Iterable<string>,
+  /** The contract that was actually sent. Defaults to the long variant. */
+  tool: RecommendationTool = SUBMIT_RECOMMENDATION_TOOL,
 ): ValidationResult {
+  const bounds = boundsOf(tool);
   const problems: ResponseProblem[] = [];
   const fail = (code: ResponseProblemCode, path: string, message: string) =>
     problems.push({ code, path, message });
+  /** A ceiling the schema published, enforced exactly rather than approximately. */
+  const checkLength = (value: unknown, path: string, limit: number | undefined) => {
+    if (limit === undefined || typeof value !== 'string') return;
+    if (value.length > limit) {
+      fail('too_long', path, `Expected at most ${limit} characters, got ${value.length}.`);
+    }
+  };
 
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
     return {
@@ -92,7 +136,7 @@ export function validateStrategistResponse(
    * written for: null is a real answer meaning "no deviation", while undefined
    * means the model never considered the question.
    */
-  for (const field of REQUIRED_FIELDS) {
+  for (const field of bounds.required) {
     if (!(field in value) || value[field] === undefined) {
       fail('missing_field', field, `Required field "${field}" was not returned.`);
     }
@@ -122,11 +166,11 @@ export function validateStrategistResponse(
     if (!Array.isArray(alternatives)) {
       fail('wrong_type', 'alternatives', 'Expected an array of alternatives.');
     } else {
-      if (alternatives.length < ALTERNATIVES_MIN || alternatives.length > ALTERNATIVES_MAX) {
+      if (alternatives.length < bounds.alternativesMin || alternatives.length > bounds.alternativesMax) {
         fail(
           'wrong_length',
           'alternatives',
-          `Expected ${ALTERNATIVES_MIN}-${ALTERNATIVES_MAX} alternatives, got ${alternatives.length}.`,
+          `Expected ${bounds.alternativesMin}-${bounds.alternativesMax} alternatives, got ${alternatives.length}.`,
         );
       }
       alternatives.forEach((entry, index) => {
@@ -149,6 +193,7 @@ export function validateStrategistResponse(
           );
         }
         requireText(alternative.reason, `${path}.reason`, fail);
+        checkLength(alternative.reason, `${path}.reason`, bounds.maxLength.alternativeReason);
       });
     }
   }
@@ -159,13 +204,13 @@ export function validateStrategistResponse(
     const confidence = value.confidence;
     if (typeof confidence !== 'number' || !Number.isFinite(confidence)) {
       fail('wrong_type', 'confidence', 'Expected a number.');
-    } else if (confidence < CONFIDENCE_MIN || confidence > CONFIDENCE_MAX) {
+    } else if (confidence < bounds.confidenceMin || confidence > bounds.confidenceMax) {
       fail(
         'out_of_range',
         'confidence',
-        `Expected ${CONFIDENCE_MIN}-${CONFIDENCE_MAX}, got ${confidence}.`,
+        `Expected ${bounds.confidenceMin}-${bounds.confidenceMax}, got ${confidence}.`,
       );
-    } else if (CONFIDENCE_INTEGER && !Number.isInteger(confidence)) {
+    } else if (bounds.confidenceInteger && !Number.isInteger(confidence)) {
       /*
        * The schema and the validator have to agree.
        *
@@ -181,16 +226,18 @@ export function validateStrategistResponse(
     }
   }
 
-  if ('urgency' in value && !URGENCIES.includes(value.urgency as string)) {
+  if ('urgency' in value && !bounds.urgencies.includes(value.urgency as string)) {
     fail(
       'invalid_enum',
       'urgency',
-      `Expected one of ${URGENCIES.join(' | ')}, got ${describe(value.urgency)}.`,
+      `Expected one of ${bounds.urgencies.join(' | ')}, got ${describe(value.urgency)}.`,
     );
   }
 
   requireText(value.strategy, 'strategy', fail, 'strategy' in value);
+  checkLength(value.strategy, 'strategy', bounds.maxLength.strategy);
   requireText(value.expectedNextPickPlan, 'expectedNextPickPlan', fail, 'expectedNextPickPlan' in value);
+  checkLength(value.expectedNextPickPlan, 'expectedNextPickPlan', bounds.maxLength.expectedNextPickPlan);
 
   /* ------------------------------------------------------------- the reasons */
 
@@ -199,11 +246,11 @@ export function validateStrategistResponse(
     if (!Array.isArray(reasons)) {
       fail('wrong_type', 'reasons', 'Expected an array of reasons.');
     } else {
-      if (reasons.length < REASONS_MIN || reasons.length > REASONS_MAX) {
+      if (reasons.length < bounds.reasonsMin || reasons.length > bounds.reasonsMax) {
         fail(
           'wrong_length',
           'reasons',
-          `Expected ${REASONS_MIN}-${REASONS_MAX} reasons, got ${reasons.length}.`,
+          `Expected ${bounds.reasonsMin}-${bounds.reasonsMax} reasons, got ${reasons.length}.`,
         );
       }
       reasons.forEach((entry, index) => {
@@ -214,7 +261,9 @@ export function validateStrategistResponse(
         }
         const reason = entry as Record<string, unknown>;
         requireText(reason.code, `${path}.code`, fail);
+        checkLength(reason.code, `${path}.code`, bounds.maxLength.reasonCode);
         requireText(reason.detail, `${path}.detail`, fail);
+        checkLength(reason.detail, `${path}.detail`, bounds.maxLength.reasonDetail);
       });
     }
   }
@@ -262,6 +311,11 @@ export function validateStrategistResponse(
     fail,
     'strongestAlternativeWhy' in value,
   );
+  checkLength(
+    value.strongestAlternativeWhy,
+    'strongestAlternativeWhy',
+    bounds.maxLength.strongestAlternativeWhy,
+  );
 
   requireText(
     value.strongestCounterargument,
@@ -269,11 +323,21 @@ export function validateStrategistResponse(
     fail,
     'strongestCounterargument' in value,
   );
+  checkLength(
+    value.strongestCounterargument,
+    'strongestCounterargument',
+    bounds.maxLength.strongestCounterargument,
+  );
   requireText(
     value.whyRecommendationStillWins,
     'whyRecommendationStillWins',
     fail,
     'whyRecommendationStillWins' in value,
+  );
+  checkLength(
+    value.whyRecommendationStillWins,
+    'whyRecommendationStillWins',
+    bounds.maxLength.whyRecommendationStillWins,
   );
 
   /*
@@ -285,6 +349,7 @@ export function validateStrategistResponse(
     if (reason !== null && typeof reason !== 'string') {
       fail('wrong_type', 'firstSeedDeviationReason', 'Expected a string or null.');
     }
+    checkLength(reason, 'firstSeedDeviationReason', bounds.maxLength.firstSeedDeviationReason);
   }
 
   /* ----------------------------------------------------------- the opponents */
@@ -294,11 +359,11 @@ export function validateStrategistResponse(
     if (!Array.isArray(opponents)) {
       fail('wrong_type', 'opponentsThatMatter', 'Expected an array.');
     } else {
-      if (opponents.length > OPPONENTS_MAX) {
+      if (opponents.length > bounds.opponentsMax) {
         fail(
           'wrong_length',
           'opponentsThatMatter',
-          `Expected at most ${OPPONENTS_MAX}, got ${opponents.length}.`,
+          `Expected at most ${bounds.opponentsMax}, got ${opponents.length}.`,
         );
       }
       opponents.forEach((entry, index) => {
@@ -312,6 +377,7 @@ export function validateStrategistResponse(
           fail('wrong_type', `${path}.rosterId`, 'Expected an integer roster id.');
         }
         requireText(opponent.why, `${path}.why`, fail);
+        checkLength(opponent.why, `${path}.why`, bounds.maxLength.opponentWhy);
       });
     }
   }

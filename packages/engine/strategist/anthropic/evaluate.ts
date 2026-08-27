@@ -22,6 +22,7 @@ import { buildStrategistPromptContext } from '../prompt-context';
 import type { BriefCandidate, DraftBrief } from '../types';
 import { cacheKey, readCached, writeCached, type CachedCall } from './cache';
 import { AnthropicStrategist, strategistFingerprint } from './client';
+import type { RecommendationTool } from './schema';
 import { describeProblems, validateStrategistResponse } from './validate';
 
 /** Why a selection was picked out for evaluation. */
@@ -194,13 +195,18 @@ function repairRecordFor(call: CachedCall) {
   };
 }
 
-function enforceContract(call: CachedCall, brief: DraftBrief): CachedCall {
+function enforceContract(
+  call: CachedCall,
+  brief: DraftBrief,
+  tool: RecommendationTool,
+): CachedCall {
   if (call.response === null || call.response === undefined) {
     return { ...call, problems: call.problems ?? [] };
   }
   const validation = validateStrategistResponse(
     call.response,
     brief.candidates.map((candidate) => candidate.playerId),
+    tool,
   );
   if (validation.ok) return { ...call, problems: [] };
   return {
@@ -234,15 +240,17 @@ export async function evaluatePick(
    * experiment was quietly answered from the open cache.
    */
   const payload = buildStrategistPromptContext(brief, options.strategist.promptContext);
-  const key = cacheKey({ model: options.model, payload });
+  const key = cacheKey({ model: options.model, payload, tool: options.strategist.tool });
   const label =
     `${input.regression.draftId} p${overallPick} ${strategistFingerprint(options.model)}` +
-    (options.strategist.isBlind ? ' blind' : '');
+    (options.strategist.isBlind ? ' blind' : '') +
+    (options.strategist.isConcise ? ' concise' : '');
 
   const cached = options.refresh ? null : readCached(key);
   const call = enforceContract(
     cached ?? writeCached(key, label, await options.strategist.call(brief), options.now),
     brief,
+    options.strategist.tool,
   );
 
   const decision = resolveStrategistDecision({

@@ -21,6 +21,7 @@ import {
 import { toAdvice } from '../../packages/engine/strategist/anthropic/client';
 import {
   SUBMIT_RECOMMENDATION_TOOL,
+  SUBMIT_RECOMMENDATION_TOOL_CONCISE,
   type StrategistResponse,
 } from '../../packages/engine/strategist/anthropic/schema';
 import type { DraftBrief } from '../../packages/engine/strategist/types';
@@ -432,6 +433,98 @@ describe('partial and degenerate tool responses', () => {
     const summary = describeProblems(check({}).problems);
     expect(summary).toContain('urgency');
     expect(summary).toContain('recommendedPlayerId');
+  });
+});
+
+/* ------------------------------------------------------- the concise contract */
+
+describe('the concise contract', () => {
+  const concise = (value: unknown) =>
+    validateStrategistResponse(value, boardIds, SUBMIT_RECOMMENDATION_TOOL_CONCISE);
+
+  it('asks the same question, with less room to answer it', () => {
+    // Same fields, same requirements, same enums - only the prose budget moves.
+    // A concise variant that dropped a field would be a different contract.
+    expect(SUBMIT_RECOMMENDATION_TOOL_CONCISE.input_schema.required).toEqual(
+      SUBMIT_RECOMMENDATION_TOOL.input_schema.required,
+    );
+    expect(Object.keys(SUBMIT_RECOMMENDATION_TOOL_CONCISE.input_schema.properties)).toEqual(
+      Object.keys(SUBMIT_RECOMMENDATION_TOOL.input_schema.properties),
+    );
+  });
+
+  it('keeps the counterargument, which is what improved decisions', () => {
+    const properties = SUBMIT_RECOMMENDATION_TOOL_CONCISE.input_schema.properties;
+    expect(SUBMIT_RECOMMENDATION_TOOL_CONCISE.input_schema.required).toContain(
+      'strongestCounterargument',
+    );
+    // And gives it more room than the fields around it: economising on the
+    // model's argument against itself is the one saving not worth making.
+    expect(properties.strongestCounterargument.maxLength).toBeGreaterThan(
+      properties.strategy.maxLength,
+    );
+  });
+
+  it('validates a response against the contract that was actually sent', () => {
+    const wordy = sound({ strategy: 'x'.repeat(400) });
+    // Fine under the long contract, too long under the short one. Validating
+    // both against one schema is the two-contracts bug one layer up.
+    expect(check(wordy).ok).toBe(true);
+    expect(concise(wordy).ok).toBe(false);
+    expect(concise(wordy).problems[0]).toMatchObject({ code: 'too_long', path: 'strategy' });
+  });
+
+  it('enforces every published ceiling exactly', () => {
+    const properties = SUBMIT_RECOMMENDATION_TOOL_CONCISE.input_schema.properties as unknown as
+      Record<string, { maxLength: number }>;
+    for (const field of [
+      'strategy',
+      'strongestAlternativeWhy',
+      'strongestCounterargument',
+      'whyRecommendationStillWins',
+      'expectedNextPickPlan',
+    ]) {
+      const limit = properties[field].maxLength;
+      expect(concise(sound({ [field]: 'x'.repeat(limit) })).ok, `${field} at the limit`).toBe(
+        true,
+      );
+      expect(
+        concise(sound({ [field]: 'x'.repeat(limit + 1) })).problems.map((p) => p.path),
+        `${field} over the limit`,
+      ).toContain(field);
+    }
+  });
+
+  it('caps the arrays too', () => {
+    const many = Array.from({ length: 4 }, () => ({ code: 'a', detail: 'b' }));
+    expect(concise(sound({ reasons: many })).problems.map((p) => p.code)).toContain(
+      'wrong_length',
+    );
+    // Four reasons is fine under the long contract.
+    expect(check(sound({ reasons: many })).ok).toBe(true);
+
+    const opponents = Array.from({ length: 4 }, (_, i) => ({ rosterId: i + 1, why: 'x' }));
+    expect(concise(sound({ opponentsThatMatter: opponents })).problems.map((p) => p.code)).toContain(
+      'wrong_length',
+    );
+  });
+
+  it('accepts a genuinely concise answer', () => {
+    expect(
+      concise(
+        sound({
+          strategy: 'Hero RB; fill the last startable TE slot before the tier breaks.',
+          reasons: [
+            { code: 'tier_cliff', detail: 'TE tier 3 has 2 left, 10.6 to the next tier.' },
+            { code: 'starter_need', detail: 'TE is empty; RB and WR are full.' },
+          ],
+          strongestAlternativeWhy: "First Seed's best available at fsGap 0.",
+          strongestCounterargument: 'Kraft survives 72.3%, so the tier likely holds to 69.',
+          whyRecommendationStillWins: '27.7% of runs leave no tier-3 TE, and WR is replaceable.',
+          expectedNextPickPlan: 'QB at 69 from the 16-deep tier 4, WR at 72.',
+        }),
+      ).ok,
+    ).toBe(true);
   });
 });
 
