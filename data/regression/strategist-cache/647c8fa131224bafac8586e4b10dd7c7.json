@@ -1,0 +1,187 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 148,
+      "currentOverallPick": 149,
+      "currentRound": 15,
+      "boardFingerprint": "44-10bd6676",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11583",
+      "reasoning": "upside_over_filler: Brooks projects 124.7 pts, projRank 91 - far above every other bench-eligible body left (White 103.7, Kamara 76.0, Shakir 88.4). no_open_slots: Lineup is complete (QB/2RB/2WR/TE/2FLEX/K/DEF) and TE is blocked; this pick is pure bench value with 1 selection remaining. simulation_support: Brooks has the best non-QB simGap on the board at -1.9 and gain 14.7, versus -6.5 for White and -10.0 for Kamara.",
+      "reasonCodes": [
+        "upside_over_filler",
+        "no_open_slots",
+        "simulation_support"
+      ],
+      "confidence": 0.63
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8136",
+        "reasoning": "Rachaad White, 103.7 proj, is the highest-projected non-QB skill body left and a usable flex/bye fill.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:11563",
+        "reasoning": "Bo Nix, 276.1 proj, is the best QB2 insurance behind Jalen Hurts if we prefer a backup QB.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": null,
+    "confidence": 0.63,
+    "model": "claude-opus-5",
+    "urgency": "neutral",
+    "strategy": "Final pick on a full, balanced roster with no holes: buy the highest-upside bench asset, a Tier-13 RB with a real path to touches.",
+    "firstSeedDeviationReason": "Reaching 27 ranks past Kamara because the final roster spot is pure upside and Brooks outprojects him by 48.7 points with the board's best non-QB simGap.",
+    "strongestAlternativePlayerId": "jfp:8136",
+    "strongestAlternativeWhy": "Rachaad White is 21 First Seed ranks cheaper and immediately playable as a flex/bye cover in standard scoring.",
+    "strongestCounterargument": "First Seed's best available is Alvin Kamara at rank 132; Brooks is rank 159, an fsGap of 27, and First Seed's landmine score on him is the board's lowest at 1.2 only because they discount him heavily.",
+    "whyRecommendationStillWins": "fsGap costs nothing on the last pick with no starting slot at stake: Kamara projects 76.0 to Brooks' 124.7 and carries simGap -10.0 vs -1.9. A rank-132 player who can never start is worth less than the highest-ceiling RB stash.",
+    "expectedNextPickPlan": "None - this is selection 149, our last. Roster closes with Brooks as the sixth RB stash behind Barkley, Judkins, Javonte, Conner and Mason.",
+    "opponentsThatMatter": []
+  },
+  "response": {
+    "playerId": "unused",
+    "recommendedPlayerId": "jfp:11583",
+    "alternatives": [
+      {
+        "playerId": "jfp:8136",
+        "reason": "Rachaad White, 103.7 proj, is the highest-projected non-QB skill body left and a usable flex/bye fill."
+      },
+      {
+        "playerId": "jfp:11563",
+        "reason": "Bo Nix, 276.1 proj, is the best QB2 insurance behind Jalen Hurts if we prefer a backup QB."
+      }
+    ],
+    "confidence": 63,
+    "urgency": "neutral",
+    "strategy": "Final pick on a full, balanced roster with no holes: buy the highest-upside bench asset, a Tier-13 RB with a real path to touches.",
+    "reasons": [
+      {
+        "code": "upside_over_filler",
+        "detail": "Brooks projects 124.7 pts, projRank 91 - far above every other bench-eligible body left (White 103.7, Kamara 76.0, Shakir 88.4)."
+      },
+      {
+        "code": "no_open_slots",
+        "detail": "Lineup is complete (QB/2RB/2WR/TE/2FLEX/K/DEF) and TE is blocked; this pick is pure bench value with 1 selection remaining."
+      },
+      {
+        "code": "simulation_support",
+        "detail": "Brooks has the best non-QB simGap on the board at -1.9 and gain 14.7, versus -6.5 for White and -10.0 for Kamara."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8136",
+    "strongestAlternativeWhy": "Rachaad White is 21 First Seed ranks cheaper and immediately playable as a flex/bye cover in standard scoring.",
+    "strongestCounterargument": "First Seed's best available is Alvin Kamara at rank 132; Brooks is rank 159, an fsGap of 27, and First Seed's landmine score on him is the board's lowest at 1.2 only because they discount him heavily.",
+    "whyRecommendationStillWins": "fsGap costs nothing on the last pick with no starting slot at stake: Kamara projects 76.0 to Brooks' 124.7 and carries simGap -10.0 vs -1.9. A rank-132 player who can never start is worth less than the highest-ceiling RB stash.",
+    "firstSeedDeviationReason": "Reaching 27 ranks past Kamara because the final roster spot is pure upside and Brooks outprojects him by 48.7 points with the board's best non-QB simGap.",
+    "expectedNextPickPlan": "None - this is selection 149, our last. Roster closes with Brooks as the sixth RB stash behind Barkley, Judkins, Javonte, Conner and Mason.",
+    "opponentsThatMatter": []
+  },
+  "rawResponse": {
+    "playerId": "unused",
+    "recommendedPlayerId": "jfp:11583",
+    "alternatives": [
+      {
+        "playerId": "jfp:8136",
+        "reason": "Rachaad White, 103.7 proj, is the highest-projected non-QB skill body left and a usable flex/bye fill."
+      },
+      {
+        "playerId": "jfp:11563",
+        "reason": "Bo Nix, 276.1 proj, is the best QB2 insurance behind Jalen Hurts if we prefer a backup QB."
+      }
+    ],
+    "confidence": 63,
+    "urgency": "neutral",
+    "strategy": "Final pick on a full, balanced roster with no holes: buy the highest-upside bench asset, a Tier-13 RB with a real path to touches.",
+    "reasons": [
+      {
+        "code": "upside_over_filler",
+        "detail": "Brooks projects 124.7 pts, projRank 91 - far above every other bench-eligible body left (White 103.7, Kamara 76.0, Shakir 88.4)."
+      },
+      {
+        "code": "no_open_slots",
+        "detail": "Lineup is complete (QB/2RB/2WR/TE/2FLEX/K/DEF) and TE is blocked; this pick is pure bench value with 1 selection remaining."
+      },
+      {
+        "code": "simulation_support",
+        "detail": "Brooks has the best non-QB simGap on the board at -1.9 and gain 14.7, versus -6.5 for White and -10.0 for Kamara."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8136",
+    "strongestAlternativeWhy": "Rachaad White is 21 First Seed ranks cheaper and immediately playable as a flex/bye cover in standard scoring.",
+    "strongestCounterargument": "First Seed's best available is Alvin Kamara at rank 132; Brooks is rank 159, an fsGap of 27, and First Seed's landmine score on him is the board's lowest at 1.2 only because they discount him heavily.",
+    "whyRecommendationStillWins": "fsGap costs nothing on the last pick with no starting slot at stake: Kamara projects 76.0 to Brooks' 124.7 and carries simGap -10.0 vs -1.9. A rank-132 player who can never start is worth less than the highest-ceiling RB stash.",
+    "firstSeedDeviationReason": "Reaching 27 ranks past Kamara because the final roster spot is pure upside and Brooks outprojects him by 48.7 points with the board's best non-QB simGap.",
+    "expectedNextPickPlan": "None - this is selection 149, our last. Roster closes with Brooks as the sixth RB stash behind Barkley, Judkins, Javonte, Conner and Mason.",
+    "opponentsThatMatter": []
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "playerId": "unused",
+        "recommendedPlayerId": "jfp:11583",
+        "alternatives": [
+          {
+            "playerId": "jfp:8136",
+            "reason": "Rachaad White, 103.7 proj, is the highest-projected non-QB skill body left and a usable flex/bye fill."
+          },
+          {
+            "playerId": "jfp:11563",
+            "reason": "Bo Nix, 276.1 proj, is the best QB2 insurance behind Jalen Hurts if we prefer a backup QB."
+          }
+        ],
+        "confidence": 63,
+        "urgency": "neutral",
+        "strategy": "Final pick on a full, balanced roster with no holes: buy the highest-upside bench asset, a Tier-13 RB with a real path to touches.",
+        "reasons": [
+          {
+            "code": "upside_over_filler",
+            "detail": "Brooks projects 124.7 pts, projRank 91 - far above every other bench-eligible body left (White 103.7, Kamara 76.0, Shakir 88.4)."
+          },
+          {
+            "code": "no_open_slots",
+            "detail": "Lineup is complete (QB/2RB/2WR/TE/2FLEX/K/DEF) and TE is blocked; this pick is pure bench value with 1 selection remaining."
+          },
+          {
+            "code": "simulation_support",
+            "detail": "Brooks has the best non-QB simGap on the board at -1.9 and gain 14.7, versus -6.5 for White and -10.0 for Kamara."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8136",
+        "strongestAlternativeWhy": "Rachaad White is 21 First Seed ranks cheaper and immediately playable as a flex/bye cover in standard scoring.",
+        "strongestCounterargument": "First Seed's best available is Alvin Kamara at rank 132; Brooks is rank 159, an fsGap of 27, and First Seed's landmine score on him is the board's lowest at 1.2 only because they discount him heavily.",
+        "whyRecommendationStillWins": "fsGap costs nothing on the last pick with no starting slot at stake: Kamara projects 76.0 to Brooks' 124.7 and carries simGap -10.0 vs -1.9. A rank-132 player who can never start is worth less than the highest-ceiling RB stash.",
+        "firstSeedDeviationReason": "Reaching 27 ranks past Kamara because the final roster spot is pure upside and Brooks outprojects him by 48.7 points with the board's best non-QB simGap.",
+        "expectedNextPickPlan": "None - this is selection 149, our last. Roster closes with Brooks as the sixth RB stash behind Barkley, Judkins, Javonte, Conner and Mason.",
+        "opponentsThatMatter": []
+      },
+      "usage": {
+        "inputTokens": 13209,
+        "outputTokens": 1123
+      },
+      "latencyMs": 17460,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 13209,
+    "outputTokens": 1123
+  },
+  "latencyMs": 17460,
+  "error": null,
+  "cachedAt": "2026-08-27T20:13:31.819Z",
+  "key": "647c8fa131224bafac8586e4b10dd7c7",
+  "label": "1398448522730221568 p149 claude-opus-5/playbook-v1 blind concise compact"
+}

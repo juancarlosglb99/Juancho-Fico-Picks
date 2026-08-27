@@ -1,0 +1,260 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 108,
+      "currentOverallPick": 109,
+      "currentRound": 11,
+      "boardFingerprint": "30-442e8b02",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8408",
+      "reasoning": "starter_upgrade: Mason projects 113.5 with +34.0 immediate gain, the largest of any non-QB on the board, and simGap -0.2, the best final-roster outcome available. positional_scarcity: RB tier 13 has only 3 left (Mason, Brooks, Pacheco) and K plus DEF must consume 2 of our 5 remaining picks. opportunity_cost: TE is blocked (2 rostered), and QB tier 4 has 10 members with 83.7% chance all survive, so Kittle/Mahomes add nothing startable.",
+      "reasonCodes": [
+        "starter_upgrade",
+        "positional_scarcity",
+        "opportunity_cost"
+      ],
+      "confidence": 0.61
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reasoning": "Jordan Addison, WR tier 12 at 104.5 proj, our best bench/flex upgrade over Marvin Harrison.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:11583",
+        "reasoning": "Jonathon Brooks, RB tier 13 with 124.7 proj and +37.4 gain, the highest-upside RB depth left.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Owns 110 and 111 back-to-back; needs TE but has taken 3 RBs recently.",
+    "confidence": 0.61,
+    "model": "claude-opus-5",
+    "urgency": "likely_to_return",
+    "strategy": "Balanced roster with all starting slots filled; add the highest-projecting startable RB body (113.5 proj) as real flex/injury insurance before the useful RB tier empties.",
+    "firstSeedDeviationReason": "fsGap 11 past James Conner, whose flagged data conflict shows a 40.4-point projection against rank 99; Mason projects 113.5 in the same role.",
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is First Seed's next best (rank 108) at 104.5 proj, but as WR5 behind Nacua/Pickens/Flowers/Harrison he is pure bench.",
+    "strongestCounterargument": "Mason survives 94% to pick 112, and roster 10's two picks need TE - waiting costs almost nothing and lets us pair him with Conner or Addison.",
+    "whyRecommendationStillWins": "94% is high, but every alternative is safer still: Pittman 97.7%, Brooks and Pacheco 100%, Addison 77.3% but replaceable by Reed/Diggs. Spending the riskier slot on the best RB body is the correct ordering of the pair.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR/RB depth - Addison (77%), Pittman (98%) or Brooks (100%) - then K and DEF with the last two picks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns 110 and 111 back-to-back; needs TE but has taken 3 RBs recently."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Jordan Addison, WR tier 12 at 104.5 proj, our best bench/flex upgrade over Marvin Harrison."
+      },
+      {
+        "playerId": "jfp:11583",
+        "reason": "Jonathon Brooks, RB tier 13 with 124.7 proj and +37.4 gain, the highest-upside RB depth left."
+      }
+    ],
+    "confidence": 61,
+    "urgency": "likely_to_return",
+    "strategy": "Balanced roster with all starting slots filled; add the highest-projecting startable RB body (113.5 proj) as real flex/injury insurance before the useful RB tier empties.",
+    "reasons": [
+      {
+        "code": "starter_upgrade",
+        "detail": "Mason projects 113.5 with +34.0 immediate gain, the largest of any non-QB on the board, and simGap -0.2, the best final-roster outcome available."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "RB tier 13 has only 3 left (Mason, Brooks, Pacheco) and K plus DEF must consume 2 of our 5 remaining picks."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "TE is blocked (2 rostered), and QB tier 4 has 10 members with 83.7% chance all survive, so Kittle/Mahomes add nothing startable."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is First Seed's next best (rank 108) at 104.5 proj, but as WR5 behind Nacua/Pickens/Flowers/Harrison he is pure bench.",
+    "strongestCounterargument": "Mason survives 94% to pick 112, and roster 10's two picks need TE - waiting costs almost nothing and lets us pair him with Conner or Addison.",
+    "whyRecommendationStillWins": "94% is high, but every alternative is safer still: Pittman 97.7%, Brooks and Pacheco 100%, Addison 77.3% but replaceable by Reed/Diggs. Spending the riskier slot on the best RB body is the correct ordering of the pair.",
+    "firstSeedDeviationReason": "fsGap 11 past James Conner, whose flagged data conflict shows a 40.4-point projection against rank 99; Mason projects 113.5 in the same role.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR/RB depth - Addison (77%), Pittman (98%) or Brooks (100%) - then K and DEF with the last two picks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns 110 and 111 back-to-back; needs TE but has taken 3 RBs recently."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Jordan Addison, WR tier 12 at 104.5 proj, our best bench/flex upgrade over Marvin Harrison."
+      },
+      {
+        "playerId": "jfp:11583",
+        "reason": "Jonathon Brooks, RB tier 13 with 124.7 proj and +37.4 gain, the highest-upside RB depth left."
+      }
+    ],
+    "confidence": 61,
+    "urgency": "likely_to_return",
+    "strategy": "Balanced roster with all starting slots filled; add the highest-projecting startable RB body (113.5 proj) as real flex/injury insurance before the useful RB tier empties.",
+    "reasons": [
+      {
+        "code": "starter_upgrade",
+        "detail": "Mason projects 113.5 with +34.0 immediate gain, the largest of any non-QB on the board, and simGap -0.2, the best final-roster outcome available."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "RB tier 13 has only 3 left (Mason, Brooks, Pacheco) and K plus DEF must consume 2 of our 5 remaining picks."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "TE is blocked (2 rostered), and QB tier 4 has 10 members with 83.7% chance all survive, so Kittle/Mahomes add nothing startable."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is First Seed's next best (rank 108) at 104.5 proj, but as WR5 behind Nacua/Pickens/Flowers/Harrison he is pure bench.",
+    "strongestCounterargument": "Mason survives 94% to pick 112, and roster 10's two picks need TE - waiting costs almost nothing and lets us pair him with Conner or Addison.",
+    "whyRecommendationStillWins": "94% is high, but every alternative is safer still: Pittman 97.7%, Brooks and Pacheco 100%, Addison 77.3% but replaceable by Reed/Diggs. Spending the riskier slot on the best RB body is the correct ordering of the pair.",
+    "firstSeedDeviationReason": "fsGap 11 past James Conner, whose flagged data conflict shows a 40.4-point projection against rank 99; Mason projects 113.5 in the same role.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR/RB depth - Addison (77%), Pittman (98%) or Brooks (100%) - then K and DEF with the last two picks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns 110 and 111 back-to-back; needs TE but has taken 3 RBs recently."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [
+        {
+          "code": "missing_field",
+          "path": "urgency",
+          "message": "Required field \"urgency\" was not returned."
+        }
+      ],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:9756",
+            "reason": "Jordan Addison, WR4 tier at 104.5 proj, would be our best bench/flex upgrade over Marvin Harrison."
+          },
+          {
+            "playerId": "jfp:11583",
+            "reason": "Jonathon Brooks, RB tier 13 with 124.7 proj and +37.4 gain, the highest-upside RB depth left."
+          }
+        ],
+        "confidence": 61,
+        "strategy": "Balanced roster with all starting slots filled; add the highest-projecting startable RB body (113.5 proj) as real flex/injury insurance before the useful RB tier empties.",
+        "reasons": [
+          {
+            "code": "starter_upgrade",
+            "detail": "Mason projects 113.5 vs our current FLEX bodies; +34.0 immediate gain, the largest of any non-QB on the board and simGap only -0.2, the best on the board."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "RB tier 13 has 3 left (Mason, Brooks, Pacheco); K and DEF must consume 2 of our 5 remaining picks, so real depth slots are scarce."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "TE is blocked (2 already), QB4 tier has 10 members with 83.7% chance all survive, so Mahomes/Kittle add nothing startable."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:9756",
+        "strongestAlternativeWhy": "Addison is First Seed's next best (rank 108) and 104.5 proj, but WR4 behind Nacua/Pickens/Flowers/Harrison is pure bench.",
+        "strongestCounterargument": "Mason survives 94% to pick 112 and only roster 10 picks twice, needing TE - waiting costs almost nothing and Conner/Addison could be paired with him.",
+        "whyRecommendationStillWins": "94% is high but the alternatives are even safer: Addison 77.3%, Pittman 97.7%, Brooks/Pacheco 100%. Taking the 6% risk on the best RB body while the near-certain WR/RB depth keeps for 112 is the correct ordering of the pair.",
+        "firstSeedDeviationReason": "fsGap 11 past James Conner, whose own data warning flags a 40.4-point projection against rank 99; Mason projects 113.5 for the same role.",
+        "expectedNextPickPlan": "At 112 take the best remaining WR/RB depth - Addison (77%) or Pittman (98%)/Brooks (100%) - then K and DEF in the final two of our five picks.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks 110 and 111 back-to-back; RB5 already but needs TE, so likely takes a TE and an RB."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 13968,
+        "outputTokens": 1141
+      },
+      "latencyMs": 17323,
+      "error": "The strategist's response did not satisfy the contract. urgency: Required field \"urgency\" was not returned."
+    },
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:9756",
+            "reason": "Jordan Addison, WR tier 12 at 104.5 proj, our best bench/flex upgrade over Marvin Harrison."
+          },
+          {
+            "playerId": "jfp:11583",
+            "reason": "Jonathon Brooks, RB tier 13 with 124.7 proj and +37.4 gain, the highest-upside RB depth left."
+          }
+        ],
+        "confidence": 61,
+        "urgency": "likely_to_return",
+        "strategy": "Balanced roster with all starting slots filled; add the highest-projecting startable RB body (113.5 proj) as real flex/injury insurance before the useful RB tier empties.",
+        "reasons": [
+          {
+            "code": "starter_upgrade",
+            "detail": "Mason projects 113.5 with +34.0 immediate gain, the largest of any non-QB on the board, and simGap -0.2, the best final-roster outcome available."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "RB tier 13 has only 3 left (Mason, Brooks, Pacheco) and K plus DEF must consume 2 of our 5 remaining picks."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "TE is blocked (2 rostered), and QB tier 4 has 10 members with 83.7% chance all survive, so Kittle/Mahomes add nothing startable."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:9756",
+        "strongestAlternativeWhy": "Addison is First Seed's next best (rank 108) at 104.5 proj, but as WR5 behind Nacua/Pickens/Flowers/Harrison he is pure bench.",
+        "strongestCounterargument": "Mason survives 94% to pick 112, and roster 10's two picks need TE - waiting costs almost nothing and lets us pair him with Conner or Addison.",
+        "whyRecommendationStillWins": "94% is high, but every alternative is safer still: Pittman 97.7%, Brooks and Pacheco 100%, Addison 77.3% but replaceable by Reed/Diggs. Spending the riskier slot on the best RB body is the correct ordering of the pair.",
+        "firstSeedDeviationReason": "fsGap 11 past James Conner, whose flagged data conflict shows a 40.4-point projection against rank 99; Mason projects 113.5 in the same role.",
+        "expectedNextPickPlan": "At 112 take the best remaining WR/RB depth - Addison (77%), Pittman (98%) or Brooks (100%) - then K and DEF with the last two picks.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Owns 110 and 111 back-to-back; needs TE but has taken 3 RBs recently."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 15304,
+        "outputTokens": 1152
+      },
+      "latencyMs": 12261,
+      "error": null
+    }
+  ],
+  "repairAttempted": true,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 29272,
+    "outputTokens": 2293
+  },
+  "latencyMs": 29584,
+  "error": null,
+  "cachedAt": "2026-08-27T20:13:31.819Z",
+  "key": "b16960ffc9abfc325ccfca5ab366cf25",
+  "label": "1398448522730221568 p109 claude-opus-5/playbook-v1 blind concise compact"
+}
