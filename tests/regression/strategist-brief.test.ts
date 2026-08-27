@@ -18,6 +18,7 @@ import {
 import { listCases, readProjectionSnapshot, readRoomSnapshot } from '../../packages/engine/benchmark/store';
 import { validateStrategistPick } from '../../packages/engine/strategist/guardrails';
 import { buildStrategistPromptContext } from '../../packages/engine/strategist/prompt-context';
+import { findInterestingPicks } from '../../packages/engine/strategist/anthropic/evaluate';
 import { buildDraftAttachment } from '../../packages/sleeper/attachment';
 import { draftFor, playersFor, replayCase } from './replay-harness';
 
@@ -191,6 +192,35 @@ describe('the brief on real drafts', () => {
    * The example is generated rather than written by hand, so it can never
    * describe a shape the code stopped producing.
    */
+  /**
+   * The evaluation harness has to find the selections worth paying to examine.
+   *
+   * A pick where First Seed, our simulation and our ranking all agree teaches
+   * nothing: the strategist can only match or be wrong. This checks that the
+   * disputes are actually detected, including the one used as the first test.
+   */
+  it('finds the disputed selections in every mock', () => {
+    for (const entry of cases) {
+      const interesting = findInterestingPicks(inputFor(entry));
+      expect(interesting.length, entry.draftId).toBeGreaterThan(0);
+      for (const pick of interesting) {
+        expect(pick.reasons.length, `p${pick.overallPick}`).toBeGreaterThan(0);
+        expect(pick.score).toBeGreaterThan(0);
+      }
+      // Ordered by how much is actually in dispute.
+      const scores = interesting.map((pick) => pick.score);
+      expect([...scores].sort((a, b) => b - a)).toEqual(scores);
+    }
+  });
+
+  it('flags pick 69 of the third mock, where the simulation disputes the ranking', () => {
+    const entry = cases.find((item) => item.draftId === '1398448522730221568');
+    if (!entry) return;
+    const found = findInterestingPicks(inputFor(entry)).find((pick) => pick.overallPick === 69);
+    expect(found, 'pick 69 should be recognised as disputed').toBeTruthy();
+    expect(found!.reasons).toContain('simulation_disagrees');
+  });
+
   it('reports what a real brief contains', () => {
     const wanted = process.env.JUANCHO_BRIEF_DRAFT;
     const entry = (wanted ? cases.find((item) => item.draftId === wanted) : cases[0]) ?? cases[0];

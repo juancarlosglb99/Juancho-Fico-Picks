@@ -410,8 +410,22 @@ export interface StrategistAdvice {
   alternatives: StrategistPick[];
   /** How the strategist reads the room as a whole. */
   roomRead: string | null;
+  /** 0-1. Models report 0-100; the boundary normalises. */
   confidence: number;
   model?: string | null;
+
+  /* --- richer fields, present when the strategist supplies them --- */
+
+  /** Whether this player must be taken now or is merely the best choice. */
+  decision?: 'DRAFT_NOW' | 'WAIT';
+  /** The roster shape this pick serves, named concretely. */
+  strategy?: string;
+  /** Required when the pick reaches meaningfully past First Seed. */
+  firstSeedDeviationReason?: string | null;
+  /** What we expect to do at our next selection, given this one. */
+  expectedNextPickPlan?: string;
+  /** The teams whose selections before our next turn changed the decision. */
+  opponentsThatMatter?: { rosterId: number; why: string }[];
 }
 
 /**

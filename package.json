@@ -16,9 +16,11 @@
     "capture": "node scripts/capture.mjs",
     "test:regression": "vitest run --config vitest.config.ts tests/regression",
     "tune:consensus": "node scripts/tune-consensus.mjs",
-    "brief": "node scripts/brief.mjs"
+    "brief": "node scripts/brief.mjs",
+    "strategist:eval": "node scripts/strategist-eval.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.121.0",
     "next": "^16.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
