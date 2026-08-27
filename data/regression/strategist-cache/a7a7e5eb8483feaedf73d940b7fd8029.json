@@ -1,0 +1,243 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 108,
+      "currentOverallPick": 109,
+      "currentRound": 11,
+      "boardFingerprint": "30-442e8b02",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8408",
+      "reasoning": "lineup_upgrade: Our weakest starter is FLEX Zay Flowers/Javonte Williams; Jordan Mason projects 113.5, the highest projection of any RB on this board besides Jonathon Brooks, and would compete immediately for the RB2/FLEX role over Javonte. blocked_te: TE is explicitly blocked (Tyler Warren + Sam LaPorta), so Kittle, Kelce and the whole 10-man TE tier are unusable to us — the 'best available' TE names are noise. qb_is_flat: We already start Jalen Hurts; the tier-4 QB pool has 10 members with 83.7% chance ALL of them remain at 112, so Mahomes/Nix/Stafford is never the right use of pick 109 in a 1QB league. first_seed_prior: fsGap is only 11 (rank 110 vs Conner at 99) and First Seed's own data warning flags Conner as a ranking/projection conflict — they rank him 99 while projecting 40.4 points, 49 points below Mason. opponent_demand: Only two selections intervene, both from roster 10 (picks 110 and 111), who already carries 5 RBs and needs TE — the exact position we cannot use — so the RB/WR depth we pass on is largely safe. opportunity_cost: Addison (77.3%), Conner (80.3%) and every QB survive at high rates, while Mason at 94% is also likely back — this is a low-leverage pick where the marginal-points body wins.",
+      "reasonCodes": [
+        "lineup_upgrade",
+        "blocked_te",
+        "qb_is_flat",
+        "first_seed_prior",
+        "opponent_demand",
+        "opportunity_cost"
+      ],
+      "confidence": 0.58
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reasoning": "Jordan Addison is the best remaining WR body for our two flex slots and a genuine upgrade over Marvin Harrison as depth insurance in standard scoring.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:4137",
+        "reasoning": "James Conner is First Seed's best available and would be our RB4/flex handcuff-quality body, though 3 RBs already fill our lineup.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Owns both intervening selections at 110 and 111; carries 5 RBs, 3 WRs and needs a TE, so they are most likely to take Kittle/Kelce-class tight ends we cannot use, but with 5 RBs already they could still add a Mason-type volume back as a bench swing.",
+    "confidence": 0.58,
+    "model": "claude-opus-5",
+    "urgency": "likely_to_return",
+    "strategy": "Balanced roster with every skill slot already filled by a real starter; we spend this pick on the highest-upside body left who can actually beat a current starter — Jordan Mason's standalone RB volume — while banking that Conner/Addison-class depth and the flat QB2 pool survive to 112, 129 and 132 alongside the mandatory K and DEF.",
+    "firstSeedDeviationReason": "fsGap 11 past Conner: First Seed's own board flags Conner with a ranking_projection_conflict (rank 99 vs 40.4 projected points, versus a 89-point median for RBs ranked near him), and Conner would be our fourth RB behind Saquon, Judkins and Javonte, while Mason projects 113.5 and can actually start — worth well more than 11 board ranks at pick 109.",
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is First Seed's second-best available (rank 108) and projects 104.5 as a WR who could unseat Zay Flowers in our second flex.",
+    "strongestCounterargument": "Jordan Mason's survival is 94% with only 2 intervening selections, both belonging to roster 10 which already rosters 5 RBs and needs a TE — so we could simply take Conner or Addison now and still have Mason at 112, and the pairs table shows Conner+Mason both available in 74.7% of runs.",
+    "whyRecommendationStillWins": "The 94% is real but the alternative it protects is worth almost nothing: Conner's own projection is 40.4 and Addison is one of twelve interchangeable tier-12 WRs (Pittman 97.7%, Diggs 98%, Doubs 98.7%, Reed 99% all survive), so taking Mason first costs us essentially zero on the back end while guaranteeing the one body with a genuine path to our starting lineup.",
+    "expectedNextPickPlan": "At 112 take the best flex-capable body still there — Addison, Pittman or Conner, all 77%+ to survive — then use 129/132 on a QB2/upside RB from the ten-deep tier-4 QB pool or Jonathon Brooks (100% survival), and reserve 149 plus one more for the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both intervening selections at 110 and 111; carries 5 RBs, 3 WRs and needs a TE, so they are most likely to take Kittle/Kelce-class tight ends we cannot use, but with 5 RBs already they could still add a Mason-type volume back as a bench swing."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Jordan Addison is the best remaining WR body for our two flex slots and a genuine upgrade over Marvin Harrison as depth insurance in standard scoring."
+      },
+      {
+        "playerId": "jfp:4137",
+        "reason": "James Conner is First Seed's best available and would be our RB4/flex handcuff-quality body, though 3 RBs already fill our lineup."
+      }
+    ],
+    "confidence": 58,
+    "strategy": "Balanced roster with every skill slot already filled by a real starter; we spend this pick on the highest-upside body left who can actually beat a current starter — Jordan Mason's standalone RB volume — while banking that Conner/Addison-class depth and the flat QB2 pool survive to 112, 129 and 132 alongside the mandatory K and DEF.",
+    "reasons": [
+      {
+        "code": "lineup_upgrade",
+        "detail": "Our weakest starter is FLEX Zay Flowers/Javonte Williams; Jordan Mason projects 113.5, the highest projection of any RB on this board besides Jonathon Brooks, and would compete immediately for the RB2/FLEX role over Javonte."
+      },
+      {
+        "code": "blocked_te",
+        "detail": "TE is explicitly blocked (Tyler Warren + Sam LaPorta), so Kittle, Kelce and the whole 10-man TE tier are unusable to us — the 'best available' TE names are noise."
+      },
+      {
+        "code": "qb_is_flat",
+        "detail": "We already start Jalen Hurts; the tier-4 QB pool has 10 members with 83.7% chance ALL of them remain at 112, so Mahomes/Nix/Stafford is never the right use of pick 109 in a 1QB league."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 11 (rank 110 vs Conner at 99) and First Seed's own data warning flags Conner as a ranking/projection conflict — they rank him 99 while projecting 40.4 points, 49 points below Mason."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Only two selections intervene, both from roster 10 (picks 110 and 111), who already carries 5 RBs and needs TE — the exact position we cannot use — so the RB/WR depth we pass on is largely safe."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Addison (77.3%), Conner (80.3%) and every QB survive at high rates, while Mason at 94% is also likely back — this is a low-leverage pick where the marginal-points body wins."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is First Seed's second-best available (rank 108) and projects 104.5 as a WR who could unseat Zay Flowers in our second flex.",
+    "strongestCounterargument": "Jordan Mason's survival is 94% with only 2 intervening selections, both belonging to roster 10 which already rosters 5 RBs and needs a TE — so we could simply take Conner or Addison now and still have Mason at 112, and the pairs table shows Conner+Mason both available in 74.7% of runs.",
+    "whyRecommendationStillWins": "The 94% is real but the alternative it protects is worth almost nothing: Conner's own projection is 40.4 and Addison is one of twelve interchangeable tier-12 WRs (Pittman 97.7%, Diggs 98%, Doubs 98.7%, Reed 99% all survive), so taking Mason first costs us essentially zero on the back end while guaranteeing the one body with a genuine path to our starting lineup.",
+    "firstSeedDeviationReason": "fsGap 11 past Conner: First Seed's own board flags Conner with a ranking_projection_conflict (rank 99 vs 40.4 projected points, versus a 89-point median for RBs ranked near him), and Conner would be our fourth RB behind Saquon, Judkins and Javonte, while Mason projects 113.5 and can actually start — worth well more than 11 board ranks at pick 109.",
+    "expectedNextPickPlan": "At 112 take the best flex-capable body still there — Addison, Pittman or Conner, all 77%+ to survive — then use 129/132 on a QB2/upside RB from the ten-deep tier-4 QB pool or Jonathon Brooks (100% survival), and reserve 149 plus one more for the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both intervening selections at 110 and 111; carries 5 RBs, 3 WRs and needs a TE, so they are most likely to take Kittle/Kelce-class tight ends we cannot use, but with 5 RBs already they could still add a Mason-type volume back as a bench swing."
+      }
+    ],
+    "urgency": "likely_to_return"
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Jordan Addison is the best remaining WR body for our two flex slots and a genuine upgrade over Marvin Harrison as depth insurance in standard scoring."
+      },
+      {
+        "playerId": "jfp:4137",
+        "reason": "James Conner is First Seed's best available and would be our RB4/flex handcuff-quality body, though 3 RBs already fill our lineup."
+      }
+    ],
+    "confidence": 58,
+    "strategy": "Balanced roster with every skill slot already filled by a real starter; we spend this pick on the highest-upside body left who can actually beat a current starter — Jordan Mason's standalone RB volume — while banking that Conner/Addison-class depth and the flat QB2 pool survive to 112, 129 and 132 alongside the mandatory K and DEF.",
+    "reasons": [
+      {
+        "code": "lineup_upgrade",
+        "detail": "Our weakest starter is FLEX Zay Flowers/Javonte Williams; Jordan Mason projects 113.5, the highest projection of any RB on this board besides Jonathon Brooks, and would compete immediately for the RB2/FLEX role over Javonte."
+      },
+      {
+        "code": "blocked_te",
+        "detail": "TE is explicitly blocked (Tyler Warren + Sam LaPorta), so Kittle, Kelce and the whole 10-man TE tier are unusable to us — the 'best available' TE names are noise."
+      },
+      {
+        "code": "qb_is_flat",
+        "detail": "We already start Jalen Hurts; the tier-4 QB pool has 10 members with 83.7% chance ALL of them remain at 112, so Mahomes/Nix/Stafford is never the right use of pick 109 in a 1QB league."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 11 (rank 110 vs Conner at 99) and First Seed's own data warning flags Conner as a ranking/projection conflict — they rank him 99 while projecting 40.4 points, 49 points below Mason."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Only two selections intervene, both from roster 10 (picks 110 and 111), who already carries 5 RBs and needs TE — the exact position we cannot use — so the RB/WR depth we pass on is largely safe."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Addison (77.3%), Conner (80.3%) and every QB survive at high rates, while Mason at 94% is also likely back — this is a low-leverage pick where the marginal-points body wins."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is First Seed's second-best available (rank 108) and projects 104.5 as a WR who could unseat Zay Flowers in our second flex.",
+    "strongestCounterargument": "Jordan Mason's survival is 94% with only 2 intervening selections, both belonging to roster 10 which already rosters 5 RBs and needs a TE — so we could simply take Conner or Addison now and still have Mason at 112, and the pairs table shows Conner+Mason both available in 74.7% of runs.",
+    "whyRecommendationStillWins": "The 94% is real but the alternative it protects is worth almost nothing: Conner's own projection is 40.4 and Addison is one of twelve interchangeable tier-12 WRs (Pittman 97.7%, Diggs 98%, Doubs 98.7%, Reed 99% all survive), so taking Mason first costs us essentially zero on the back end while guaranteeing the one body with a genuine path to our starting lineup.",
+    "firstSeedDeviationReason": "fsGap 11 past Conner: First Seed's own board flags Conner with a ranking_projection_conflict (rank 99 vs 40.4 projected points, versus a 89-point median for RBs ranked near him), and Conner would be our fourth RB behind Saquon, Judkins and Javonte, while Mason projects 113.5 and can actually start — worth well more than 11 board ranks at pick 109.",
+    "expectedNextPickPlan": "At 112 take the best flex-capable body still there — Addison, Pittman or Conner, all 77%+ to survive — then use 129/132 on a QB2/upside RB from the ten-deep tier-4 QB pool or Jonathon Brooks (100% survival), and reserve 149 plus one more for the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both intervening selections at 110 and 111; carries 5 RBs, 3 WRs and needs a TE, so they are most likely to take Kittle/Kelce-class tight ends we cannot use, but with 5 RBs already they could still add a Mason-type volume back as a bench swing."
+      }
+    ],
+    "urgency": "likely_to_return"
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:9756",
+            "reason": "Jordan Addison is the best remaining WR body for our two flex slots and a genuine upgrade over Marvin Harrison as depth insurance in standard scoring."
+          },
+          {
+            "playerId": "jfp:4137",
+            "reason": "James Conner is First Seed's best available and would be our RB4/flex handcuff-quality body, though 3 RBs already fill our lineup."
+          }
+        ],
+        "confidence": 58,
+        "strategy": "Balanced roster with every skill slot already filled by a real starter; we spend this pick on the highest-upside body left who can actually beat a current starter — Jordan Mason's standalone RB volume — while banking that Conner/Addison-class depth and the flat QB2 pool survive to 112, 129 and 132 alongside the mandatory K and DEF.",
+        "reasons": [
+          {
+            "code": "lineup_upgrade",
+            "detail": "Our weakest starter is FLEX Zay Flowers/Javonte Williams; Jordan Mason projects 113.5, the highest projection of any RB on this board besides Jonathon Brooks, and would compete immediately for the RB2/FLEX role over Javonte."
+          },
+          {
+            "code": "blocked_te",
+            "detail": "TE is explicitly blocked (Tyler Warren + Sam LaPorta), so Kittle, Kelce and the whole 10-man TE tier are unusable to us — the 'best available' TE names are noise."
+          },
+          {
+            "code": "qb_is_flat",
+            "detail": "We already start Jalen Hurts; the tier-4 QB pool has 10 members with 83.7% chance ALL of them remain at 112, so Mahomes/Nix/Stafford is never the right use of pick 109 in a 1QB league."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap is only 11 (rank 110 vs Conner at 99) and First Seed's own data warning flags Conner as a ranking/projection conflict — they rank him 99 while projecting 40.4 points, 49 points below Mason."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Only two selections intervene, both from roster 10 (picks 110 and 111), who already carries 5 RBs and needs TE — the exact position we cannot use — so the RB/WR depth we pass on is largely safe."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Addison (77.3%), Conner (80.3%) and every QB survive at high rates, while Mason at 94% is also likely back — this is a low-leverage pick where the marginal-points body wins."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:9756",
+        "strongestAlternativeWhy": "Addison is First Seed's second-best available (rank 108) and projects 104.5 as a WR who could unseat Zay Flowers in our second flex.",
+        "strongestCounterargument": "Jordan Mason's survival is 94% with only 2 intervening selections, both belonging to roster 10 which already rosters 5 RBs and needs a TE — so we could simply take Conner or Addison now and still have Mason at 112, and the pairs table shows Conner+Mason both available in 74.7% of runs.",
+        "whyRecommendationStillWins": "The 94% is real but the alternative it protects is worth almost nothing: Conner's own projection is 40.4 and Addison is one of twelve interchangeable tier-12 WRs (Pittman 97.7%, Diggs 98%, Doubs 98.7%, Reed 99% all survive), so taking Mason first costs us essentially zero on the back end while guaranteeing the one body with a genuine path to our starting lineup.",
+        "firstSeedDeviationReason": "fsGap 11 past Conner: First Seed's own board flags Conner with a ranking_projection_conflict (rank 99 vs 40.4 projected points, versus a 89-point median for RBs ranked near him), and Conner would be our fourth RB behind Saquon, Judkins and Javonte, while Mason projects 113.5 and can actually start — worth well more than 11 board ranks at pick 109.",
+        "expectedNextPickPlan": "At 112 take the best flex-capable body still there — Addison, Pittman or Conner, all 77%+ to survive — then use 129/132 on a QB2/upside RB from the ten-deep tier-4 QB pool or Jonathon Brooks (100% survival), and reserve 149 plus one more for the mandatory K and DEF.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Owns both intervening selections at 110 and 111; carries 5 RBs, 3 WRs and needs a TE, so they are most likely to take Kittle/Kelce-class tight ends we cannot use, but with 5 RBs already they could still add a Mason-type volume back as a bench swing."
+          }
+        ],
+        "urgency": "likely_to_return"
+      },
+      "usage": {
+        "inputTokens": 16243,
+        "outputTokens": 1843
+      },
+      "latencyMs": 28832,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 16243,
+    "outputTokens": 1843
+  },
+  "latencyMs": 28832,
+  "error": null,
+  "cachedAt": "2026-08-27T19:52:28.610Z",
+  "key": "a7a7e5eb8483feaedf73d940b7fd8029",
+  "label": "1398448522730221568 p109 claude-opus-5/playbook-v1 blind"
+}

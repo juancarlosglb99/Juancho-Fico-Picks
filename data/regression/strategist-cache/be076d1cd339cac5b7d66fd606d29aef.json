@@ -1,0 +1,243 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 148,
+      "currentOverallPick": 149,
+      "currentRound": 15,
+      "boardFingerprint": "44-10bd6676",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11583",
+      "reasoning": "no_starter_need: Holes are \"none\" - QB Hurts, RB Barkley/Javonte, WR Nacua/Pickens, TE Warren, K, DEF and both FLEX (Judkins, Flowers) are already set, so this pick can only ever be bench upside. tier_edge: Jonathon Brooks is RB tier 13 (only 2 left) at 124.7 projected points - the highest RB projection on the entire board and 20+ points clear of Rachaad White (103.7) and Chris Rodriguez (102.4). positional_scarcity: Our RB room behind Barkley is Javonte/Judkins/Conner/Mason; Brooks is the only remaining back with a path to a true lead role, which is exactly the profile a 5th bench spot should hold. first_seed_prior: First Seed has him at 159 (fsGap 27), but with fsVal +0.79 and the lowest landmine score on the board (fsMine 1.2) their own value model says the market is underrating him - the rank penalty is a reach charge, not a talent verdict. opportunity_cost: TE is blocked (2 already, one starting slot) and a 2nd QB behind Hurts can never start in this 1QB league, so Bo Nix's 276.1 points and 16.6 gain are illusory - he would be an unusable body. survives_to_next_turn: With selectionsRemaining 1 and picksUntilOurNextTurn null, there is no next turn - survival percentages are irrelevant and the only question is which body we want on the bench.",
+      "reasonCodes": [
+        "no_starter_need",
+        "tier_edge",
+        "positional_scarcity",
+        "first_seed_prior",
+        "opportunity_cost",
+        "survives_to_next_turn"
+      ],
+      "confidence": 0.66
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8205",
+        "reasoning": "Isiah Pacheco projects 115.5 with a defined early-down role in Detroit and is the next-best upside RB bench body.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:12501",
+        "reasoning": "Matthew Golden is the highest-tier WR left (tier 12, 100.7 proj) and would be the first man up if Zay Flowers or Marvin Harrison disappoints.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks at 150 and is the only team with a hole (K:high), so they will take a kicker and cannot touch any candidate we are weighing - our decision is unconstrained.",
+    "confidence": 0.66,
+    "model": "claude-opus-5",
+    "urgency": "neutral",
+    "strategy": "Balanced roster with every starting slot filled and no blocked needs; this final selection is a pure upside dart on the bench, targeting the highest-ceiling handcuff/lead-back lottery ticket rather than another undifferentiated body.",
+    "firstSeedDeviationReason": "fsGap 27 past Kamara, justified because the roster has no startable hole to fill and the last bench slot maximises value as a lottery ticket: Brooks leads all available RBs in projection (124.7) and simGap (-1.9, best on the board among usable positions), and First Seed's own value delta (+0.79, highest on the board) and landmine score (1.2, lowest) show their rank is a discount for injury recency rather than a talent judgement.",
+    "strongestAlternativePlayerId": "jfp:8205",
+    "strongestAlternativeWhy": "Pacheco's 115.5 projection is the second-highest among available RBs and carries less health-related uncertainty than Brooks while offering a similar path to standing-down snaps.",
+    "strongestCounterargument": "Juancho's simulation names Alvin Kamara as First Seed's best available at rank 132 with fsGap 0, and Brooks sits at fsRank 159 - a 27-rank reach that First Seed's global board says is unearned, while Kamara adds an immediate 6.6 gain to a roster that is otherwise complete.",
+    "whyRecommendationStillWins": "Kamara projects 76.0 to Brooks's 124.7 and simGap favours Brooks by 8.1 points of finished-roster value (-1.9 vs -10.0); at pick 149 with zero starting needs, a 31-year-old committee back's marginal gain is worthless while the only thing a last bench spot can do is buy a ceiling, and First Seed's own fsVal +0.79 / fsMine 1.2 on Brooks concedes the rank is lagging.",
+    "expectedNextPickPlan": "There is no next pick - selectionsRemaining is 1 and this is overall 149, the final selection we own; the finished roster is Hurts / Barkley / Javonte / Nacua / Pickens / Warren / Vinatieri / Cardinals with Judkins and Flowers at FLEX, and a bench of Mason, Harrison, LaPorta, Conner and Brooks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks at 150 and is the only team with a hole (K:high), so they will take a kicker and cannot touch any candidate we are weighing - our decision is unconstrained."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:11583",
+    "alternatives": [
+      {
+        "playerId": "jfp:8205",
+        "reason": "Isiah Pacheco projects 115.5 with a defined early-down role in Detroit and is the next-best upside RB bench body."
+      },
+      {
+        "playerId": "jfp:12501",
+        "reason": "Matthew Golden is the highest-tier WR left (tier 12, 100.7 proj) and would be the first man up if Zay Flowers or Marvin Harrison disappoints."
+      }
+    ],
+    "confidence": 66,
+    "strategy": "Balanced roster with every starting slot filled and no blocked needs; this final selection is a pure upside dart on the bench, targeting the highest-ceiling handcuff/lead-back lottery ticket rather than another undifferentiated body.",
+    "reasons": [
+      {
+        "code": "no_starter_need",
+        "detail": "Holes are \"none\" - QB Hurts, RB Barkley/Javonte, WR Nacua/Pickens, TE Warren, K, DEF and both FLEX (Judkins, Flowers) are already set, so this pick can only ever be bench upside."
+      },
+      {
+        "code": "tier_edge",
+        "detail": "Jonathon Brooks is RB tier 13 (only 2 left) at 124.7 projected points - the highest RB projection on the entire board and 20+ points clear of Rachaad White (103.7) and Chris Rodriguez (102.4)."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Our RB room behind Barkley is Javonte/Judkins/Conner/Mason; Brooks is the only remaining back with a path to a true lead role, which is exactly the profile a 5th bench spot should hold."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed has him at 159 (fsGap 27), but with fsVal +0.79 and the lowest landmine score on the board (fsMine 1.2) their own value model says the market is underrating him - the rank penalty is a reach charge, not a talent verdict."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "TE is blocked (2 already, one starting slot) and a 2nd QB behind Hurts can never start in this 1QB league, so Bo Nix's 276.1 points and 16.6 gain are illusory - he would be an unusable body."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "With selectionsRemaining 1 and picksUntilOurNextTurn null, there is no next turn - survival percentages are irrelevant and the only question is which body we want on the bench."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8205",
+    "strongestAlternativeWhy": "Pacheco's 115.5 projection is the second-highest among available RBs and carries less health-related uncertainty than Brooks while offering a similar path to standing-down snaps.",
+    "strongestCounterargument": "Juancho's simulation names Alvin Kamara as First Seed's best available at rank 132 with fsGap 0, and Brooks sits at fsRank 159 - a 27-rank reach that First Seed's global board says is unearned, while Kamara adds an immediate 6.6 gain to a roster that is otherwise complete.",
+    "whyRecommendationStillWins": "Kamara projects 76.0 to Brooks's 124.7 and simGap favours Brooks by 8.1 points of finished-roster value (-1.9 vs -10.0); at pick 149 with zero starting needs, a 31-year-old committee back's marginal gain is worthless while the only thing a last bench spot can do is buy a ceiling, and First Seed's own fsVal +0.79 / fsMine 1.2 on Brooks concedes the rank is lagging.",
+    "firstSeedDeviationReason": "fsGap 27 past Kamara, justified because the roster has no startable hole to fill and the last bench slot maximises value as a lottery ticket: Brooks leads all available RBs in projection (124.7) and simGap (-1.9, best on the board among usable positions), and First Seed's own value delta (+0.79, highest on the board) and landmine score (1.2, lowest) show their rank is a discount for injury recency rather than a talent judgement.",
+    "expectedNextPickPlan": "There is no next pick - selectionsRemaining is 1 and this is overall 149, the final selection we own; the finished roster is Hurts / Barkley / Javonte / Nacua / Pickens / Warren / Vinatieri / Cardinals with Judkins and Flowers at FLEX, and a bench of Mason, Harrison, LaPorta, Conner and Brooks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks at 150 and is the only team with a hole (K:high), so they will take a kicker and cannot touch any candidate we are weighing - our decision is unconstrained."
+      }
+    ],
+    "urgency": "neutral"
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:11583",
+    "alternatives": [
+      {
+        "playerId": "jfp:8205",
+        "reason": "Isiah Pacheco projects 115.5 with a defined early-down role in Detroit and is the next-best upside RB bench body."
+      },
+      {
+        "playerId": "jfp:12501",
+        "reason": "Matthew Golden is the highest-tier WR left (tier 12, 100.7 proj) and would be the first man up if Zay Flowers or Marvin Harrison disappoints."
+      }
+    ],
+    "confidence": 66,
+    "strategy": "Balanced roster with every starting slot filled and no blocked needs; this final selection is a pure upside dart on the bench, targeting the highest-ceiling handcuff/lead-back lottery ticket rather than another undifferentiated body.",
+    "reasons": [
+      {
+        "code": "no_starter_need",
+        "detail": "Holes are \"none\" - QB Hurts, RB Barkley/Javonte, WR Nacua/Pickens, TE Warren, K, DEF and both FLEX (Judkins, Flowers) are already set, so this pick can only ever be bench upside."
+      },
+      {
+        "code": "tier_edge",
+        "detail": "Jonathon Brooks is RB tier 13 (only 2 left) at 124.7 projected points - the highest RB projection on the entire board and 20+ points clear of Rachaad White (103.7) and Chris Rodriguez (102.4)."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Our RB room behind Barkley is Javonte/Judkins/Conner/Mason; Brooks is the only remaining back with a path to a true lead role, which is exactly the profile a 5th bench spot should hold."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed has him at 159 (fsGap 27), but with fsVal +0.79 and the lowest landmine score on the board (fsMine 1.2) their own value model says the market is underrating him - the rank penalty is a reach charge, not a talent verdict."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "TE is blocked (2 already, one starting slot) and a 2nd QB behind Hurts can never start in this 1QB league, so Bo Nix's 276.1 points and 16.6 gain are illusory - he would be an unusable body."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "With selectionsRemaining 1 and picksUntilOurNextTurn null, there is no next turn - survival percentages are irrelevant and the only question is which body we want on the bench."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8205",
+    "strongestAlternativeWhy": "Pacheco's 115.5 projection is the second-highest among available RBs and carries less health-related uncertainty than Brooks while offering a similar path to standing-down snaps.",
+    "strongestCounterargument": "Juancho's simulation names Alvin Kamara as First Seed's best available at rank 132 with fsGap 0, and Brooks sits at fsRank 159 - a 27-rank reach that First Seed's global board says is unearned, while Kamara adds an immediate 6.6 gain to a roster that is otherwise complete.",
+    "whyRecommendationStillWins": "Kamara projects 76.0 to Brooks's 124.7 and simGap favours Brooks by 8.1 points of finished-roster value (-1.9 vs -10.0); at pick 149 with zero starting needs, a 31-year-old committee back's marginal gain is worthless while the only thing a last bench spot can do is buy a ceiling, and First Seed's own fsVal +0.79 / fsMine 1.2 on Brooks concedes the rank is lagging.",
+    "firstSeedDeviationReason": "fsGap 27 past Kamara, justified because the roster has no startable hole to fill and the last bench slot maximises value as a lottery ticket: Brooks leads all available RBs in projection (124.7) and simGap (-1.9, best on the board among usable positions), and First Seed's own value delta (+0.79, highest on the board) and landmine score (1.2, lowest) show their rank is a discount for injury recency rather than a talent judgement.",
+    "expectedNextPickPlan": "There is no next pick - selectionsRemaining is 1 and this is overall 149, the final selection we own; the finished roster is Hurts / Barkley / Javonte / Nacua / Pickens / Warren / Vinatieri / Cardinals with Judkins and Flowers at FLEX, and a bench of Mason, Harrison, LaPorta, Conner and Brooks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks at 150 and is the only team with a hole (K:high), so they will take a kicker and cannot touch any candidate we are weighing - our decision is unconstrained."
+      }
+    ],
+    "urgency": "neutral"
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:11583",
+        "alternatives": [
+          {
+            "playerId": "jfp:8205",
+            "reason": "Isiah Pacheco projects 115.5 with a defined early-down role in Detroit and is the next-best upside RB bench body."
+          },
+          {
+            "playerId": "jfp:12501",
+            "reason": "Matthew Golden is the highest-tier WR left (tier 12, 100.7 proj) and would be the first man up if Zay Flowers or Marvin Harrison disappoints."
+          }
+        ],
+        "confidence": 66,
+        "strategy": "Balanced roster with every starting slot filled and no blocked needs; this final selection is a pure upside dart on the bench, targeting the highest-ceiling handcuff/lead-back lottery ticket rather than another undifferentiated body.",
+        "reasons": [
+          {
+            "code": "no_starter_need",
+            "detail": "Holes are \"none\" - QB Hurts, RB Barkley/Javonte, WR Nacua/Pickens, TE Warren, K, DEF and both FLEX (Judkins, Flowers) are already set, so this pick can only ever be bench upside."
+          },
+          {
+            "code": "tier_edge",
+            "detail": "Jonathon Brooks is RB tier 13 (only 2 left) at 124.7 projected points - the highest RB projection on the entire board and 20+ points clear of Rachaad White (103.7) and Chris Rodriguez (102.4)."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "Our RB room behind Barkley is Javonte/Judkins/Conner/Mason; Brooks is the only remaining back with a path to a true lead role, which is exactly the profile a 5th bench spot should hold."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "First Seed has him at 159 (fsGap 27), but with fsVal +0.79 and the lowest landmine score on the board (fsMine 1.2) their own value model says the market is underrating him - the rank penalty is a reach charge, not a talent verdict."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "TE is blocked (2 already, one starting slot) and a 2nd QB behind Hurts can never start in this 1QB league, so Bo Nix's 276.1 points and 16.6 gain are illusory - he would be an unusable body."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "With selectionsRemaining 1 and picksUntilOurNextTurn null, there is no next turn - survival percentages are irrelevant and the only question is which body we want on the bench."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8205",
+        "strongestAlternativeWhy": "Pacheco's 115.5 projection is the second-highest among available RBs and carries less health-related uncertainty than Brooks while offering a similar path to standing-down snaps.",
+        "strongestCounterargument": "Juancho's simulation names Alvin Kamara as First Seed's best available at rank 132 with fsGap 0, and Brooks sits at fsRank 159 - a 27-rank reach that First Seed's global board says is unearned, while Kamara adds an immediate 6.6 gain to a roster that is otherwise complete.",
+        "whyRecommendationStillWins": "Kamara projects 76.0 to Brooks's 124.7 and simGap favours Brooks by 8.1 points of finished-roster value (-1.9 vs -10.0); at pick 149 with zero starting needs, a 31-year-old committee back's marginal gain is worthless while the only thing a last bench spot can do is buy a ceiling, and First Seed's own fsVal +0.79 / fsMine 1.2 on Brooks concedes the rank is lagging.",
+        "firstSeedDeviationReason": "fsGap 27 past Kamara, justified because the roster has no startable hole to fill and the last bench slot maximises value as a lottery ticket: Brooks leads all available RBs in projection (124.7) and simGap (-1.9, best on the board among usable positions), and First Seed's own value delta (+0.79, highest on the board) and landmine score (1.2, lowest) show their rank is a discount for injury recency rather than a talent judgement.",
+        "expectedNextPickPlan": "There is no next pick - selectionsRemaining is 1 and this is overall 149, the final selection we own; the finished roster is Hurts / Barkley / Javonte / Nacua / Pickens / Warren / Vinatieri / Cardinals with Judkins and Flowers at FLEX, and a bench of Mason, Harrison, LaPorta, Conner and Brooks.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks at 150 and is the only team with a hole (K:high), so they will take a kicker and cannot touch any candidate we are weighing - our decision is unconstrained."
+          }
+        ],
+        "urgency": "neutral"
+      },
+      "usage": {
+        "inputTokens": 16155,
+        "outputTokens": 1827
+      },
+      "latencyMs": 29606,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 16155,
+    "outputTokens": 1827
+  },
+  "latencyMs": 29606,
+  "error": null,
+  "cachedAt": "2026-08-27T19:52:28.610Z",
+  "key": "be076d1cd339cac5b7d66fd606d29aef",
+  "label": "1398448522730221568 p149 claude-opus-5/playbook-v1 blind"
+}

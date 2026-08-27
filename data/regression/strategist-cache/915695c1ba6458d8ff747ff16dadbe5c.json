@@ -1,0 +1,262 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 108,
+      "currentOverallPick": 109,
+      "currentRound": 11,
+      "boardFingerprint": "30-442e8b02",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8408",
+      "reasoning": "positional_scarcity: RB tier 13 has only 3 players left (surv 94% for Mason) while our bench RB depth beyond Javonte Williams/Judkins is thin, and RB dries up faster than WR in redraft benches. tier_cliff: RB tier 13 (Mason, Woody Marks, Tyrone Tracy) has a gapAfter of 7.3 points to the next tier, and only 3 total remain league-wide with several RB-needy teams (rosterId 2,4,5,7,8) drafting before our next turn at 112. gain_value: Jordan Mason offers gain of 34.0 points to our roster, the highest gain figure on the board among startable-position players, versus 13.1 for Addison (WR) and 0 for any TE (TE already capped at 2). opportunity_cost: TE is blocked (rules.blocked lists TE as unusable a third time), so George Kittle despite being top TE by proj (103.4) cannot help our roster at all. survival_math: Mason's survival to pick 112 is 94% per joint availability, but James Conner has a data warning (ranking_projection_conflict) making his 40.4 proj far below peers, undermining his gain=12.1 despite 80.3% survival.",
+      "reasonCodes": [
+        "positional_scarcity",
+        "tier_cliff",
+        "gain_value",
+        "opportunity_cost",
+        "survival_math"
+      ],
+      "confidence": 0.62
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reasoning": "Best available WR depth piece with strong projection (104.5) if we prioritize a bench receiver instead.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:4137",
+        "reasoning": "Juancho's top-ranked RB by survival simulation but has a flagged ranking/projection conflict making him risky.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 8: Picks at 113 right after us, needs WR/TE, could take Addison or Kittle before our 112 pick isn't affected but influences what remains for pick 112. Roster 10: Picks twice (110,111) before our nextPick 112, needs TE, likely to grab a TE like Kittle or Kelce, thinning that tier further. Roster 4: RB-heavy build with reachesAt QB tag, could still grab another RB like Mason if we don't take him now, competing directly for the same scarce RB tier.",
+    "confidence": 0.62,
+    "model": "claude-sonnet-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced roster with all starting slots filled except K/DEF; use remaining bench slots to maximize flex-eligible depth. Jordan Mason offers the best combination of projection (113.5, RB posRank 39) and gain (34 points) among realistic bench options, and RB depth is more scarce than WR/TE right now given our roster already has 3 flex-worthy WRs and 2 usable TEs.",
+    "firstSeedDeviationReason": "First Seed ranks Mason 110th overall (fsGap 11), a modest reach justified by Juancho's much higher gain (34) and tight RB tier-13 scarcity (only 3 left) versus deeper WR/TE tiers still available next turn.",
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Jordan Addison offers strong WR depth (104.5 proj, posRank 43) and a safer profile, useful if RB depth is deemed less needed given Javonte Williams and Judkins already fill FLEX/RB2.",
+    "strongestCounterargument": "Jordan Mason's own survival is already high at 94% (joint availability with James Conner shows bIfAGone of 98.3%), suggesting he would likely still be there at pick 112, so we could take a different player now and still get him.",
+    "whyRecommendationStillWins": "While Mason is likely to survive, the RB tier-13 pool is razor thin (only 3 left) and multiple RB-needy teams (Cincinnati/Jags/Vikings-style rosters at slots 2,4,5,7,8 all list RB as a medium need) draft twice before our next turn at 112; taking him now locks in the highest-gain startable asset rather than gambling on a shrinking pool, and our next pick can still capture a Kittle/Addison-tier player since TE tier survival for Kittle is only 66.3% and WR tier 12 survival is 77-98% for several names, giving us better odds of getting a good WR/TE fallback than getting a good RB fallback.",
+    "expectedNextPickPlan": "At pick 112, expect to grab the best remaining WR depth piece (Jordan Addison or Michael Pittman, both showing high survival ~77-98%) or a value TE like George Kittle if he somehow survives (66.3% chance), rounding out bench depth before turning to K/DEF in later rounds.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks at 113 right after us, needs WR/TE, could take Addison or Kittle before our 112 pick isn't affected but influences what remains for pick 112."
+      },
+      {
+        "rosterId": 10,
+        "why": "Picks twice (110,111) before our nextPick 112, needs TE, likely to grab a TE like Kittle or Kelce, thinning that tier further."
+      },
+      {
+        "rosterId": 4,
+        "why": "RB-heavy build with reachesAt QB tag, could still grab another RB like Mason if we don't take him now, competing directly for the same scarce RB tier."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Best available WR depth piece with strong projection (104.5) if we prioritize a bench receiver instead."
+      },
+      {
+        "playerId": "jfp:4137",
+        "reason": "Juancho's top-ranked RB by survival simulation but has a flagged ranking/projection conflict making him risky."
+      }
+    ],
+    "confidence": 62,
+    "urgency": "must_take_now",
+    "strategy": "Balanced roster with all starting slots filled except K/DEF; use remaining bench slots to maximize flex-eligible depth. Jordan Mason offers the best combination of projection (113.5, RB posRank 39) and gain (34 points) among realistic bench options, and RB depth is more scarce than WR/TE right now given our roster already has 3 flex-worthy WRs and 2 usable TEs.",
+    "reasons": [
+      {
+        "code": "positional_scarcity",
+        "detail": "RB tier 13 has only 3 players left (surv 94% for Mason) while our bench RB depth beyond Javonte Williams/Judkins is thin, and RB dries up faster than WR in redraft benches."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 13 (Mason, Woody Marks, Tyrone Tracy) has a gapAfter of 7.3 points to the next tier, and only 3 total remain league-wide with several RB-needy teams (rosterId 2,4,5,7,8) drafting before our next turn at 112."
+      },
+      {
+        "code": "gain_value",
+        "detail": "Jordan Mason offers gain of 34.0 points to our roster, the highest gain figure on the board among startable-position players, versus 13.1 for Addison (WR) and 0 for any TE (TE already capped at 2)."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "TE is blocked (rules.blocked lists TE as unusable a third time), so George Kittle despite being top TE by proj (103.4) cannot help our roster at all."
+      },
+      {
+        "code": "survival_math",
+        "detail": "Mason's survival to pick 112 is 94% per joint availability, but James Conner has a data warning (ranking_projection_conflict) making his 40.4 proj far below peers, undermining his gain=12.1 despite 80.3% survival."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Jordan Addison offers strong WR depth (104.5 proj, posRank 43) and a safer profile, useful if RB depth is deemed less needed given Javonte Williams and Judkins already fill FLEX/RB2.",
+    "strongestCounterargument": "Jordan Mason's own survival is already high at 94% (joint availability with James Conner shows bIfAGone of 98.3%), suggesting he would likely still be there at pick 112, so we could take a different player now and still get him.",
+    "whyRecommendationStillWins": "While Mason is likely to survive, the RB tier-13 pool is razor thin (only 3 left) and multiple RB-needy teams (Cincinnati/Jags/Vikings-style rosters at slots 2,4,5,7,8 all list RB as a medium need) draft twice before our next turn at 112; taking him now locks in the highest-gain startable asset rather than gambling on a shrinking pool, and our next pick can still capture a Kittle/Addison-tier player since TE tier survival for Kittle is only 66.3% and WR tier 12 survival is 77-98% for several names, giving us better odds of getting a good WR/TE fallback than getting a good RB fallback.",
+    "firstSeedDeviationReason": "First Seed ranks Mason 110th overall (fsGap 11), a modest reach justified by Juancho's much higher gain (34) and tight RB tier-13 scarcity (only 3 left) versus deeper WR/TE tiers still available next turn.",
+    "expectedNextPickPlan": "At pick 112, expect to grab the best remaining WR depth piece (Jordan Addison or Michael Pittman, both showing high survival ~77-98%) or a value TE like George Kittle if he somehow survives (66.3% chance), rounding out bench depth before turning to K/DEF in later rounds.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks at 113 right after us, needs WR/TE, could take Addison or Kittle before our 112 pick isn't affected but influences what remains for pick 112."
+      },
+      {
+        "rosterId": 10,
+        "why": "Picks twice (110,111) before our nextPick 112, needs TE, likely to grab a TE like Kittle or Kelce, thinning that tier further."
+      },
+      {
+        "rosterId": 4,
+        "why": "RB-heavy build with reachesAt QB tag, could still grab another RB like Mason if we don't take him now, competing directly for the same scarce RB tier."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Best available WR depth piece with strong projection (104.5) if we prioritize a bench receiver instead."
+      },
+      {
+        "playerId": "jfp:4137",
+        "reason": "Juancho's top-ranked RB by survival simulation but has a flagged ranking/projection conflict making him risky."
+      }
+    ],
+    "confidence": 62,
+    "urgency": "must_take_now",
+    "strategy": "Balanced roster with all starting slots filled except K/DEF; use remaining bench slots to maximize flex-eligible depth. Jordan Mason offers the best combination of projection (113.5, RB posRank 39) and gain (34 points) among realistic bench options, and RB depth is more scarce than WR/TE right now given our roster already has 3 flex-worthy WRs and 2 usable TEs.",
+    "reasons": [
+      {
+        "code": "positional_scarcity",
+        "detail": "RB tier 13 has only 3 players left (surv 94% for Mason) while our bench RB depth beyond Javonte Williams/Judkins is thin, and RB dries up faster than WR in redraft benches."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 13 (Mason, Woody Marks, Tyrone Tracy) has a gapAfter of 7.3 points to the next tier, and only 3 total remain league-wide with several RB-needy teams (rosterId 2,4,5,7,8) drafting before our next turn at 112."
+      },
+      {
+        "code": "gain_value",
+        "detail": "Jordan Mason offers gain of 34.0 points to our roster, the highest gain figure on the board among startable-position players, versus 13.1 for Addison (WR) and 0 for any TE (TE already capped at 2)."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "TE is blocked (rules.blocked lists TE as unusable a third time), so George Kittle despite being top TE by proj (103.4) cannot help our roster at all."
+      },
+      {
+        "code": "survival_math",
+        "detail": "Mason's survival to pick 112 is 94% per joint availability, but James Conner has a data warning (ranking_projection_conflict) making his 40.4 proj far below peers, undermining his gain=12.1 despite 80.3% survival."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Jordan Addison offers strong WR depth (104.5 proj, posRank 43) and a safer profile, useful if RB depth is deemed less needed given Javonte Williams and Judkins already fill FLEX/RB2.",
+    "strongestCounterargument": "Jordan Mason's own survival is already high at 94% (joint availability with James Conner shows bIfAGone of 98.3%), suggesting he would likely still be there at pick 112, so we could take a different player now and still get him.",
+    "whyRecommendationStillWins": "While Mason is likely to survive, the RB tier-13 pool is razor thin (only 3 left) and multiple RB-needy teams (Cincinnati/Jags/Vikings-style rosters at slots 2,4,5,7,8 all list RB as a medium need) draft twice before our next turn at 112; taking him now locks in the highest-gain startable asset rather than gambling on a shrinking pool, and our next pick can still capture a Kittle/Addison-tier player since TE tier survival for Kittle is only 66.3% and WR tier 12 survival is 77-98% for several names, giving us better odds of getting a good WR/TE fallback than getting a good RB fallback.",
+    "firstSeedDeviationReason": "First Seed ranks Mason 110th overall (fsGap 11), a modest reach justified by Juancho's much higher gain (34) and tight RB tier-13 scarcity (only 3 left) versus deeper WR/TE tiers still available next turn.",
+    "expectedNextPickPlan": "At pick 112, expect to grab the best remaining WR depth piece (Jordan Addison or Michael Pittman, both showing high survival ~77-98%) or a value TE like George Kittle if he somehow survives (66.3% chance), rounding out bench depth before turning to K/DEF in later rounds.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks at 113 right after us, needs WR/TE, could take Addison or Kittle before our 112 pick isn't affected but influences what remains for pick 112."
+      },
+      {
+        "rosterId": 10,
+        "why": "Picks twice (110,111) before our nextPick 112, needs TE, likely to grab a TE like Kittle or Kelce, thinning that tier further."
+      },
+      {
+        "rosterId": 4,
+        "why": "RB-heavy build with reachesAt QB tag, could still grab another RB like Mason if we don't take him now, competing directly for the same scarce RB tier."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:9756",
+            "reason": "Best available WR depth piece with strong projection (104.5) if we prioritize a bench receiver instead."
+          },
+          {
+            "playerId": "jfp:4137",
+            "reason": "Juancho's top-ranked RB by survival simulation but has a flagged ranking/projection conflict making him risky."
+          }
+        ],
+        "confidence": 62,
+        "urgency": "must_take_now",
+        "strategy": "Balanced roster with all starting slots filled except K/DEF; use remaining bench slots to maximize flex-eligible depth. Jordan Mason offers the best combination of projection (113.5, RB posRank 39) and gain (34 points) among realistic bench options, and RB depth is more scarce than WR/TE right now given our roster already has 3 flex-worthy WRs and 2 usable TEs.",
+        "reasons": [
+          {
+            "code": "positional_scarcity",
+            "detail": "RB tier 13 has only 3 players left (surv 94% for Mason) while our bench RB depth beyond Javonte Williams/Judkins is thin, and RB dries up faster than WR in redraft benches."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "RB tier 13 (Mason, Woody Marks, Tyrone Tracy) has a gapAfter of 7.3 points to the next tier, and only 3 total remain league-wide with several RB-needy teams (rosterId 2,4,5,7,8) drafting before our next turn at 112."
+          },
+          {
+            "code": "gain_value",
+            "detail": "Jordan Mason offers gain of 34.0 points to our roster, the highest gain figure on the board among startable-position players, versus 13.1 for Addison (WR) and 0 for any TE (TE already capped at 2)."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "TE is blocked (rules.blocked lists TE as unusable a third time), so George Kittle despite being top TE by proj (103.4) cannot help our roster at all."
+          },
+          {
+            "code": "survival_math",
+            "detail": "Mason's survival to pick 112 is 94% per joint availability, but James Conner has a data warning (ranking_projection_conflict) making his 40.4 proj far below peers, undermining his gain=12.1 despite 80.3% survival."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:9756",
+        "strongestAlternativeWhy": "Jordan Addison offers strong WR depth (104.5 proj, posRank 43) and a safer profile, useful if RB depth is deemed less needed given Javonte Williams and Judkins already fill FLEX/RB2.",
+        "strongestCounterargument": "Jordan Mason's own survival is already high at 94% (joint availability with James Conner shows bIfAGone of 98.3%), suggesting he would likely still be there at pick 112, so we could take a different player now and still get him.",
+        "whyRecommendationStillWins": "While Mason is likely to survive, the RB tier-13 pool is razor thin (only 3 left) and multiple RB-needy teams (Cincinnati/Jags/Vikings-style rosters at slots 2,4,5,7,8 all list RB as a medium need) draft twice before our next turn at 112; taking him now locks in the highest-gain startable asset rather than gambling on a shrinking pool, and our next pick can still capture a Kittle/Addison-tier player since TE tier survival for Kittle is only 66.3% and WR tier 12 survival is 77-98% for several names, giving us better odds of getting a good WR/TE fallback than getting a good RB fallback.",
+        "firstSeedDeviationReason": "First Seed ranks Mason 110th overall (fsGap 11), a modest reach justified by Juancho's much higher gain (34) and tight RB tier-13 scarcity (only 3 left) versus deeper WR/TE tiers still available next turn.",
+        "expectedNextPickPlan": "At pick 112, expect to grab the best remaining WR depth piece (Jordan Addison or Michael Pittman, both showing high survival ~77-98%) or a value TE like George Kittle if he somehow survives (66.3% chance), rounding out bench depth before turning to K/DEF in later rounds.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 8,
+            "why": "Picks at 113 right after us, needs WR/TE, could take Addison or Kittle before our 112 pick isn't affected but influences what remains for pick 112."
+          },
+          {
+            "rosterId": 10,
+            "why": "Picks twice (110,111) before our nextPick 112, needs TE, likely to grab a TE like Kittle or Kelce, thinning that tier further."
+          },
+          {
+            "rosterId": 4,
+            "why": "RB-heavy build with reachesAt QB tag, could still grab another RB like Mason if we don't take him now, competing directly for the same scarce RB tier."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 16311,
+        "outputTokens": 1837
+      },
+      "latencyMs": 23006,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-sonnet-5",
+  "usage": {
+    "inputTokens": 16311,
+    "outputTokens": 1837
+  },
+  "latencyMs": 23006,
+  "error": null,
+  "cachedAt": "2026-08-27T19:50:38.616Z",
+  "key": "915695c1ba6458d8ff747ff16dadbe5c",
+  "label": "1398448522730221568 p109 claude-sonnet-5/playbook-v1 blind"
+}
