@@ -12,7 +12,7 @@
  * deterministic recommendation and the screen. The panel draws Juancho's answer
  * the moment the board changes, and this upgrades it later or not at all.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   DEFAULT_CALL_POLICY,
   LiveStrategist,
@@ -60,19 +60,16 @@ export function useStrategist(
   useEffect(() => () => live.abort(), [live]);
 
   /*
-   * Keyed on the board fingerprint rather than the brief object.
+   * Depends on the brief itself rather than a ref read during render.
    *
-   * The brief is rebuilt on every poll - eight hundred milliseconds apart -
-   * and is a new object each time even when nothing has changed. Depending on
-   * the object would restart the request on every tick.
+   * The brief is a new object on every poll even when nothing changed, so this
+   * effect runs often - which is fine, because `update` remembers the boards it
+   * has already asked about and returns immediately for an unchanged one. The
+   * dedupe belongs there, where it can be tested, not in a dependency array.
    */
-  const fingerprint = brief?.state.boardFingerprint ?? null;
-  const latest = useRef(brief);
-  latest.current = brief;
-
   useEffect(() => {
-    void live.update(latest.current);
-  }, [live, fingerprint]);
+    void live.update(brief);
+  }, [live, brief]);
 
   return state;
 }

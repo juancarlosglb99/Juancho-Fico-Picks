@@ -513,7 +513,7 @@ export function buildStrategistPromptContext(
 
     board: boardTable(candidates, opts.blind, bestFinalRosterValue, richIds),
     ...(opts.compact
-      ? { deepBoard: deepBoardTable(candidates, richIds, bestFinalRosterValue) }
+      ? { deepBoard: deepBoardTable(candidates, richIds) }
       : {}),
     jointAvailability: jointTables(brief),
     dataWarnings: candidates
@@ -713,7 +713,6 @@ function boardTable(
 function deepBoardTable(
   candidates: BriefCandidate[],
   richIds: Set<string>,
-  bestFinalRosterValue: number | null,
 ): CompactTable {
   const columns = ['id', 'name', 'pos', 'fsRank', 'proj', 'surv'];
   return {
