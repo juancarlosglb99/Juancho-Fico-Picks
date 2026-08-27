@@ -1,0 +1,208 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11604",
+      "reasoning": "tier_cliff: Bowers is the last TE in tier 1 with a 15.7-point gap to the next tier; after him the best TEs are Loveland 120.4, Warren 116.8, Kraft 116.3 versus his 143.7. positional_scarcity: TE1 tier has expected 0.7 members left and only 74.3% survival - the lowest of any candidate - while the RB tier-9 pool still has 7 members and 100% chance one remains at pick 32. opponent_demand: Team 10 picks twice (30, 31) with TE:high and every remaining opponent except team 1 lists TE:high, so Bowers is the single most exposed name on this board.",
+      "reasonCodes": [
+        "tier_cliff",
+        "positional_scarcity",
+        "opponent_demand"
+      ],
+      "confidence": 0.68
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reasoning": "First Seed's best available WR, 78.3% to survive, and would pair Puka with a real WR2.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7588",
+        "reasoning": "Best remaining RB by projection (186.9) to fill RB2 next to Saquon.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks 30 and 31 back-to-back with TE:high and no TE; only team that can take Bowers before us.",
+    "confidence": 0.68,
+    "model": "claude-opus-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced start (Nacua/Barkley) now buying the only separating TE, since RB/WR depth at this tier is flat and refillable at 32 and 49.",
+    "firstSeedDeviationReason": "Reaching one rank past First Seed's best available (fsGap 1) to secure the only tier-1 TE before four TE-needy teams pick.",
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's best available (rank 28, fsGap 0) and Juancho's simulation pick, giving us a genuine WR2 next to Nacua.",
+    "strongestCounterargument": "Pickens survives 78.3% and Bowers/Pickens are both there in 55.7% of runs, with bIfAGone showing Pickens still alive in 86.2% of runs where Bowers is taken - and Bowers' simGap is -12.7 versus Pickens' -12.2, so the simulation sees them as equal.",
+    "whyRecommendationStillWins": "Equal simGap means the tiebreak is replaceability: if Pickens goes, the WR8 tier still has 16 members (Higgins, McMillan, McConkey, Nabers all 81-97% to survive); if Bowers goes, our TE falls 23+ points to Loveland/Warren with no recovery. Taking the 74.3% player and collecting the 86-93% ones at 32/49 is the better sequence.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/Nabers/Higgins if a WR survives, otherwise a tier-9 RB (Javonte Williams 86%, Judkins 98%, Skattebo 93.7%); QB waits until 49+ since Maye/Hurts/Daniels/Burrow are 97-100% to last.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks 30 and 31 back-to-back with TE:high and no TE; only team that can take Bowers before us."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "First Seed's best available WR, 78.3% to survive, and would pair Puka with a real WR2."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Best remaining RB by projection (186.9) to fill RB2 next to Saquon."
+      }
+    ],
+    "confidence": 68,
+    "strategy": "Balanced start (Nacua/Barkley) now buying the only separating TE, since RB/WR depth at this tier is flat and refillable at 32 and 49.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Bowers is the last TE in tier 1 with a 15.7-point gap to the next tier; after him the best TEs are Loveland 120.4, Warren 116.8, Kraft 116.3 versus his 143.7."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "TE1 tier has expected 0.7 members left and only 74.3% survival - the lowest of any candidate - while the RB tier-9 pool still has 7 members and 100% chance one remains at pick 32."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 picks twice (30, 31) with TE:high and every remaining opponent except team 1 lists TE:high, so Bowers is the single most exposed name on this board."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's best available (rank 28, fsGap 0) and Juancho's simulation pick, giving us a genuine WR2 next to Nacua.",
+    "strongestCounterargument": "Pickens survives 78.3% and Bowers/Pickens are both there in 55.7% of runs, with bIfAGone showing Pickens still alive in 86.2% of runs where Bowers is taken - and Bowers' simGap is -12.7 versus Pickens' -12.2, so the simulation sees them as equal.",
+    "whyRecommendationStillWins": "Equal simGap means the tiebreak is replaceability: if Pickens goes, the WR8 tier still has 16 members (Higgins, McMillan, McConkey, Nabers all 81-97% to survive); if Bowers goes, our TE falls 23+ points to Loveland/Warren with no recovery. Taking the 74.3% player and collecting the 86-93% ones at 32/49 is the better sequence.",
+    "firstSeedDeviationReason": "Reaching one rank past First Seed's best available (fsGap 1) to secure the only tier-1 TE before four TE-needy teams pick.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/Nabers/Higgins if a WR survives, otherwise a tier-9 RB (Javonte Williams 86%, Judkins 98%, Skattebo 93.7%); QB waits until 49+ since Maye/Hurts/Daniels/Burrow are 97-100% to last.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks 30 and 31 back-to-back with TE:high and no TE; only team that can take Bowers before us."
+      }
+    ],
+    "urgency": "must_take_now"
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "First Seed's best available WR, 78.3% to survive, and would pair Puka with a real WR2."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Best remaining RB by projection (186.9) to fill RB2 next to Saquon."
+      }
+    ],
+    "confidence": 68,
+    "strategy": "Balanced start (Nacua/Barkley) now buying the only separating TE, since RB/WR depth at this tier is flat and refillable at 32 and 49.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Bowers is the last TE in tier 1 with a 15.7-point gap to the next tier; after him the best TEs are Loveland 120.4, Warren 116.8, Kraft 116.3 versus his 143.7."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "TE1 tier has expected 0.7 members left and only 74.3% survival - the lowest of any candidate - while the RB tier-9 pool still has 7 members and 100% chance one remains at pick 32."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 picks twice (30, 31) with TE:high and every remaining opponent except team 1 lists TE:high, so Bowers is the single most exposed name on this board."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's best available (rank 28, fsGap 0) and Juancho's simulation pick, giving us a genuine WR2 next to Nacua.",
+    "strongestCounterargument": "Pickens survives 78.3% and Bowers/Pickens are both there in 55.7% of runs, with bIfAGone showing Pickens still alive in 86.2% of runs where Bowers is taken - and Bowers' simGap is -12.7 versus Pickens' -12.2, so the simulation sees them as equal.",
+    "whyRecommendationStillWins": "Equal simGap means the tiebreak is replaceability: if Pickens goes, the WR8 tier still has 16 members (Higgins, McMillan, McConkey, Nabers all 81-97% to survive); if Bowers goes, our TE falls 23+ points to Loveland/Warren with no recovery. Taking the 74.3% player and collecting the 86-93% ones at 32/49 is the better sequence.",
+    "firstSeedDeviationReason": "Reaching one rank past First Seed's best available (fsGap 1) to secure the only tier-1 TE before four TE-needy teams pick.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/Nabers/Higgins if a WR survives, otherwise a tier-9 RB (Javonte Williams 86%, Judkins 98%, Skattebo 93.7%); QB waits until 49+ since Maye/Hurts/Daniels/Burrow are 97-100% to last.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks 30 and 31 back-to-back with TE:high and no TE; only team that can take Bowers before us."
+      }
+    ],
+    "urgency": "must_take_now"
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:11604",
+        "alternatives": [
+          {
+            "playerId": "jfp:8137",
+            "reason": "First Seed's best available WR, 78.3% to survive, and would pair Puka with a real WR2."
+          },
+          {
+            "playerId": "jfp:7588",
+            "reason": "Best remaining RB by projection (186.9) to fill RB2 next to Saquon."
+          }
+        ],
+        "confidence": 68,
+        "strategy": "Balanced start (Nacua/Barkley) now buying the only separating TE, since RB/WR depth at this tier is flat and refillable at 32 and 49.",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "Bowers is the last TE in tier 1 with a 15.7-point gap to the next tier; after him the best TEs are Loveland 120.4, Warren 116.8, Kraft 116.3 versus his 143.7."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "TE1 tier has expected 0.7 members left and only 74.3% survival - the lowest of any candidate - while the RB tier-9 pool still has 7 members and 100% chance one remains at pick 32."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Team 10 picks twice (30, 31) with TE:high and every remaining opponent except team 1 lists TE:high, so Bowers is the single most exposed name on this board."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8137",
+        "strongestAlternativeWhy": "Pickens is First Seed's best available (rank 28, fsGap 0) and Juancho's simulation pick, giving us a genuine WR2 next to Nacua.",
+        "strongestCounterargument": "Pickens survives 78.3% and Bowers/Pickens are both there in 55.7% of runs, with bIfAGone showing Pickens still alive in 86.2% of runs where Bowers is taken - and Bowers' simGap is -12.7 versus Pickens' -12.2, so the simulation sees them as equal.",
+        "whyRecommendationStillWins": "Equal simGap means the tiebreak is replaceability: if Pickens goes, the WR8 tier still has 16 members (Higgins, McMillan, McConkey, Nabers all 81-97% to survive); if Bowers goes, our TE falls 23+ points to Loveland/Warren with no recovery. Taking the 74.3% player and collecting the 86-93% ones at 32/49 is the better sequence.",
+        "firstSeedDeviationReason": "Reaching one rank past First Seed's best available (fsGap 1) to secure the only tier-1 TE before four TE-needy teams pick.",
+        "expectedNextPickPlan": "At 32 take the best of Pickens/Nabers/Higgins if a WR survives, otherwise a tier-9 RB (Javonte Williams 86%, Judkins 98%, Skattebo 93.7%); QB waits until 49+ since Maye/Hurts/Daniels/Burrow are 97-100% to last.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks 30 and 31 back-to-back with TE:high and no TE; only team that can take Bowers before us."
+          }
+        ],
+        "urgency": "must_take_now"
+      },
+      "usage": {
+        "inputTokens": 8897,
+        "cacheWriteTokens": 5337,
+        "cacheReadTokens": 0,
+        "outputTokens": 1289
+      },
+      "latencyMs": 18820,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 8897,
+    "cacheWriteTokens": 5337,
+    "cacheReadTokens": 0,
+    "outputTokens": 1289
+  },
+  "latencyMs": 18820,
+  "error": null,
+  "cachedAt": "2026-08-27T20:35:33.280Z",
+  "key": "fc00b6024020b6e0a74a2906f3433ac9",
+  "label": "1398448522730221568 p29 claude-opus-5/playbook-v1 blind concise compact"
+}
