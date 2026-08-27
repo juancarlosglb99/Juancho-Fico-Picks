@@ -259,6 +259,28 @@ export const CONSENSUS_ANCHOR_WEIGHT = Number(
 export const SURPLUS_STACK_PENALTY = 40;
 
 /**
+ * What an optional selection costs as the draft runs out of room.
+ *
+ * A draft ends with a fixed number of picks and a fixed number of compulsory
+ * slots. While the gap between them is comfortable, depth is free and the
+ * ordinary scoring is right. As it closes, a body that cannot reach the lineup
+ * stops being merely a weak pick and starts spending a slot we are obliged to
+ * fill - and the completed-roster plan does not see it, because the plan
+ * happily assumes it can fetch a kicker later.
+ *
+ * Charged only against candidates that fill no required slot AND add nothing to
+ * the lineup, so a genuine starter is never penalised. Deliberately large at
+ * the last spare selection: at that point the alternative is forfeiting the
+ * only remaining freedom in the draft.
+ */
+export const ENDGAME_OPTIONAL_PICK_PENALTY = {
+  /** Two or more spare selections: depth is genuinely free. */
+  free: 0,
+  /** Exactly one spare: it has to be worth something. */
+  lastSpare: 60,
+} as const;
+
+/**
  * How much better a completed roster must be before it overrules a heuristic.
  *
  * A finished roster is worth roughly 1900 points and the plan is a greedy

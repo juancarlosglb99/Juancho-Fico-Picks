@@ -28,12 +28,14 @@ import {
   simulateRoom,
   type SimulationCandidate,
 } from './room-simulation';
+import { detectDataWarnings } from './data-anomaly';
 import { getRosterPositionCounts } from './roster-fit';
 import { buildProjectionTiers } from './tiers';
 import { buildFillerCandidates } from './late-round-fillers';
 import {
   DRAFT_NOW_THRESHOLD,
   DRAFT_SCORE_SHAPE,
+  ENDGAME_OPTIONAL_PICK_PENALTY,
   DOMINANCE_PLAN_TOLERANCE,
   PLAN_FUTURE_DISCOUNT,
   SURPLUS_STACK_PENALTY,
@@ -628,6 +630,19 @@ export function generateDraftRecommendations({
     consensusRank: consensusRankFor(scored),
   }));
 
+  /*
+   * Where First Seed's rank and projection disagree about the same player.
+   * Raised, never acted on: the engine still ranks him exactly as before.
+   */
+  const dataWarnings = detectDataWarnings(
+    plannable.map((candidate) => ({
+      playerId: candidate.playerId,
+      position: candidate.position,
+      firstSeedRank: roomByPlayerId.get(candidate.playerId)?.rank ?? null,
+      projection: valuedById.get(candidate.playerId)?.source.projection ?? candidate.projection,
+    })),
+  );
+
   const basePlanInput = {
     rosterPlayers,
     available: plannable,
@@ -775,6 +790,34 @@ export function generateDraftRecommendations({
     return consensusAnchorPenalty(gap);
   };
 
+  /*
+   * The endgame budget, in the engine's own terms.
+   *
+   * The plan happily schedules a kicker into a later round, so it never notices
+   * that spending the last spare selection on a bench body leaves no room for
+   * one. Counting obligations against selections makes that visible.
+   */
+  // Dedicated slots only: an empty flex is a weaker roster, not an obligation.
+  const DEDICATED_SLOT_NAMES = new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DEF']);
+  const unfilledRequired = currentRosterValue.lineup.unfilled.filter((hole) =>
+    DEDICATED_SLOT_NAMES.has(hole.slot as string),
+  );
+  const requiredStillEmpty = unfilledRequired.reduce((sum, hole) => sum + hole.count, 0);
+  const requiredPositions = new Set(unfilledRequired.map((hole) => hole.slot as Position));
+  const spareSelections = picksRemaining - requiredStillEmpty;
+  const endgamePenaltyFor = (candidate: PlannablePlayer, immediate: number) => {
+    // With nothing still owed there is no slot to protect, so depth is free
+    // however few selections remain.
+    if (requiredStillEmpty === 0) return ENDGAME_OPTIONAL_PICK_PENALTY.free;
+    if (spareSelections !== 1) return ENDGAME_OPTIONAL_PICK_PENALTY.free;
+    if (requiredPositions.has(candidate.position)) return 0;
+    // Only a body that cannot reach the lineup at all. A genuine starter is
+    // never charged for this.
+    return immediate - currentRosterValue.total > 0
+      ? 0
+      : ENDGAME_OPTIONAL_PICK_PENALTY.lastSpare;
+  };
+
   const planned = [...shortlisted.values()].map((candidate) => {
     const immediate = evaluateRoster([...rosterPlayers, candidate], slots).total;
     const plan = planRemainingRoster(basePlanInput, candidate);
@@ -785,7 +828,8 @@ export function generateDraftRecommendations({
       decisionValue:
         decisionValueOf(immediate, plan.total) -
         anchorPenaltyFor(candidate) -
-        surplusPenaltyFor(candidate),
+        surplusPenaltyFor(candidate) -
+        endgamePenaltyFor(candidate, immediate),
     };
   });
   planned.sort(
@@ -1327,6 +1371,7 @@ export function generateDraftRecommendations({
       return probabilityOf(candidate);
     },
     playerOf: (playerId) => players.byId.get(playerId),
+    dataWarningOf: (playerId) => dataWarnings.get(playerId),
   };
 
   return {

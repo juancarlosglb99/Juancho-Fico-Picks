@@ -238,6 +238,7 @@ function describeCandidate({
       interveningTeamsWithNeed: survival.teamsWithNeed,
       interveningDemand: round1(survival.demand),
     },
+    dataWarning: internals.dataWarningOf(playerId) ?? null,
     inclusionReasons: reasons,
   };
 }

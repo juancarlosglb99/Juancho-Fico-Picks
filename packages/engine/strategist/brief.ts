@@ -410,13 +410,39 @@ function buildConstraints({
     .filter((hole) => (ALL_POSITIONS as string[]).includes(hole.slot))
     .map((hole) => ({ position: hole.slot as Position, count: hole.count }));
 
+  /*
+   * The budget, computed the same way whatever the format: obligations against
+   * selections. Nothing here knows what round it is.
+   */
+  const requiredSlotsRemaining = mustFill.reduce((sum, entry) => sum + entry.count, 0);
+  const ourSelectionsRemaining = internals.ourFuturePicks.length;
+  const spareSelections = ourSelectionsRemaining - requiredSlotsRemaining;
+
   return {
     slots,
-    rosterSpotsRemaining: internals.ourFuturePicks.length,
+    rosterSpotsRemaining: ourSelectionsRemaining,
     usableCapacity,
     blockedPositions,
     mustFillBeforeDraftEnds: mustFill,
     kickersAndDefensesAllowed: internals.kickersAndDefensesAllowed,
+    endgame: {
+      requiredSlotsRemaining,
+      ourSelectionsRemaining,
+      spareSelections,
+      requiredPositions: mustFill,
+      /*
+       * Nothing owed means nothing to protect: the last pick of a complete
+       * roster is entirely free, however few picks remain.
+       */
+      optionalPickCost:
+        requiredSlotsRemaining === 0
+          ? 'free'
+          : spareSelections <= 0
+            ? 'committed'
+            : spareSelections === 1
+              ? 'costly'
+              : 'free',
+    },
   };
 }
 

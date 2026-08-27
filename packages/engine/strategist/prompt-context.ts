@@ -131,6 +131,22 @@ export interface StrategistPromptContext {
   board: CompactTable;
 
   /**
+   * Players whose First Seed rank and projection point different ways.
+   *
+   * Informational and rare. Nothing has been altered or excluded - the two
+   * published numbers simply disagree, usually because they were produced on
+   * different bases, and treating them as though they agreed is how a player
+   * projecting a quarter of his rank neighbours gets taken on his rank alone.
+   */
+  dataWarnings: {
+    playerId: string;
+    name: string;
+    position: Position;
+    code: string;
+    detail: string;
+  }[];
+
+  /**
    * Availability for more than one player at a time.
    *
    * The board's `surv` column is marginal: it says whether ONE player reaches
@@ -217,6 +233,7 @@ const BOARD_LEGEND: Record<string, string> = {
   gain: 'points added to our roster the moment we take him',
   age: 'age',
   note: 'anything unusual about his status',
+  warn: "set when First Seed's own rank and projection disagree about him - see dataWarnings",
 };
 
 export function buildStrategistPromptContext(
@@ -303,6 +320,15 @@ export function buildStrategistPromptContext(
 
     board: boardTable(candidates),
     jointAvailability: jointTables(brief),
+    dataWarnings: candidates
+      .filter((candidate) => candidate.dataWarning !== null)
+      .map((candidate) => ({
+        playerId: candidate.playerId,
+        name: candidate.name,
+        position: candidate.position,
+        code: candidate.dataWarning!.code,
+        detail: candidate.dataWarning!.detail,
+      })),
 
     juancho: {
       recommended: recommended
@@ -367,7 +393,7 @@ function boardTable(candidates: BriefCandidate[]): CompactTable {
   const columns = [
     'id', 'name', 'pos', 'tm', 'fsRank', 'fsGap', 'fsVal', 'fsMine', 'proj',
     'tier', 'left', 'surv', 'conf', 'jRank', 'posRank', 'jRec', 'act',
-    'dPlan', 'dDec', 'gain', 'age', 'note',
+    'dPlan', 'dDec', 'gain', 'age', 'note', 'warn',
   ];
   return {
     columns,
@@ -396,6 +422,7 @@ function boardTable(candidates: BriefCandidate[]): CompactTable {
       candidate.juancho.immediateRosterGain,
       candidate.age,
       candidate.status && candidate.status !== 'Active' ? candidate.status : null,
+      candidate.dataWarning ? candidate.dataWarning.code : null,
     ]),
   };
 }

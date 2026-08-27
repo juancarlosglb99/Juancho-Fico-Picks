@@ -28,6 +28,7 @@ import type { LineupPlayer, LineupSlots } from './lineup';
 import type { InterveningTeam, RoomBehavior } from './room-behavior';
 import type { RosterConstructionState } from './roster-state';
 import type { PlannablePlayer } from './roster-plan';
+import type { DataWarning } from './data-anomaly';
 import type { RoomOutcomes } from './room-simulation';
 import type { ProjectionTier } from './tiers';
 
@@ -104,4 +105,6 @@ export interface DraftDecisionInternals {
   /** Cached, so asking about a hundred candidates costs one pass each. */
   survivalOf(playerId: string): SurvivalEstimate;
   playerOf(playerId: string): CanonicalPlayer | undefined;
+  /** Set where First Seed's rank and projection contradict each other. */
+  dataWarningOf(playerId: string): DataWarning | undefined;
 }

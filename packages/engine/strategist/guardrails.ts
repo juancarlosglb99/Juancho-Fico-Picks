@@ -36,6 +36,7 @@ export type GuardrailViolationCode =
   | 'illegal_position'
   | 'no_roster_spots_remaining'
   | 'impossible_roster_construction'
+  | 'must_fill_required_slot'
   | 'meaningless_stack';
 
 /**
@@ -48,6 +49,7 @@ export type GuardrailConcernCode =
   | 'outside_juancho_shortlist'
   | 'unrecognized_reason_code'
   | 'contradicts_survival_estimate'
+  | 'spends_the_last_spare_pick'
   | 'low_confidence';
 
 export interface GuardrailViolation {
@@ -164,6 +166,29 @@ export function validateStrategistPick(
     );
   }
 
+  /*
+   * Once selections and obligations are equal, every pick is spoken for.
+   *
+   * Distinct from the unfillable-lineup check below, which asks whether a
+   * lineup can still be completed at all. This asks the sharper question: with
+   * two picks and two empty compulsory slots, a bench body is not a weaker
+   * choice, it is a forfeited slot. Derived from the budget rather than from a
+   * round number, so it holds in any format.
+   */
+  const endgame = brief.constraints.endgame;
+  if (endgame.spareSelections <= 0 && endgame.requiredSlotsRemaining > 0) {
+    const required = new Set(
+      endgame.requiredPositions.filter((entry) => entry.count > 0).map((entry) => entry.position),
+    );
+    if (!required.has(candidate.position)) {
+      violate(
+        'must_fill_required_slot',
+        `Every remaining selection is committed: ${endgame.ourSelectionsRemaining} left and ` +
+          `${endgame.requiredSlotsRemaining} compulsory slots still empty (${[...required].join(', ')}).`,
+      );
+    }
+  }
+
   if (leavesLineupUnfillable(brief, candidate)) {
     violate(
       'impossible_roster_construction',
@@ -218,6 +243,22 @@ export function validateStrategistPick(
       `Reasoning implies urgency, but Juancho puts him at ${survival}% to survive to our next selection.`,
       survival,
     );
+  }
+
+  /*
+   * The last spare selection is not illegal, but it is the last one. Depth that
+   * cannot reach a lineup costs the only remaining freedom in the draft.
+   */
+  if (endgame.optionalPickCost === 'costly') {
+    const required = new Set(endgame.requiredPositions.map((entry) => entry.position));
+    if (!required.has(candidate.position) && (candidate.juancho.immediateRosterGain ?? 0) <= 0) {
+      note(
+        'spends_the_last_spare_pick',
+        `This is the only selection not already owed to a compulsory slot, and he adds ` +
+          `nothing to the lineup (${candidate.juancho.immediateRosterGain ?? 0} points).`,
+        candidate.juancho.immediateRosterGain,
+      );
+    }
   }
 
   if (pick.confidence < LOW_CONFIDENCE) {

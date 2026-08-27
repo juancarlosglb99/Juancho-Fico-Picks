@@ -86,8 +86,18 @@ const APPETITE = {
   unusable: 0.02,
   /** Kickers and defenses before the closing rounds. Nobody does this. */
   tooEarlyForKicker: 0.01,
-  /** A mandatory kicker or defense slot in the closing rounds. */
+  /**
+   * A compulsory slot a team can no longer put off.
+   *
+   * Reached when their remaining selections no longer exceed their remaining
+   * obligations - the same budget rule we apply to ourselves, read off their
+   * roster. A team with two picks left and both a kicker and a defense missing
+   * has no choice; one with five picks left has every reason to keep taking
+   * skill players.
+   */
   mandatoryLateSlot: 2.5,
+  /** The same slot while they still have room to postpone it. */
+  postponableLateSlot: 0.25,
 } as const;
 
 /**
@@ -102,6 +112,12 @@ const APPETITE = {
  * that, and only while the slot is open and the closing rounds have started.
  */
 const LATE_SLOT_EFFECTIVE_GAP = 5;
+
+/** Positions First Seed does not rank but a legal lineup still requires. */
+const MANDATORY_LATE_POSITIONS: Position[] = ['K', 'DEF'];
+
+/** How many of each are pulled into contention for a team that needs one. */
+const LATE_SLOT_CANDIDATES = 2;
 
 export interface SimulationCandidate {
   playerId: string;
@@ -294,6 +310,20 @@ export function simulateOnce(
 
   for (const selection of selections) {
     const held = selection.rosterId === null ? null : counts.get(selection.rosterId) ?? new Map();
+    /*
+     * Selections this team has left, read off how many players it holds. Every
+     * roster gets exactly one pick per round, so rounds minus bodies is what
+     * remains - and it shrinks as the simulation proceeds, which is what makes
+     * a compulsory slot become urgent at the right moment rather than at a
+     * fixed round.
+     */
+    const theirSelectionsRemaining =
+      held === null
+        ? undefined
+        : Math.max(
+            0,
+            input.totalRounds - [...held.values()].reduce((sum, count) => sum + count, 0),
+          );
 
     const chosen = chooseOne({
       board,
@@ -307,6 +337,7 @@ export function simulateOnce(
        * kickers are in play can genuinely change inside one simulated stretch.
        */
       kickersAllowed: kickersAllowedAt(selection.overallPick, input.teams, input.totalRounds),
+      theirSelectionsRemaining,
       random,
     });
     if (!chosen) continue;
@@ -346,6 +377,7 @@ function chooseOne({
   slots,
   rankScale,
   kickersAllowed,
+  theirSelectionsRemaining,
   random,
 }: {
   board: SimulationCandidate[];
@@ -354,6 +386,7 @@ function chooseOne({
   slots: LineupSlots;
   rankScale: number;
   kickersAllowed: boolean;
+  theirSelectionsRemaining: number | undefined;
   random: () => number;
 }): SimulationCandidate | null {
   const considered: SimulationCandidate[] = [];
@@ -364,12 +397,52 @@ function chooseOne({
     considered.push(candidate);
     if (considered.length >= CANDIDATE_DEPTH) break;
   }
+
+  /*
+   * A kicker or defense this team must fill is always in the running.
+   *
+   * They are unranked - First Seed publishes neither - so they sit past the end
+   * of the board and never survive the walk above, which meant the room was
+   * modelled as never taking one at all. Every defense then showed 100%
+   * survival across sixteen closing-round selections, which is plainly false
+   * and is what let a bench receiver look free at pick 132.
+   *
+   * Only the best one or two per position, and only for a team that genuinely
+   * needs it: this restores a real possibility, not a flood of them.
+   */
+  if (kickersAllowed) {
+    const seen = new Set(considered.map((candidate) => candidate.playerId));
+    for (const position of MANDATORY_LATE_POSITIONS) {
+      if (
+        appetiteFor(position, held, slots, true, theirSelectionsRemaining) <
+        APPETITE.mandatoryLateSlot
+      ) {
+        continue;
+      }
+      let added = 0;
+      for (const candidate of board) {
+        if (added >= LATE_SLOT_CANDIDATES) break;
+        if (candidate.position !== position) continue;
+        if (taken.has(candidate.playerId) || seen.has(candidate.playerId)) continue;
+        considered.push(candidate);
+        seen.add(candidate.playerId);
+        added += 1;
+      }
+    }
+  }
+
   if (considered.length === 0) return null;
 
   const weights: number[] = [];
   let total = 0;
   for (const candidate of considered) {
-    const appetite = appetiteFor(candidate.position, held, slots, kickersAllowed);
+    const appetite = appetiteFor(
+      candidate.position,
+      held,
+      slots,
+      kickersAllowed,
+      theirSelectionsRemaining,
+    );
     const mandatoryLate =
       kickersAllowed &&
       (candidate.position === 'K' || candidate.position === 'DEF') &&
@@ -406,6 +479,8 @@ export function appetiteFor(
   held: Map<Position, number> | null,
   slots: LineupSlots,
   kickersAllowed: boolean,
+  /** Selections this team has left, for the compulsory-slot budget. */
+  theirSelectionsRemaining?: number,
 ): number {
   // An unknown seat is modelled as an average team rather than as no team,
   // which would silently make everyone safer than they are.
@@ -416,7 +491,26 @@ export function appetiteFor(
 
   if (position === 'K' || position === 'DEF') {
     if (!kickersAllowed) return APPETITE.tooEarlyForKicker;
-    return owned < dedicated ? APPETITE.mandatoryLateSlot : APPETITE.unusable;
+    if (owned >= dedicated) return APPETITE.unusable;
+    /*
+     * WHEN a team fills these, not merely whether it may.
+     *
+     * A flat "closing rounds" flag says every team wants a kicker from round
+     * thirteen, which is far too eager, while excluding them entirely says no
+     * defense is ever taken across sixteen closing selections, which is why one
+     * showed 100% survival and made a bench receiver look free. Neither is how
+     * rooms behave: they postpone compulsory slots until the arithmetic stops
+     * letting them.
+     *
+     * So the appetite comes from THEIR budget - selections left against slots
+     * still owed - which is the same rule we apply to ourselves and needs no
+     * round number to state.
+     */
+    if (theirSelectionsRemaining === undefined) return APPETITE.mandatoryLateSlot;
+    const owedElsewhere = compulsorySlotsMissing(held, slots);
+    return theirSelectionsRemaining <= owedElsewhere
+      ? APPETITE.mandatoryLateSlot
+      : APPETITE.postponableLateSlot;
   }
 
   const footprint = startingFootprint(position, slots);
@@ -428,6 +522,15 @@ export function appetiteFor(
   // A position with a single lineup spot cannot use a third body at all; one
   // with real flex access still has some bench value.
   return footprint <= 1.5 ? APPETITE.unusable : APPETITE.surplus;
+}
+
+/** Compulsory starting slots this roster has not filled yet. */
+function compulsorySlotsMissing(held: Map<Position, number>, slots: LineupSlots): number {
+  let missing = 0;
+  for (const position of ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'] as Position[]) {
+    missing += Math.max(0, dedicatedSlots(position, slots) - (held.get(position) ?? 0));
+  }
+  return missing;
 }
 
 function dedicatedSlots(position: Position, slots: LineupSlots): number {

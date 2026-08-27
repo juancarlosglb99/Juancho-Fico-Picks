@@ -30,6 +30,7 @@ import type {
   StarterQuality,
 } from '../draft/roster-state';
 import type { RecommendationAction } from '../draft/types';
+import type { DataWarning } from '../draft/data-anomaly';
 import type { JointAvailability } from './joint';
 
 /** Bumped when the brief's shape changes in a way a stored one cannot satisfy. */
@@ -295,6 +296,15 @@ export interface BriefCandidate {
     interveningDemand: number;
   };
 
+  /**
+   * Set when First Seed's own rank and projection disagree about him.
+   *
+   * Informational. Nothing is rejected or altered - the strategist is simply
+   * told the two source signals point different ways so it can weigh them
+   * itself instead of assuming they agree.
+   */
+  dataWarning: DataWarning | null;
+
   inclusionReasons: CandidateInclusionReason[];
 }
 
@@ -347,6 +357,39 @@ export interface BriefConstraints {
   mustFillBeforeDraftEnds: { position: Position; count: number }[];
   /** True while kickers and defenses may be selected. */
   kickersAndDefensesAllowed: boolean;
+  /** How much room is left for anything that is not a required starter. */
+  endgame: EndgameBudget;
+}
+
+/**
+ * Selections left, against slots we are still obliged to fill.
+ *
+ * A draft ends with a fixed number of picks and a fixed number of compulsory
+ * slots, and the gap between them is the entire budget for optional depth. It
+ * starts large and shrinks; once it reaches zero every remaining selection is
+ * spoken for, and a bench body is not a weaker choice at that point but an
+ * illegal one.
+ *
+ * Derived from obligations rather than from a round number: "take a defense in
+ * round 14" is right in one league and wrong in the next, while "you have two
+ * picks and two empty compulsory slots" is right in all of them.
+ */
+export interface EndgameBudget {
+  /** Compulsory starting slots still empty - K, DEF, and any unfilled starter. */
+  requiredSlotsRemaining: number;
+  ourSelectionsRemaining: number;
+  /** Selections beyond our obligations. Zero means every pick is committed. */
+  spareSelections: number;
+  /** Which slots those obligations are. */
+  requiredPositions: { position: Position; count: number }[];
+  /**
+   * What an optional pick has to be worth right now.
+   *
+   * `free` while there is real room, `costly` on the last spare selection, and
+   * `committed` when there is none - at which point taking depth forfeits a
+   * slot that cannot be recovered.
+   */
+  optionalPickCost: 'free' | 'costly' | 'committed';
 }
 
 /* ------------------------------------------------- reserved extension points */
