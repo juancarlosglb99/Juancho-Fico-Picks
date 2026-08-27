@@ -21,5 +21,7 @@ export {
   validateStrategistResponse,
 } from './validate';
 export type { ResponseProblem, ResponseProblemCode, ValidationResult } from './validate';
+export { estimateCost, MODEL_RATES } from './pricing';
+export type { ModelRate } from './pricing';
 export { CACHE_DIRECTORY, cacheKey, listCached, readCached, writeCached } from './cache';
 export type { CachedCall } from './cache';

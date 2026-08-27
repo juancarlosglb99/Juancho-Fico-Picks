@@ -161,8 +161,13 @@ export function renderEvaluatedPick(evaluated: EvaluatedPick): string[] {
 
   if (call.usage) {
     const attempts = call.attempts?.length ?? 1;
+    const usage = call.usage;
+    const cache =
+      (usage.cacheReadTokens ?? 0) > 0 || (usage.cacheWriteTokens ?? 0) > 0
+        ? `  ·  cache ${usage.cacheReadTokens ?? 0} read / ${usage.cacheWriteTokens ?? 0} written`
+        : '';
     lines.push(
-      `  cost         ${call.usage.inputTokens} in / ${call.usage.outputTokens} out` +
+      `  cost         ${usage.inputTokens} in / ${usage.outputTokens} out${cache}` +
         `  ·  ${call.latencyMs}ms  ·  ${call.model}` +
         (attempts > 1 ? `  ·  ${attempts} attempts (totals)` : ''),
     );

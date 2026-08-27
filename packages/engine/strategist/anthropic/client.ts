@@ -64,11 +64,29 @@ export interface AnthropicStrategistOptions {
 }
 
 /** What one request to the model produced, before or after repair. */
+/**
+ * What one request cost, split by how each token was billed.
+ *
+ * Cached reads bill at a tenth of the base rate and cache writes at a quarter
+ * above it, so a single "input tokens" figure would misreport the bill in both
+ * directions. Reporting them apart is also the only way to tell whether the
+ * cache is working at all.
+ */
+export interface CallUsage {
+  /** Billed at the normal input rate: the live draft state. */
+  inputTokens: number;
+  /** Written to the cache on a miss. Billed above base rate, once. */
+  cacheWriteTokens: number;
+  /** Served from the cache. Billed at roughly a tenth. */
+  cacheReadTokens: number;
+  outputTokens: number;
+}
+
 export interface CallAttempt {
   /** Empty when the attempt satisfied the contract. */
   problems: ResponseProblem[];
   rawResponse: unknown;
-  usage: { inputTokens: number; outputTokens: number } | null;
+  usage: CallUsage | null;
   latencyMs: number;
   error: string | null;
 }
@@ -98,7 +116,7 @@ export interface StrategistCallResult {
   /** The model's own reasoning, when extended thinking is on. */
   thinking: string | null;
   model: string;
-  usage: { inputTokens: number; outputTokens: number } | null;
+  usage: CallUsage | null;
   latencyMs: number | null;
   error: string | null;
 }
@@ -291,7 +309,7 @@ export class AnthropicStrategist implements StrategistClient {
     toolUse: Anthropic.ToolUseBlock | null;
     content: Anthropic.ContentBlock[];
     thinking: string | null;
-    usage: { inputTokens: number; outputTokens: number } | null;
+    usage: CallUsage | null;
     latencyMs: number;
     transportError: string | null;
   }> {
@@ -301,7 +319,26 @@ export class AnthropicStrategist implements StrategistClient {
         {
           model: this.model,
           max_tokens: this.maxTokens,
-          system: STRATEGIST_SYSTEM_PROMPT,
+          /*
+           * The stable prefix, cached.
+           *
+           * The playbook and the tool schema are five thousand tokens that are
+           * byte-identical on every call of every draft - thirty percent of the
+           * request - while the draft state below changes every pick. A cache
+           * breakpoint here covers the tools and the system block, since tools
+           * are sent first, and leaves the live state uncached where it
+           * belongs.
+           *
+           * Nothing about the effective prompt changes: same instructions, same
+           * schema, same order. This is a billing arrangement, not a rewrite.
+           */
+          system: [
+            {
+              type: 'text' as const,
+              text: STRATEGIST_SYSTEM_PROMPT,
+              cache_control: { type: 'ephemeral' as const },
+            },
+          ],
           tools: [this.tool],
           /*
            * Forced when we can force it, so there is no path to a prose answer.
@@ -395,12 +432,14 @@ function assemble(
     model,
     // Totals: a repaired answer cost both requests, and reporting only the
     // successful one would understate what it took to get it.
-    usage: attempts.reduce(
+    usage: attempts.reduce<CallUsage>(
       (total, attempt) => ({
         inputTokens: total.inputTokens + (attempt.usage?.inputTokens ?? 0),
+        cacheWriteTokens: total.cacheWriteTokens + (attempt.usage?.cacheWriteTokens ?? 0),
+        cacheReadTokens: total.cacheReadTokens + (attempt.usage?.cacheReadTokens ?? 0),
         outputTokens: total.outputTokens + (attempt.usage?.outputTokens ?? 0),
       }),
-      { inputTokens: 0, outputTokens: 0 },
+      { inputTokens: 0, cacheWriteTokens: 0, cacheReadTokens: 0, outputTokens: 0 },
     ),
     latencyMs: attempts.reduce((total, attempt) => total + attempt.latencyMs, 0),
     error,
@@ -460,8 +499,13 @@ export function strategistFingerprint(model: string): string {
   return `${model}/playbook-v${PLAYBOOK_VERSION}`;
 }
 
-function usageOf(message: Anthropic.Message): { inputTokens: number; outputTokens: number } {
-  return { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens };
+function usageOf(message: Anthropic.Message): CallUsage {
+  return {
+    inputTokens: message.usage.input_tokens,
+    cacheWriteTokens: message.usage.cache_creation_input_tokens ?? 0,
+    cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
+    outputTokens: message.usage.output_tokens,
+  };
 }
 
 /**

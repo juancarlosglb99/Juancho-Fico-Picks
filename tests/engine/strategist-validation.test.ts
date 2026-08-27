@@ -466,7 +466,8 @@ describe('the concise contract', () => {
   });
 
   it('validates a response against the contract that was actually sent', () => {
-    const wordy = sound({ strategy: 'x'.repeat(400) });
+    // Inside the long contract's 800, past the concise contract's 500.
+    const wordy = sound({ strategy: 'x'.repeat(600) });
     // Fine under the long contract, too long under the short one. Validating
     // both against one schema is the two-contracts bug one layer up.
     expect(check(wordy).ok).toBe(true);
@@ -507,6 +508,22 @@ describe('the concise contract', () => {
     expect(concise(sound({ opponentsThatMatter: opponents })).problems.map((p) => p.code)).toContain(
       'wrong_length',
     );
+  });
+
+  it('does not manufacture a repair over a stray clause', () => {
+    /*
+     * The exact response that cost a thirty-cent repair call: 324 characters
+     * of `whyRecommendationStillWins` against a ceiling that had been set at
+     * the target length of 300. Perfectly concise, perfectly usable, rejected
+     * by our own strictness. The descriptions still ask for one or two short
+     * sentences; the ceiling now only catches a runaway.
+     */
+    const realAnswer = "Kraft's 72.3% is a single-player figure against 16 picks and six TE-needy teams; the pair figure that matters is 6% both remain, and if Kraft goes too we fall to Pitts/LaPorta ~103, a 13-point starter downgrade. WR is deep \u2014 tier 8 has 7 members, 93% at least one survives, plus Odunze/Metcalf/Thomas on deepBoard at 75-93%.";
+    expect(realAnswer.length).toBeGreaterThan(300);
+    expect(concise(sound({ whyRecommendationStillWins: realAnswer })).ok).toBe(true);
+
+    // A genuine runaway is still rejected.
+    expect(concise(sound({ whyRecommendationStillWins: 'x'.repeat(2000) })).ok).toBe(false);
   });
 
   it('accepts a genuinely concise answer', () => {

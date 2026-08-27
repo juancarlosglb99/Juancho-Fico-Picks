@@ -123,12 +123,17 @@ function scriptedStrategist(script: unknown[]) {
   (strategist as unknown as { client: unknown }).client = {
     messages: {
       create: async (body: { messages: unknown[] }) => {
-        requests.push({ messages: body.messages });
+        requests.push(body as unknown as { messages: unknown[] });
         const input = script[Math.min(call, script.length - 1)];
         call += 1;
         return {
           content: [{ type: 'tool_use', id: `tool-${call}`, name: 'submit_recommendation', input }],
-          usage: { input_tokens: 1000, output_tokens: 200 },
+          usage: {
+            input_tokens: 1000,
+            output_tokens: 200,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
         };
       },
     },
@@ -267,6 +272,24 @@ describe('one repair attempt', () => {
     expect((result.rawResponse as Record<string, unknown>).urgency).toBeUndefined();
   });
 
+  it('caches the stable prefix and never the draft state', async () => {
+    /*
+     * The playbook and tool schema are identical on every call of every draft;
+     * the draft state changes every pick. A breakpoint on the system block
+     * covers the tools too, since tools are sent first.
+     */
+    const { strategist, requests } = scriptedStrategist([sound()]);
+    await strategist.call(brief);
+    const body = requests[0] as unknown as {
+      system: { type: string; cache_control?: unknown }[];
+      messages: { role: string; content: unknown }[];
+    };
+    expect(Array.isArray(body.system)).toBe(true);
+    expect(body.system[0].cache_control).toEqual({ type: 'ephemeral' });
+    // The live state must never be marked cacheable.
+    expect(JSON.stringify(body.messages)).not.toContain('cache_control');
+  });
+
   it('sums tokens and latency across both attempts', async () => {
     const broken = sound();
     delete broken.urgency;
@@ -274,7 +297,12 @@ describe('one repair attempt', () => {
     const result = await strategist.call(brief);
 
     // Reporting only the successful request would understate what it took.
-    expect(result.usage).toEqual({ inputTokens: 2000, outputTokens: 400 });
+    expect(result.usage).toEqual({
+      inputTokens: 2000,
+      cacheWriteTokens: 0,
+      cacheReadTokens: 0,
+      outputTokens: 400,
+    });
     expect(result.attempts.every((attempt) => attempt.usage !== null)).toBe(true);
   });
 

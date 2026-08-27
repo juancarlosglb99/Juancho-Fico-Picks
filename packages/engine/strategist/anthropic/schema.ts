@@ -22,7 +22,20 @@
  * steer while still catching a runaway.
  */
 
-/** Ceilings for one variant of the contract. */
+/**
+ * HARD CEILINGS, not targets.
+ *
+ * The distinction cost a real repair. The concise contract set both to the same
+ * number, and a 324-character answer against a 300-character limit triggered a
+ * second thirty-cent API call over twenty-four characters - a rejection
+ * manufactured entirely by our own strictness, for a response that was
+ * perfectly concise and perfectly usable.
+ *
+ * The brevity now comes from ONE place: the field descriptions, which are
+ * unchanged and say "one short sentence". These numbers only catch a runaway.
+ * Set them at the target and they become a tax on ordinary variation; set them
+ * far above and a genuinely absurd answer is still rejected.
+ */
 interface ContractLimits {
   strategy: number;
   reasonCode: number;
@@ -68,17 +81,23 @@ const LONG_LIMITS: ContractLimits = {
  * thing not worth economising on is the model's argument against itself.
  */
 const CONCISE_LIMITS: ContractLimits = {
-  strategy: 200,
-  reasonCode: 40,
-  reasonDetail: 200,
+  /*
+   * Roughly two and a half times the length the descriptions ask for. Wide
+   * enough that a normal concise answer with one extra clause never fails,
+   * narrow enough that a paragraph still does. The array bounds stay exact -
+   * a fourth reason is a structural choice, not a stray clause.
+   */
+  strategy: 500,
+  reasonCode: 80,
+  reasonDetail: 500,
   reasonsMax: 3,
-  alternativeReason: 150,
-  strongestAlternativeWhy: 200,
-  strongestCounterargument: 300,
-  whyRecommendationStillWins: 300,
-  expectedNextPickPlan: 250,
-  firstSeedDeviationReason: 300,
-  opponentWhy: 120,
+  alternativeReason: 400,
+  strongestAlternativeWhy: 500,
+  strongestCounterargument: 750,
+  whyRecommendationStillWins: 750,
+  expectedNextPickPlan: 600,
+  firstSeedDeviationReason: 750,
+  opponentWhy: 300,
   opponentsMax: 3,
 };
 
