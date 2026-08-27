@@ -49,6 +49,8 @@ const REFRESH = process.env.JUANCHO_EVAL_REFRESH === '1';
 const BLIND = process.env.JUANCHO_EVAL_BLIND === '1';
 /** Ask for the short form of the same contract. */
 const CONCISE = process.env.JUANCHO_EVAL_CONCISE === '1';
+/** Spend detail where the decision needs it. */
+const COMPACT = process.env.JUANCHO_EVAL_COMPACT === '1';
 /** Default budget when nobody names selections: enough to judge, few enough to afford. */
 const DEFAULT_LIMIT = Number(process.env.JUANCHO_EVAL_LIMIT ?? 3);
 
@@ -111,11 +113,14 @@ describe('strategist evaluation', () => {
     }
 
     const strategist = new AnthropicStrategist({
-      ...(BLIND ? { promptContext: { blind: true } } : {}),
+      ...(BLIND || COMPACT
+        ? { promptContext: { blind: BLIND, compact: COMPACT } }
+        : {}),
       ...(CONCISE ? { concise: true } : {}),
     });
     if (BLIND) console.log('[eval] BLIND context: the deterministic verdict is withheld');
     if (CONCISE) console.log('[eval] CONCISE contract: same fields, less room for prose');
+    if (COMPACT) console.log('[eval] COMPACT context: detail spent where the decision needs it');
     // Stamped once so a whole run shares a timestamp, and nothing deeper in the
     // engine ever has to read the clock.
     const now = new Date().toISOString();

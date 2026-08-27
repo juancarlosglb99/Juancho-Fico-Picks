@@ -18,7 +18,8 @@
     "tune:consensus": "node scripts/tune-consensus.mjs",
     "brief": "node scripts/brief.mjs",
     "strategist:eval": "node scripts/strategist-eval.mjs",
-    "calibration": "npx vitest run --config vitest.config.ts tests/regression/survival-calibration.test.ts --reporter=verbose"
+    "calibration": "npx vitest run --config vitest.config.ts tests/regression/survival-calibration.test.ts --reporter=verbose",
+    "strategist:size": "node scripts/strategist-size.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.121.0",

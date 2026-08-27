@@ -244,7 +244,8 @@ export async function evaluatePick(
   const label =
     `${input.regression.draftId} p${overallPick} ${strategistFingerprint(options.model)}` +
     (options.strategist.isBlind ? ' blind' : '') +
-    (options.strategist.isConcise ? ' concise' : '');
+    (options.strategist.isConcise ? ' concise' : '') +
+    (options.strategist.isCompact ? ' compact' : '');
 
   const cached = options.refresh ? null : readCached(key);
   const call = enforceContract(

@@ -72,6 +72,7 @@ const result = spawnSync(
       JUANCHO_EVAL_REFRESH: flags.has('--refresh') ? '1' : '',
       JUANCHO_EVAL_BLIND: flags.has('--blind') ? '1' : '',
       JUANCHO_EVAL_CONCISE: flags.has('--concise') ? '1' : '',
+      JUANCHO_EVAL_COMPACT: flags.has('--compact') ? '1' : '',
     },
   },
 );

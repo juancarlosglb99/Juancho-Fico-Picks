@@ -147,6 +147,16 @@ export interface StrategistPromptContext {
   }[];
 
   /**
+   * The rest of the board, in fewer columns.
+   *
+   * Present only in compact mode. Every remaining available player, with enough
+   * to know he exists and roughly what he is worth - so a correct pick can
+   * never vanish because it fell outside an arbitrary top-N, without paying
+   * twenty metrics for a player nobody would take.
+   */
+  deepBoard?: CompactTable;
+
+  /**
    * Availability for more than one player at a time.
    *
    * The board's `surv` column is marginal: it says whether ONE player reaches
@@ -242,6 +252,22 @@ export interface PromptContextOptions {
    * fallback and the guardrail.
    */
   blind: boolean;
+  /**
+   * Spend detail where the decision needs it.
+   *
+   * Measured before cutting: the candidate board is a third of the prompt and
+   * the opponents another tenth, while the sections that LOOK verbose - rules,
+   * tier cliffs, the simulation block - are under two percent between them.
+   * Cutting on impression rather than measurement loses information and saves
+   * nothing.
+   *
+   * So nothing is truncated by rank. The board keeps full metrics for the
+   * players a decision could turn on and a thinner row for everyone else, so
+   * the model still knows what exists deeper without paying twenty columns for
+   * a player nobody would take. Opponents keep full rosters where they bear on
+   * this pick and a summary where they do not.
+   */
+  compact: boolean;
 }
 
 export const DEFAULT_PROMPT_CONTEXT: PromptContextOptions = {
@@ -250,7 +276,17 @@ export const DEFAULT_PROMPT_CONTEXT: PromptContextOptions = {
   recentPicks: 15,
   opponentRecentPicks: 4,
   blind: false,
+  compact: false,
 };
+
+/** In compact mode: how much of First Seed's board keeps full metrics. */
+const RICH_TOP_BOARD = 20;
+/** Plus the best few at each position we can still start. */
+const RICH_PER_OPEN_POSITION = 6;
+/** Plus the leaders on the completed-roster simulation. */
+const RICH_SIMULATION_LEADERS = 10;
+/** Plus the top of each tier that could break, bounded against a flat curve. */
+const RICH_PER_TIER = 8;
 
 const BOARD_LEGEND: Record<string, string> = {
   id: 'player id - return this exact string to select him',
@@ -327,10 +363,96 @@ export function buildStrategistPromptContext(
       }
     : null;
 
+  /*
+   * Who gets full metrics.
+   *
+   * A union of the ways a player can matter, never a rank cut: the top of First
+   * Seed's board, every member of a tier that could break at a position we can
+   * still start, everyone named in a joint-availability comparison, the leaders
+   * on the completed-roster simulation, and anyone whose source data conflicts.
+   * A player outside all of those is genuinely not a candidate for THIS pick,
+   * and he still appears on the deep board.
+   */
+  const richIds = new Set<string>();
+  const openPositionsForBoard = new Set(
+    brief.ourTeam.needs
+      .filter((need) => need.openStartingSlots > 0 || need.depthNeed !== 'none')
+      .map((need) => need.position),
+  );
+
   const teamsBefore = new Map(
     brief.room.teamsBeforeOurNextPick.map((team) => [team.rosterId, team]),
   );
   const kickersMatter = brief.constraints.kickersAndDefensesAllowed;
+
+  /*
+   * Which opponents need naming player by player.
+   *
+   * The ones who pick before our next turn, because they are the reason a
+   * candidate might not reach us - and the ones with a live need at a position
+   * whose tier is about to break, because they are who breaks it. Everyone else
+   * gets counts, holes, needs and a build label, which is what a distant team's
+   * seven player names amount to anyway.
+   */
+  const atRiskPositions = new Set(
+    brief.room.tierCliffs.filter((cliff) => cliff.atRisk).map((cliff) => cliff.position),
+  );
+  const teamsThatMatter = new Set<number>(
+    brief.room.teamsBeforeOurNextPick
+      .map((team) => team.rosterId)
+      .filter((rosterId): rosterId is number => rosterId !== null),
+  );
+  for (const team of brief.opponents) {
+    const pressesATier = team.needs.some(
+      (need) =>
+        atRiskPositions.has(need.position) &&
+        ['critical', 'high'].includes(need.depthNeed),
+    );
+    if (pressesATier) teamsThatMatter.add(team.rosterId);
+  }
+
+  if (opts.compact) {
+    const byFirstSeed = [...candidates].sort(
+      (a, b) => (a.firstSeed.rank ?? Infinity) - (b.firstSeed.rank ?? Infinity),
+    );
+    for (const candidate of byFirstSeed.slice(0, RICH_TOP_BOARD)) richIds.add(candidate.playerId);
+
+    const bySimulation = [...candidates].sort(
+      (a, b) => (b.juancho.planValue ?? -Infinity) - (a.juancho.planValue ?? -Infinity),
+    );
+    for (const candidate of bySimulation.slice(0, RICH_SIMULATION_LEADERS)) {
+      richIds.add(candidate.playerId);
+    }
+
+    for (const tier of brief.jointAvailability?.scenarios.tiers ?? []) {
+      // Bounded: a tier is normally two to twenty deep, but a flat projection
+      // curve can put a whole position in one, and an unbounded tier would
+      // quietly defeat the compaction it is meant to inform.
+      for (const member of tier.members.slice(0, RICH_PER_TIER)) richIds.add(member.playerId);
+    }
+    for (const pair of brief.jointAvailability?.pairs ?? []) {
+      richIds.add(pair.a.playerId);
+      richIds.add(pair.b.playerId);
+    }
+    for (const entry of brief.jointAvailability?.scenarios.fallbacks ?? []) {
+      richIds.add(entry.playerId);
+    }
+    for (const entry of brief.jointAvailability?.scenarios.likelyBestAvailable ?? []) {
+      richIds.add(entry.playerId);
+    }
+    for (const candidate of candidates) {
+      if (candidate.dataWarning) richIds.add(candidate.playerId);
+      // The best few at every position we could still start, so a real need is
+      // never represented only by a thin row.
+      if (openPositionsForBoard.has(candidate.position)) {
+        const atPosition = candidates
+          .filter((entry) => entry.position === candidate.position)
+          .sort((a, b) => (a.firstSeed.rank ?? Infinity) - (b.firstSeed.rank ?? Infinity))
+          .slice(0, RICH_PER_OPEN_POSITION);
+        for (const entry of atPosition) richIds.add(entry.playerId);
+      }
+    }
+  }
 
   return {
     contextVersion: PROMPT_CONTEXT_VERSION,
@@ -356,7 +478,9 @@ export function buildStrategistPromptContext(
     },
 
     us: describeOurTeam(brief.ourTeam, opts, kickersMatter),
-    opponents: brief.opponents.map((team) => describeTeam(team, opts, kickersMatter)),
+    opponents: brief.opponents.map((team) =>
+      describeTeam(team, opts, kickersMatter, opts.compact && !teamsThatMatter.has(team.rosterId)),
+    ),
 
     upcoming: {
       order: brief.room.teamsBeforeOurNextPick
@@ -387,7 +511,10 @@ export function buildStrategistPromptContext(
       tierCliffs: tierCliffTable(brief),
     },
 
-    board: boardTable(candidates, opts.blind, bestFinalRosterValue),
+    board: boardTable(candidates, opts.blind, bestFinalRosterValue, richIds),
+    ...(opts.compact
+      ? { deepBoard: deepBoardTable(candidates, richIds, bestFinalRosterValue) }
+      : {}),
     jointAvailability: jointTables(brief),
     dataWarnings: candidates
       .filter((candidate) => candidate.dataWarning !== null)
@@ -444,7 +571,17 @@ export function buildStrategistPromptContext(
     strategyContext: brief.strategyContext,
     playerNews: brief.playerNews,
 
-    omitted: [
+    // Bookkeeping about what was left out is worth 269 tokens in the long form
+    // and nothing to the decision; compact mode states it in one line.
+    omitted: opts.compact
+      ? [
+          ...(opts.blind
+            ? ['A deterministic ranking of these candidates is not included in this context.']
+            : []),
+          'Detail is spent where the decision needs it: distant opponents are summarised, ' +
+            'and players outside the immediate decision appear on deepBoard at lower detail.',
+        ]
+      : [
       ...(opts.blind
         ? [
             'A deterministic ranking of these candidates is not included in this context.',
@@ -474,7 +611,12 @@ function boardTable(
   candidates: BriefCandidate[],
   blind: boolean,
   bestFinalRosterValue: number | null,
+  /** When non-empty, only these players get the full metric set. */
+  richIds: Set<string> = new Set(),
 ): CompactTable {
+  const rows = richIds.size === 0
+    ? candidates
+    : candidates.filter((candidate) => richIds.has(candidate.playerId));
   /*
    * Blind mode drops three columns and re-bases a fourth.
    *
@@ -502,7 +644,7 @@ function boardTable(
     return {
       columns,
       legend: Object.fromEntries(columns.map((column) => [column, BOARD_LEGEND[column]])),
-      rows: candidates.map((candidate) => [
+      rows: rows.map((candidate) => [
         candidate.playerId,
         candidate.name,
         candidate.position,
@@ -532,7 +674,7 @@ function boardTable(
   return {
     columns,
     legend: Object.fromEntries(columns.map((column) => [column, BOARD_LEGEND[column]])),
-    rows: candidates.map((candidate) => [
+    rows: rows.map((candidate) => [
       candidate.playerId,
       candidate.name,
       candidate.position,
@@ -558,6 +700,46 @@ function boardTable(
       candidate.status && candidate.status !== 'Active' ? candidate.status : null,
       candidate.dataWarning ? candidate.dataWarning.code : null,
     ]),
+  };
+}
+
+/**
+ * Everyone the rich board left out, in six columns instead of twenty.
+ *
+ * Not a truncation - every remaining available player is here. The point is
+ * that a correct recommendation can never disappear because it fell outside a
+ * top-N, while a player nobody would take does not cost twenty metrics.
+ */
+function deepBoardTable(
+  candidates: BriefCandidate[],
+  richIds: Set<string>,
+  bestFinalRosterValue: number | null,
+): CompactTable {
+  const columns = ['id', 'name', 'pos', 'fsRank', 'proj', 'surv'];
+  return {
+    columns,
+    legend: {
+      id: 'player id - return this exact string to select him',
+      name: 'player name',
+      pos: 'position',
+      fsRank: "First Seed's rank, or blank if they do not rank him",
+      proj: 'projected points in this league scoring',
+      surv: '% chance he is still available at our next selection',
+      _note:
+        'the rest of the available pool, at lower detail. Ask for nothing here ' +
+        'lightly: if one of these is genuinely the right pick, say so - but the ' +
+        'players a decision usually turns on are on the main board.',
+    },
+    rows: candidates
+      .filter((candidate) => !richIds.has(candidate.playerId))
+      .map((candidate) => [
+        candidate.playerId,
+        candidate.name,
+        candidate.position,
+        candidate.firstSeed.rank,
+        candidate.juancho.projectedPoints,
+        candidate.survival.probability,
+      ]),
   };
 }
 
@@ -749,21 +931,26 @@ function describeTeam(
   team: BriefTeam,
   opts: PromptContextOptions,
   includeKickers: boolean,
+  summariseOnly = false,
 ): CompactTeam {
   return {
     id: team.rosterId,
     slot: team.draftSlot,
     name: team.teamName,
-    roster: team.players
-      .map((player) => `${player.round ?? '-'}.${player.position} ${player.name}`)
-      .join(', '),
+    // A distant team's roster is only ever read as "what do they still need",
+    // which the counts, holes and needs below already say.
+    roster: summariseOnly
+      ? ''
+      : team.players
+          .map((player) => `${player.round ?? '-'}.${player.position} ${player.name}`)
+          .join(', '),
     counts: describeCounts(team),
     holes: team.lineupHoles.flatMap((hole) => Array(hole.count).fill(hole.slot)).join(' ') || 'none',
     needs: describeNeeds(team.needs, includeKickers),
     build: team.build,
     reachesAt: team.tendency.reachedEarlyAt.length ? team.tendency.reachedEarlyAt.join(',') : null,
     recent: team.picks
-      .slice(-Math.max(0, opts.opponentRecentPicks))
+      .slice(-Math.max(0, summariseOnly ? 2 : opts.opponentRecentPicks))
       .map((pick) => pick.position)
       .join(','),
     nextPick: team.nextSelectionOverall,

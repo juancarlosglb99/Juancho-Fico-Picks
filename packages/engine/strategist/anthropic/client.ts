@@ -27,6 +27,23 @@ import {
 
 /** Changed with `JUANCHO_STRATEGIST_MODEL`; never hardcoded at a call site. */
 export const DEFAULT_STRATEGIST_MODEL = 'claude-opus-5';
+
+/**
+ * The production contract: blind context, concise responses.
+ *
+ * Blind because a strategist shown the deterministic verdict ratifies it rather
+ * than arbitrating - Sonnet agreed five times out of five with the answer in
+ * front of it and twice out of five without. Concise because the screen shows a
+ * player and a few lines, and the long form spent 1,800 output tokens per call
+ * on prose nobody reads for the same recommendation four times in five.
+ *
+ * The long contract stays available as a diagnostic: when a recommendation
+ * needs explaining, the fuller argument is worth paying for.
+ */
+export const PRODUCTION_STRATEGIST: AnthropicStrategistOptions = {
+  promptContext: { blind: true },
+  concise: true,
+};
 export const DEFAULT_MAX_TOKENS = 4096;
 
 export interface AnthropicStrategistOptions {
@@ -131,6 +148,7 @@ export class AnthropicStrategist implements StrategistClient {
   /** The contract this strategist asks for. Part of what the cache keys on. */
   readonly tool: RecommendationTool;
   readonly isConcise: boolean;
+  readonly isCompact: boolean;
 
   constructor(options: AnthropicStrategistOptions = {}) {
     const apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY;
@@ -150,6 +168,7 @@ export class AnthropicStrategist implements StrategistClient {
     this.promptContext = options.promptContext ?? {};
     this.isBlind = this.promptContext.blind === true;
     this.isConcise = options.concise === true;
+    this.isCompact = this.promptContext.compact === true;
     this.tool = recommendationTool(this.isConcise);
     this.client = new Anthropic({ apiKey });
     this.id = `anthropic:${this.model}`;

@@ -279,6 +279,97 @@ describe('the strategist prompt context', () => {
     expect(context.board.columns).toContain('dDec');
   });
 
+  it('spends detail where the decision needs it, and loses no player', () => {
+    const brief = briefAfter(40);
+    const full = buildStrategistPromptContext(brief, { blind: true });
+    const compact = buildStrategistPromptContext(brief, { blind: true, compact: true });
+
+    /*
+     * The rule that matters: nothing is truncated. A correct recommendation
+     * must never disappear because it fell outside an arbitrary top-N, so every
+     * available player is still reachable - just not all at twenty columns.
+     */
+    const ids = (table: { columns: string[]; rows: (string | number | null)[][] }) =>
+      table.rows.map((row) => row[table.columns.indexOf('id')]);
+    const reachable = new Set([...ids(compact.board), ...ids(compact.deepBoard!)]);
+    expect([...reachable].sort()).toEqual(ids(full.board).sort());
+
+    // The two layers partition the pool; nobody is in both.
+    expect(ids(compact.board).filter((id) => ids(compact.deepBoard!).includes(id))).toEqual([]);
+    expect(compact.board.rows.length).toBeLessThan(full.board.rows.length);
+    expect(compact.deepBoard!.columns.length).toBeLessThan(compact.board.columns.length);
+
+    // And it is materially smaller.
+    expect(JSON.stringify(compact).length).toBeLessThan(JSON.stringify(full).length * 0.85);
+  });
+
+  it('keeps full metrics for the players a decision could turn on', () => {
+    const brief = briefAfter(40);
+    const compact = buildStrategistPromptContext(brief, { blind: true, compact: true });
+    const rich = new Set(
+      compact.board.rows.map((row) => row[compact.board.columns.indexOf('id')]),
+    );
+
+    // Everyone named in a joint comparison, because those are the comparisons
+    // the pick is actually being decided between.
+    for (const pair of brief.jointAvailability?.pairs ?? []) {
+      expect(rich, `pair member ${pair.a.name}`).toContain(pair.a.playerId);
+      expect(rich, `pair member ${pair.b.name}`).toContain(pair.b.playerId);
+    }
+    for (const tier of brief.jointAvailability?.scenarios.tiers ?? []) {
+      // Bounded, because a flat projection curve can put a whole position in
+      // one tier and an unbounded tier defeats the compaction entirely.
+      for (const member of tier.members.slice(0, 8)) {
+        expect(rich, `tier member ${member.name}`).toContain(member.playerId);
+      }
+    }
+    // And the top of First Seed's board.
+    const topFirstSeed = [...brief.candidates]
+      .filter((candidate) => candidate.firstSeed.rank !== null)
+      .sort((a, b) => a.firstSeed.rank! - b.firstSeed.rank!)
+      .slice(0, 10);
+    for (const candidate of topFirstSeed) {
+      expect(rich, `First Seed #${candidate.firstSeed.rank}`).toContain(candidate.playerId);
+    }
+  });
+
+  it('stays blind when compacted', () => {
+    // Compaction must not become a way for the verdict to creep back in.
+    const compact = buildStrategistPromptContext(briefAfter(40), {
+      blind: true,
+      compact: true,
+    });
+    const serialised = JSON.stringify(compact);
+    expect(compact.juancho).toBeUndefined();
+    expect(compact.board.columns).not.toContain('jRec');
+    expect(compact.board.columns).not.toContain('dDec');
+    expect(compact.deepBoard!.columns).not.toContain('jRec');
+    expect(serialised).not.toContain('recommendedPlayerId');
+  });
+
+  it('names the opponents who bear on this pick and summarises the rest', () => {
+    const brief = briefAfter(40);
+    const compact = buildStrategistPromptContext(brief, { blind: true, compact: true });
+    const mattering = new Set(
+      brief.room.teamsBeforeOurNextPick
+        .map((team) => team.rosterId)
+        .filter((rosterId): rosterId is number => rosterId !== null),
+    );
+
+    for (const team of compact.opponents) {
+      // Every team keeps what it needs; only the roster line is summarised.
+      expect(team.counts).toBeTruthy();
+      expect(team.holes).toBeTruthy();
+      expect(team.build).toBeTruthy();
+      if (mattering.has(team.id)) {
+        expect(team.roster, `roster ${team.id} picks before us`).not.toBe('');
+      }
+    }
+    if (mattering.size > 0 && mattering.size < compact.opponents.length) {
+      expect(compact.opponents.some((team) => team.roster === '')).toBe(true);
+    }
+  });
+
   it('does not clutter every roster with a kicker need nobody can act on', () => {
     const brief = briefAfter(30, WITH_KICKERS);
     expect(brief.constraints.kickersAndDefensesAllowed).toBe(false);
