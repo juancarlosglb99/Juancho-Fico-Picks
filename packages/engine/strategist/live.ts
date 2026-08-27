@@ -128,19 +128,55 @@ export class UsageLedger {
  * starts thinking as our turn approaches and always answers fresh when we are
  * actually on the clock, which is the only moment the answer is acted on.
  */
+export type CallCadence =
+  /**
+   * One call per turn of ours, made when we are actually on the clock.
+   *
+   * The safe default, and the reason is arithmetic rather than caution. A call
+   * takes seventeen to twenty seconds; a pick lands every thirty or so. Asking
+   * three picks early means the board very often moves before the answer
+   * arrives, and a stale answer is discarded - so the money is spent and
+   * nothing is shown. Waiting until the clock is ours means the board cannot
+   * move underneath the request in the ordinary case.
+   */
+  | 'on_the_clock_only'
+  /**
+   * Begin as our turn approaches, so an answer is waiting when it arrives.
+   *
+   * Worth having once latency comes down or the answer can be revised in
+   * place. Kept configurable rather than deleted.
+   */
+  | 'approaching_turn';
+
 export interface StrategistCallPolicy {
-  /** Begin analysing once our selection is this close. */
+  cadence: CallCadence;
+  /** Only consulted under `approaching_turn`. */
   analyzeWithin: number;
-  /** Always ask again when we are on the clock, even if an answer exists. */
-  refreshOnTheClock: boolean;
+  /**
+   * Calls allowed for one selection of ours.
+   *
+   * Two, and the second is only ever reached when the first completed without
+   * producing advice - an outage, or a response still malformed after its
+   * repair. A call that produced advice, or that was abandoned because the
+   * board moved, spends the selection: re-asking there would pay twice for one
+   * pick, which is the failure this policy exists to prevent.
+   */
+  maxCallsPerSelection: number;
   /** Set false to stop calling entirely, for a cap or a kill switch. */
   enabled: boolean;
 }
 
 export const DEFAULT_CALL_POLICY: StrategistCallPolicy = {
+  cadence: 'on_the_clock_only',
   analyzeWithin: 3,
-  refreshOnTheClock: true,
+  maxCallsPerSelection: 2,
   enabled: true,
+};
+
+/** The pre-turn policy, kept for when latency makes it worth the risk again. */
+export const APPROACHING_TURN_POLICY: StrategistCallPolicy = {
+  ...DEFAULT_CALL_POLICY,
+  cadence: 'approaching_turn',
 };
 
 export function shouldRequest(
@@ -149,8 +185,28 @@ export function shouldRequest(
 ): boolean {
   if (!policy.enabled) return false;
   if (brief.draft.isOurSelection) return true;
+  if (policy.cadence === 'on_the_clock_only') return false;
   const until = brief.draft.picksUntilOurNextSelection;
   return until !== null && until <= policy.analyzeWithin;
+}
+
+/**
+ * Which selection of ours a board belongs to.
+ *
+ * The dedupe key, and deliberately NOT the board fingerprint. During our turn
+ * the board can still change - a correction, a keeper resolving late - and
+ * keying on the fingerprint would treat that as a new question and pay for it
+ * again. It is the same pick either way, and we only buy one answer per pick.
+ */
+function selectionKey(brief: DraftBrief): string {
+  return `${brief.state.draftId}#${brief.draft.currentOverallPick}`;
+}
+
+/** What has already been spent on one selection of ours. */
+interface SelectionSpend {
+  calls: number;
+  /** True once a call returned advice, or was abandoned mid-flight. */
+  settled: boolean;
 }
 
 /* ----------------------------------------------------------------- the state */
@@ -194,8 +250,10 @@ export class LiveStrategist {
   private state: LiveStrategistState = IDLE;
   private readonly listeners = new Set<(state: LiveStrategistState) => void>();
   private inFlight: AbortController | null = null;
-  /** Fingerprints already asked about, so an unchanged board is never re-billed. */
-  private readonly asked = new Set<string>();
+  /** Which of OUR selections we have already paid for, and how it went. */
+  private readonly spend = new Map<string, SelectionSpend>();
+  /** The selection currently in flight, so a poll cannot start a second one. */
+  private pending: string | null = null;
 
   constructor(
     private readonly transport: StrategistTransport,
@@ -225,33 +283,53 @@ export class LiveStrategist {
    */
   async update(brief: DraftBrief | null): Promise<void> {
     if (brief === null) {
-      this.abort();
+      this.abandon();
       this.publish(IDLE);
       return;
     }
 
     const fingerprint = brief.state.boardFingerprint;
+    const selection = selectionKey(brief);
 
-    // The board moved: whatever is in flight is about to be stale, and whatever
-    // is on screen already is.
+    /*
+     * The board moved, so anything on screen describes a board that no longer
+     * exists. It goes now rather than when the next answer arrives.
+     *
+     * Whether the request in flight is abandoned depends on whether this is
+     * still OUR pick. A different selection means its answer can never be used;
+     * the same selection with a changed board means the answer may still be
+     * about a player who is gone, which the staleness gate will catch - and
+     * abandoning it would only tempt us into paying again for the same pick.
+     */
     if (this.state.fingerprint !== null && this.state.fingerprint !== fingerprint) {
-      this.abort();
-      this.publish({ ...IDLE, fingerprint });
+      if (this.pending !== null && this.pending !== selection) this.abandon();
+      this.publish(this.idleFor(brief, fingerprint));
     }
 
     if (!shouldRequest(brief, this.policy)) {
-      if (this.state.phase !== 'idle') this.publish({ ...IDLE, fingerprint });
+      if (this.state.phase !== 'idle') this.publish(this.idleFor(brief, fingerprint));
       return;
     }
 
-    // Asked about this exact board already - a poll that changed nothing must
-    // not cost anything.
-    if (this.asked.has(fingerprint)) return;
-    this.asked.add(fingerprint);
+    // A request is already running for this pick. Polling must not start
+    // another one on top of it.
+    if (this.pending !== null) return;
+
+    /*
+     * One answer per selection of ours.
+     *
+     * A second call is only ever reached when the first completed without
+     * producing advice. A call that answered - even with advice later discarded
+     * as stale - has spent this pick, and so has one abandoned mid-flight.
+     */
+    const spent = this.spend.get(selection);
+    if (spent && (spent.settled || spent.calls >= this.policy.maxCallsPerSelection)) return;
+    this.spend.set(selection, { calls: (spent?.calls ?? 0) + 1, settled: false });
 
     const controller = new AbortController();
     this.inFlight = controller;
-    this.publish({ ...IDLE, phase: 'analyzing', fingerprint });
+    this.pending = selection;
+    this.publish({ ...this.idleFor(brief, fingerprint), phase: 'analyzing' });
 
     let result: StrategistTransportResult;
     try {
@@ -262,34 +340,37 @@ export class LiveStrategist {
         signal: controller.signal,
       });
     } catch (error) {
-      // An abort is an expected outcome, not a failure worth showing.
+      // An abort is an expected outcome, not a failure worth showing - and the
+      // selection stays spent, so nothing re-asks on its own.
       if (controller.signal.aborted) return;
+      this.settle(selection, false);
       this.publish({
-        ...IDLE,
+        ...this.idleFor(brief, fingerprint),
         phase: 'fallback',
-        fingerprint,
         reason: error instanceof Error ? error.message : String(error),
       });
       return;
     } finally {
-      if (this.inFlight === controller) this.inFlight = null;
+      if (this.inFlight === controller) {
+        this.inFlight = null;
+        this.pending = null;
+      }
     }
 
-    // Aborted while we waited: the answer is about a board nobody is looking at.
     if (controller.signal.aborted) return;
 
     const usage = this.ledger.record(brief.state.draftId, result);
 
     /*
-     * The staleness gate, checked twice over.
-     *
-     * Once against the board the transport says it answered - which catches a
-     * reply routed from the wrong draft or the wrong pick - and once against
-     * the board we are holding now, which catches the ordinary race where the
-     * room moved while we waited.
+     * The staleness gate, checked twice over: once against the board the
+     * transport says it answered, which catches a reply routed from the wrong
+     * draft, and once against the board we hold now, which catches the race.
      */
     const staleness = stalenessOf(result.state, brief.state);
     if (staleness !== null) {
+      // Answered, then discarded. The pick is spent either way - re-asking
+      // would pay twice for one selection.
+      this.settle(selection, true);
       this.publish({
         ...IDLE,
         phase: 'fallback',
@@ -318,6 +399,14 @@ export class LiveStrategist {
       strategistId: result.model,
     });
 
+    /*
+     * Settled when a response arrived at all - including one the guardrails
+     * threw out. The strategist answered; the answer was unusable. Asking the
+     * same question again would spend a second time on the same pick for the
+     * same reasons.
+     */
+    this.settle(selection, result.response !== null);
+
     const applied = decision.final?.source === 'strategist';
     this.publish({
       phase: applied ? 'ready' : 'fallback',
@@ -328,10 +417,33 @@ export class LiveStrategist {
     });
   }
 
-  /** Stop any request in flight, e.g. when the component unmounts. */
-  abort(): void {
+  private settle(selection: string, settled: boolean): void {
+    const spent = this.spend.get(selection);
+    this.spend.set(selection, { calls: spent?.calls ?? 1, settled });
+  }
+
+  /**
+   * An idle state that still remembers what the draft has cost.
+   *
+   * The ledger persists across turns, so the running total must too - clearing
+   * it between selections would make the spend readout blink out exactly when
+   * somebody is watching it.
+   */
+  private idleFor(brief: DraftBrief, fingerprint: string): LiveStrategistState {
+    return { ...IDLE, fingerprint, usage: this.ledger.get(brief.state.draftId) };
+  }
+
+  /** Abandons the request in flight and marks its selection as spent. */
+  private abandon(): void {
+    if (this.pending !== null) this.settle(this.pending, true);
     this.inFlight?.abort();
     this.inFlight = null;
+    this.pending = null;
+  }
+
+  /** Stop any request in flight, e.g. when the component unmounts. */
+  abort(): void {
+    this.abandon();
   }
 
   private publish(state: LiveStrategistState): void {

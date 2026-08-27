@@ -49,7 +49,7 @@ export function useStrategist(
         new UsageLedger(),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transport, policy?.analyzeWithin, policy?.enabled, policy?.refreshOnTheClock],
+    [transport, policy?.cadence, policy?.analyzeWithin, policy?.enabled],
   );
 
   const [state, setState] = useState<LiveStrategistState>(() => live.current());

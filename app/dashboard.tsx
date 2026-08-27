@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildDraftBrief } from '@/packages/engine/strategist/brief';
-import type { LiveStrategistState } from '@/packages/engine/strategist/live';
+import type {
+  LiveStrategistState,
+  UsageRecord,
+} from '@/packages/engine/strategist/live';
 import { useStrategist } from './use-strategist';
 import {
   automaticAdpCacheKey,
@@ -2803,16 +2806,39 @@ function ProjectionPanel({
  * harness and for answering a question about a pick weeks later, not for
  * someone with forty seconds on a clock.
  */
+/**
+ * What the strategist has cost so far, for watching a live test.
+ *
+ * Deliberately small and grey. It is here to be glanced at while the first paid
+ * draft runs, not to be part of the product - a drafter has no use for a token
+ * count, and this is the first thing to remove once the spend is understood.
+ */
+function StrategistSpend({ usage }: { usage: UsageRecord | null }) {
+  if (!usage || usage.calls === 0) return null;
+  return (
+    <p className="mt-2 text-[10px] tabular-nums text-[#4d5f6b]">
+      {usage.calls} call{usage.calls === 1 ? '' : 's'}
+      {usage.repairCalls > 0 ? ` · ${usage.repairCalls} repair${usage.repairCalls === 1 ? '' : 's'}` : ''}
+      {usage.failures > 0 ? ` · ${usage.failures} failed` : ''}
+      {' · $'}
+      {usage.estimatedCostUsd.toFixed(3)} est.
+    </p>
+  );
+}
+
 function StrategistPanel({ state }: { state: LiveStrategistState }) {
-  if (state.phase === 'idle') return null;
+  if (state.phase === 'idle') return usageOnly(state);
 
   if (state.phase === 'analyzing') {
     return (
-      <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-[#2d414d] bg-[#0f1a21] px-4 py-3">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#b9ff38]" />
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#8fa0aa]">
-          AI analyzing…
-        </p>
+      <div className="mb-5 rounded-xl border border-[#2d414d] bg-[#0f1a21] px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#b9ff38]" />
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#8fa0aa]">
+            AI analyzing…
+          </p>
+        </div>
+        <StrategistSpend usage={state.usage} />
       </div>
     );
   }
@@ -2822,9 +2848,12 @@ function StrategistPanel({ state }: { state: LiveStrategistState }) {
     // Muted on purpose: the recommendation below is unaffected, so this is a
     // footnote rather than a warning.
     return (
-      <p className="mb-5 text-[11px] text-[#5f7280]">
-        {state.reason ?? 'Showing the deterministic recommendation.'}
-      </p>
+      <div className="mb-5">
+        <p className="text-[11px] text-[#5f7280]">
+          {state.reason ?? 'Showing the deterministic recommendation.'}
+        </p>
+        <StrategistSpend usage={state.usage} />
+      </div>
     );
   }
 
@@ -2893,6 +2922,18 @@ function StrategistPanel({ state }: { state: LiveStrategistState }) {
             .join(' · ')}
         </p>
       )}
+
+      <StrategistSpend usage={state.usage} />
+    </div>
+  );
+}
+
+/** Spend with nothing else to say, so a finished turn still shows the total. */
+function usageOnly(state: LiveStrategistState) {
+  if (!state.usage || state.usage.calls === 0) return null;
+  return (
+    <div className="mb-5">
+      <StrategistSpend usage={state.usage} />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { generateDraftRecommendations } from '../../packages/engine/draft/recommendations';
 import { buildDraftBrief } from '../../packages/engine/strategist/brief';
 import {
+  APPROACHING_TURN_POLICY,
   DEFAULT_CALL_POLICY,
   LiveStrategist,
   UsageLedger,
@@ -86,12 +87,15 @@ function briefAfter(pickCount: number): DraftBrief {
 }
 
 /** A board where it is our turn, so the policy always calls. */
-function ourTurn(): DraftBrief {
-  for (let picks = 0; picks < 40; picks += 1) {
+function ourTurn(nth = 1): DraftBrief {
+  let seen = 0;
+  for (let picks = 0; picks < 60; picks += 1) {
     const brief = briefAfter(picks);
-    if (brief.draft.isOurSelection) return brief;
+    if (!brief.draft.isOurSelection) continue;
+    seen += 1;
+    if (seen === nth) return brief;
   }
-  throw new Error('no selection of ours in the first forty picks');
+  throw new Error(`fewer than ${nth} selections of ours in the first sixty picks`);
 }
 
 function responseFor(brief: DraftBrief, playerId: string): StrategistResponse {
@@ -174,13 +178,27 @@ describe('when the strategist is worth calling', () => {
     expect(shouldRequest(ourTurn(), DEFAULT_CALL_POLICY)).toBe(true);
   });
 
-  it('starts analysing as our turn approaches', () => {
-    const policy: StrategistCallPolicy = { ...DEFAULT_CALL_POLICY, analyzeWithin: 3 };
+  it('starts analysing as our turn approaches, under the pre-turn cadence', () => {
+    const policy: StrategistCallPolicy = { ...APPROACHING_TURN_POLICY, analyzeWithin: 3 };
     for (let picks = 0; picks < 40; picks += 1) {
       const brief = briefAfter(picks);
       const until = brief.draft.picksUntilOurNextSelection;
       if (brief.draft.isOurSelection || until === null) continue;
       expect(shouldRequest(brief, policy)).toBe(until <= 3);
+    }
+  });
+
+  it('does NOT call merely because our turn is close, by default', () => {
+    /*
+     * The reason is arithmetic. A call takes seventeen to twenty seconds and a
+     * pick lands every thirty or so, so asking three picks early means the
+     * board very often moves before the answer arrives - and a stale answer is
+     * discarded, which means the money is spent and nothing is shown.
+     */
+    for (let picks = 0; picks < 40; picks += 1) {
+      const brief = briefAfter(picks);
+      if (brief.draft.isOurSelection) continue;
+      expect(shouldRequest(brief, DEFAULT_CALL_POLICY), `pick ${picks}`).toBe(false);
     }
   });
 
@@ -259,7 +277,7 @@ describe('advice about a board that has moved', () => {
     // The transport answers about the OLD board while we now hold a newer one.
     const { transport } = fakeTransport([result(older)]);
     const live = new LiveStrategist(transport, {
-      ...DEFAULT_CALL_POLICY,
+      ...APPROACHING_TURN_POLICY,
       analyzeWithin: 99,
     });
 
@@ -305,7 +323,7 @@ describe('advice about a board that has moved', () => {
         return Promise.resolve(result(second));
       },
     };
-    const live = new LiveStrategist(transport, { ...DEFAULT_CALL_POLICY, analyzeWithin: 99 });
+    const live = new LiveStrategist(transport, { ...APPROACHING_TURN_POLICY, analyzeWithin: 99 });
 
     const inFlight = live.update(first);
     await live.update(second);
@@ -322,7 +340,7 @@ describe('advice about a board that has moved', () => {
   it('clears stale advice from the screen the moment the board changes', async () => {
     const first = ourTurn();
     const { transport } = fakeTransport([result(first)]);
-    const live = new LiveStrategist(transport, { ...DEFAULT_CALL_POLICY, analyzeWithin: 99 });
+    const live = new LiveStrategist(transport, { ...APPROACHING_TURN_POLICY, analyzeWithin: 99 });
 
     await live.update(first);
     expect(live.current().phase).toBe('ready');
@@ -446,13 +464,152 @@ describe('never paying twice for the same board', () => {
     const first = ourTurn();
     const second = briefAfter(first.state.picksMade + 1);
     const { transport, calls } = fakeTransport([result(first), result(second)]);
-    const live = new LiveStrategist(transport, { ...DEFAULT_CALL_POLICY, analyzeWithin: 99 });
+    const live = new LiveStrategist(transport, { ...APPROACHING_TURN_POLICY, analyzeWithin: 99 });
 
     await live.update(first);
     await live.update(second);
 
     expect(calls).toHaveLength(2);
     expect(calls[0].state).not.toBe(calls[1].state);
+  });
+});
+
+/* ----------------------------------------------- one answer per turn of ours */
+
+describe('one paid call per selection of ours', () => {
+  it('buys exactly one answer when we are on the clock', async () => {
+    const brief = ourTurn();
+    const { transport, calls } = fakeTransport([result(brief)]);
+    const live = new LiveStrategist(transport);
+
+    // Sleeper polls throughout our turn; none of it should cost anything more.
+    await live.update(brief);
+    await live.update(brief);
+    await live.update(brief);
+
+    expect(calls).toHaveLength(1);
+  });
+
+  it('does not pay again when the board changes during our own turn', async () => {
+    /*
+     * A correction or a late keeper can move the board while the clock is
+     * still ours. It is the same pick, so it gets the same one answer - the
+     * reply is discarded if it no longer applies, and we fall back rather than
+     * spending a second time on one selection.
+     */
+    const brief = ourTurn();
+    const shifted: DraftBrief = {
+      ...brief,
+      state: { ...brief.state, boardFingerprint: `${brief.state.boardFingerprint}-corrected` },
+    };
+    const { transport, calls } = fakeTransport([result(brief)]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(brief);
+    await live.update(shifted);
+    await live.update(shifted);
+
+    expect(calls).toHaveLength(1);
+    // The advice was about the earlier board, so nothing is shown for it.
+    expect(live.current().decision).toBeNull();
+  });
+
+  it('starts no second request while the first is still in flight', async () => {
+    const brief = ourTurn();
+    let release: (value: StrategistTransportResult) => void;
+    const pending = new Promise<StrategistTransportResult>((resolve) => {
+      release = resolve;
+    });
+    let calls = 0;
+    const transport: StrategistTransport = {
+      advise: () => {
+        calls += 1;
+        return pending;
+      },
+    };
+    const live = new LiveStrategist(transport);
+
+    const inFlight = live.update(brief);
+    // Three polls land while the model is thinking.
+    await live.update(brief);
+    await live.update(brief);
+    await live.update(brief);
+    expect(calls).toBe(1);
+
+    release!(result(brief));
+    await inFlight;
+    expect(calls).toBe(1);
+  });
+
+  it('retries once when the first call produced no advice at all', async () => {
+    // An outage is the one case worth a second attempt: nothing was answered,
+    // so nothing has been learned.
+    const brief = ourTurn();
+    const { transport, calls } = fakeTransport([new Error('529 overloaded'), result(brief)]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(brief);
+    expect(live.current().phase).toBe('fallback');
+
+    await live.update(brief);
+    expect(calls).toHaveLength(2);
+    expect(live.current().phase).toBe('ready');
+  });
+
+  it('does not retry after an answer the guardrails threw out', async () => {
+    /*
+     * The strategist answered; the answer was unusable. Asking the same
+     * question again would spend a second time for the same reasons.
+     */
+    const brief = ourTurn();
+    const drafted = brief.room.allDraftedPlayerIds[0];
+    const { transport, calls } = fakeTransport([
+      result(brief, { response: responseFor(brief, drafted) }),
+    ]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(brief);
+    await live.update(brief);
+
+    expect(calls).toHaveLength(1);
+    expect(live.current().decision!.outcome).toBe('ai_rejected');
+  });
+
+  it('does not retry after a malformed response survived its repair', async () => {
+    const brief = ourTurn();
+    const { transport, calls } = fakeTransport([
+      result(brief, {
+        response: null,
+        attempts: 2,
+        problems: [{ code: 'missing_field', path: 'urgency', message: 'absent' }],
+        error: 'The response did not satisfy the contract.',
+      }),
+      result(brief),
+    ]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(brief);
+    await live.update(brief);
+
+    // The repair already consumed the second attempt; a third would be a third
+    // payment for one pick.
+    expect(calls).toHaveLength(2);
+  });
+
+  it('buys a new answer at our NEXT turn', async () => {
+    // Two genuine selections of ours, not two adjacent boards.
+    const first = ourTurn(1);
+    const second = ourTurn(2);
+    expect(second.draft.currentOverallPick).toBeGreaterThan(first.draft.currentOverallPick);
+
+    const { transport, calls } = fakeTransport([result(first), result(second)]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(first);
+    await live.update(second);
+
+    expect(calls).toHaveLength(2);
+    expect(live.current().phase).toBe('ready');
   });
 });
 
@@ -490,6 +647,29 @@ describe('what it has cost', () => {
 
     await live.update(brief);
     expect(ledger.get('draft-1')).toMatchObject({ calls: 1, failures: 1 });
+  });
+
+  it('keeps the running total visible between our turns', async () => {
+    /*
+     * The readout exists to be watched during a live test, so the total has to
+     * survive the idle stretch between selections - the ledger persists, and
+     * the published state has to carry it or the number blinks out exactly
+     * when somebody is looking.
+     */
+    const brief = ourTurn();
+    const { transport } = fakeTransport([result(brief)]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(brief);
+    expect(live.current().usage!.calls).toBe(1);
+
+    // A pick lands and it is somebody else's turn now.
+    const between = briefAfter(brief.state.picksMade + 1);
+    await live.update(between);
+
+    expect(live.current().phase).toBe('idle');
+    expect(live.current().usage!.calls, 'the total must not reset').toBe(1);
+    expect(live.current().usage!.estimatedCostUsd).toBeGreaterThan(0);
   });
 
   it('keeps drafts apart, which is what a future cap will read', async () => {
