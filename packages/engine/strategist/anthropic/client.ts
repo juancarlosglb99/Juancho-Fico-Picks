@@ -176,7 +176,7 @@ export class AnthropicStrategist implements StrategistClient {
         model: this.model,
         usage: null,
         latencyMs: Date.now() - startedAt,
-        error: error instanceof Error ? error.message : String(error),
+        error: redactSecrets(error instanceof Error ? error.message : String(error)),
       };
     }
   }
@@ -233,6 +233,18 @@ export function strategistFingerprint(model: string): string {
 
 function usageOf(message: Anthropic.Message): { inputTokens: number; outputTokens: number } {
   return { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens };
+}
+
+/**
+ * Strips anything key-shaped out of text that is about to be printed or stored.
+ *
+ * An SDK error can carry the request that produced it, and a cached call is a
+ * file on disk that gets read back and logged. Neither should ever be able to
+ * carry the credential, so the boundary scrubs rather than trusting that it
+ * never happens.
+ */
+export function redactSecrets(text: string): string {
+  return text.replace(/sk-ant-[A-Za-z0-9_-]+/g, 'sk-ant-***');
 }
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));

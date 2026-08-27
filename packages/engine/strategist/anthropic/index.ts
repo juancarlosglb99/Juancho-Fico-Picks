@@ -8,6 +8,7 @@ export {
   DEFAULT_STRATEGIST_MODEL,
   resolveStrategistModel,
   resolveThinkingBudget,
+  redactSecrets,
   strategistFingerprint,
   toAdvice,
 } from './client';

@@ -28,7 +28,7 @@ export function renderEvaluatedPick(evaluated: EvaluatedPick): string[] {
   lines.push(bar);
   lines.push(
     `ROUND ${brief.draft.currentRound}  ·  PICK ${evaluated.overallPick}  ·  ` +
-      `seat ${brief.draft.ourDraftSlot}  ·  ${brief.league.teams}-team ${brief.league.scoring} ${brief.league.qbFormat}` +
+      `seat ${brief.draft.ourDraftSlot}  ·  ${brief.league.teams}-team ${brief.league.scoringProfile} ${brief.league.qbFormat}` +
       `${evaluated.fromCache ? '  ·  cached' : ''}`,
   );
   lines.push(bar);
