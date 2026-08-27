@@ -1,0 +1,334 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 51,
+      "currentOverallPick": 52,
+      "currentRound": 6,
+      "boardFingerprint": "1f-400a7bf0",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:12518",
+      "reasoning": "starter_need: TE is an empty starting slot with zero bodies; RB is already 3 deep (Barkley/Javonte/Judkins fill RB-RB-FLEX) and WR2 is set with Nacua and Pickens, so Flowers or Warren would be a bench/second-FLEX body while Tyler Warren is a starter. tier_cliff: TE tier 3 has exactly 2 members left (Tyler Warren 116.8, Tucker Kraft 116.3) with a 10.6-point gap to tier 4, whose best remaining are Fannin 105.0, Mark Andrews 105.7 and LaPorta 105.5 - and tierCliffs flags TE atRisk=1. opponent_demand: Seven of the eight teams picking before pick 69 list TE need high or medium (2,3,4,5,6,7,8 all TE:high/medium), which is why Tyler Warren survives only 10% of runs and both tier-3 TEs survive together in just 6%. positional_scarcity: QB can wait: tier 3 QBs remain in 92.7% of runs (Hurts 77.7%, Daniels 61.7%) and tier 4 has 16 members - the gap from Hurts 309.6 to Dak 287.4 or Herbert 283.8 is ~25 points in a 1QB league, far less than the TE cliff costs us weekly. opportunity_cost: WR tier 8 has 7 members and at least one survives in 93% of runs (McLaurin 15.7%, Egbuka 15.3%, Evans 38%, Watson 71.3%), so passing Flowers costs us a marginal FLEX WR, not a starter. first_seed_prior: fsGap is 8 - inside the ~10 reach threshold - and Juancho's raw simulation actually prefers Tyler Warren (plan 1375.0 vs Flowers 1362.5, dPlan +12.5); only the reach/anchor penalty pushes him to jRec 3.",
+      "reasonCodes": [
+        "starter_need",
+        "tier_cliff",
+        "opponent_demand",
+        "positional_scarcity",
+        "opportunity_cost",
+        "first_seed_prior"
+      ],
+      "confidence": 0.63
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9997",
+        "reasoning": "Zay Flowers is First Seed's best available at exactly this pick (fsGap 0) and a genuine WR3/FLEX upgrade with only a 4% chance of surviving 16 selections.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:8228",
+        "reasoning": "Jaylen Warren (6% survival, RB tier 10 with only 4 left) is the last of the useful standing-back tier and would give us a fourth startable back for the open FLEX.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 7: Picks 54 and 67; has Loveland but TE:medium and WR:high, and is a plausible taker of Flowers or a second TE. Roster 6: Picks 55 and 66; QB already set with Josh Allen and needs are RB:high and TE:high, making him a direct competitor for Tyler Warren. Roster 8: Picks 53 and 68; QB filled with Drake Maye, needs WR:high and TE:high - most likely to take either Flowers or Tyler Warren immediately. Roster 4: Picks 57 and 64; five RBs, WR:critical and TE:high, so he will consume exactly the WR/TE names we are choosing between. Roster 2: Picks 59 and 62; four RBs with WR:high and TE:high, another double-dip on the positions we want. Roster 3: Picks 58 and 63; four WRs, needs QB:high, RB:high, TE:high - a strong candidate to take the last tier-3 TE or one of the tier-3 QBs before our turn.",
+    "confidence": 0.63,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "We are effectively robust-RB with two elite WRs already; this pick deliberately breaks the RB/WR accumulation to fill the empty TE starting slot from the last tier-3 tight end, leaving QB (deep, 16 left in tier 4) and a FLEX/WR for picks 69/72.",
+    "firstSeedDeviationReason": "Reaching 8 ranks past First Seed's best available (Flowers 52 to Tyler Warren 60) to secure the last-but-one member of TE tier 3; the 10.6-point gap to tier 4 at an empty starting slot exceeds the marginal WR value we forgo, and Juancho's unpenalised simulation values Warren +12.5 final-roster points over Flowers.",
+    "strongestAlternative": {
+      "playerId": "jfp:9997",
+      "why": "Flowers is the literal best player available on First Seed's board at pick 52 with a 4% survival rate, and Juancho's penalty-adjusted ranking puts him first."
+    },
+    "strongestCounterargument": "The same-tier pair row shows Tucker Kraft survives 72.3% of runs and the TE tier-3 pair leaves at least one available in 76.3% of runs, so we can very likely still get a 116-point tight end at pick 69 and take the 4%-survival Flowers now instead.",
+    "whyRecommendationStillWins": "76.3% is not 100%, and the 23.7% failure case drops us from a 116-point TE to the 105-point tier-4 pile - an 11-point hit at a starting slot - while the Flowers-vs-tier-8-WR failure case costs at most ~8 points on a second FLEX where WR tier 8 still yields someone in 93% of runs; we would also be gambling our only starting TE on the eight straight teams who all list TE need.",
+    "expectedNextPickPlan": "At 69 and 72 (back-to-back with only pick 70/71 between) we take a WR from the tier-8/10 remnant - Mike Evans (38%), Christian Watson (71.3%) or Rome Odunze - plus a QB; Jalen Hurts survives 77.7% and Jayden Daniels 61.7%, and if both are gone Dak Prescott (287.4), Herbert (283.8) and Caleb Williams (284.3) are all 95%+ to be there, so we still land a top-9 QB. RB4 depth (Stevenson 30%, Pollard 65.7%, Dowdle 72.3%) is a fallback if the WRs go.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 7,
+        "why": "Picks 54 and 67; has Loveland but TE:medium and WR:high, and is a plausible taker of Flowers or a second TE."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 55 and 66; QB already set with Josh Allen and needs are RB:high and TE:high, making him a direct competitor for Tyler Warren."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks 53 and 68; QB filled with Drake Maye, needs WR:high and TE:high - most likely to take either Flowers or Tyler Warren immediately."
+      },
+      {
+        "rosterId": 4,
+        "why": "Picks 57 and 64; five RBs, WR:critical and TE:high, so he will consume exactly the WR/TE names we are choosing between."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 59 and 62; four RBs with WR:high and TE:high, another double-dip on the positions we want."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks 58 and 63; four WRs, needs QB:high, RB:high, TE:high - a strong candidate to take the last tier-3 TE or one of the tier-3 QBs before our turn."
+      }
+    ]
+  },
+  "response": {
+    "playerId": "x",
+    "recommendedPlayerId": "jfp:12518",
+    "alternatives": [
+      {
+        "playerId": "jfp:9997",
+        "reason": "Zay Flowers is First Seed's best available at exactly this pick (fsGap 0) and a genuine WR3/FLEX upgrade with only a 4% chance of surviving 16 selections."
+      },
+      {
+        "playerId": "jfp:8228",
+        "reason": "Jaylen Warren (6% survival, RB tier 10 with only 4 left) is the last of the useful standing-back tier and would give us a fourth startable back for the open FLEX."
+      }
+    ],
+    "confidence": 63,
+    "decision": "DRAFT_NOW",
+    "strategy": "We are effectively robust-RB with two elite WRs already; this pick deliberately breaks the RB/WR accumulation to fill the empty TE starting slot from the last tier-3 tight end, leaving QB (deep, 16 left in tier 4) and a FLEX/WR for picks 69/72.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "TE is an empty starting slot with zero bodies; RB is already 3 deep (Barkley/Javonte/Judkins fill RB-RB-FLEX) and WR2 is set with Nacua and Pickens, so Flowers or Warren would be a bench/second-FLEX body while Tyler Warren is a starter."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 3 has exactly 2 members left (Tyler Warren 116.8, Tucker Kraft 116.3) with a 10.6-point gap to tier 4, whose best remaining are Fannin 105.0, Mark Andrews 105.7 and LaPorta 105.5 - and tierCliffs flags TE atRisk=1."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Seven of the eight teams picking before pick 69 list TE need high or medium (2,3,4,5,6,7,8 all TE:high/medium), which is why Tyler Warren survives only 10% of runs and both tier-3 TEs survive together in just 6%."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "QB can wait: tier 3 QBs remain in 92.7% of runs (Hurts 77.7%, Daniels 61.7%) and tier 4 has 16 members - the gap from Hurts 309.6 to Dak 287.4 or Herbert 283.8 is ~25 points in a 1QB league, far less than the TE cliff costs us weekly."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "WR tier 8 has 7 members and at least one survives in 93% of runs (McLaurin 15.7%, Egbuka 15.3%, Evans 38%, Watson 71.3%), so passing Flowers costs us a marginal FLEX WR, not a starter."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is 8 - inside the ~10 reach threshold - and Juancho's raw simulation actually prefers Tyler Warren (plan 1375.0 vs Flowers 1362.5, dPlan +12.5); only the reach/anchor penalty pushes him to jRec 3."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:9997",
+      "why": "Flowers is the literal best player available on First Seed's board at pick 52 with a 4% survival rate, and Juancho's penalty-adjusted ranking puts him first."
+    },
+    "strongestCounterargument": "The same-tier pair row shows Tucker Kraft survives 72.3% of runs and the TE tier-3 pair leaves at least one available in 76.3% of runs, so we can very likely still get a 116-point tight end at pick 69 and take the 4%-survival Flowers now instead.",
+    "whyRecommendationStillWins": "76.3% is not 100%, and the 23.7% failure case drops us from a 116-point TE to the 105-point tier-4 pile - an 11-point hit at a starting slot - while the Flowers-vs-tier-8-WR failure case costs at most ~8 points on a second FLEX where WR tier 8 still yields someone in 93% of runs; we would also be gambling our only starting TE on the eight straight teams who all list TE need.",
+    "firstSeedDeviationReason": "Reaching 8 ranks past First Seed's best available (Flowers 52 to Tyler Warren 60) to secure the last-but-one member of TE tier 3; the 10.6-point gap to tier 4 at an empty starting slot exceeds the marginal WR value we forgo, and Juancho's unpenalised simulation values Warren +12.5 final-roster points over Flowers.",
+    "expectedNextPickPlan": "At 69 and 72 (back-to-back with only pick 70/71 between) we take a WR from the tier-8/10 remnant - Mike Evans (38%), Christian Watson (71.3%) or Rome Odunze - plus a QB; Jalen Hurts survives 77.7% and Jayden Daniels 61.7%, and if both are gone Dak Prescott (287.4), Herbert (283.8) and Caleb Williams (284.3) are all 95%+ to be there, so we still land a top-9 QB. RB4 depth (Stevenson 30%, Pollard 65.7%, Dowdle 72.3%) is a fallback if the WRs go.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 7,
+        "why": "Picks 54 and 67; has Loveland but TE:medium and WR:high, and is a plausible taker of Flowers or a second TE."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 55 and 66; QB already set with Josh Allen and needs are RB:high and TE:high, making him a direct competitor for Tyler Warren."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks 53 and 68; QB filled with Drake Maye, needs WR:high and TE:high - most likely to take either Flowers or Tyler Warren immediately."
+      },
+      {
+        "rosterId": 4,
+        "why": "Picks 57 and 64; five RBs, WR:critical and TE:high, so he will consume exactly the WR/TE names we are choosing between."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 59 and 62; four RBs with WR:high and TE:high, another double-dip on the positions we want."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks 58 and 63; four WRs, needs QB:high, RB:high, TE:high - a strong candidate to take the last tier-3 TE or one of the tier-3 QBs before our turn."
+      }
+    ]
+  },
+  "rawResponse": {
+    "playerId": "x",
+    "recommendedPlayerId": "jfp:12518",
+    "alternatives": [
+      {
+        "playerId": "jfp:9997",
+        "reason": "Zay Flowers is First Seed's best available at exactly this pick (fsGap 0) and a genuine WR3/FLEX upgrade with only a 4% chance of surviving 16 selections."
+      },
+      {
+        "playerId": "jfp:8228",
+        "reason": "Jaylen Warren (6% survival, RB tier 10 with only 4 left) is the last of the useful standing-back tier and would give us a fourth startable back for the open FLEX."
+      }
+    ],
+    "confidence": 63,
+    "decision": "DRAFT_NOW",
+    "strategy": "We are effectively robust-RB with two elite WRs already; this pick deliberately breaks the RB/WR accumulation to fill the empty TE starting slot from the last tier-3 tight end, leaving QB (deep, 16 left in tier 4) and a FLEX/WR for picks 69/72.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "TE is an empty starting slot with zero bodies; RB is already 3 deep (Barkley/Javonte/Judkins fill RB-RB-FLEX) and WR2 is set with Nacua and Pickens, so Flowers or Warren would be a bench/second-FLEX body while Tyler Warren is a starter."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 3 has exactly 2 members left (Tyler Warren 116.8, Tucker Kraft 116.3) with a 10.6-point gap to tier 4, whose best remaining are Fannin 105.0, Mark Andrews 105.7 and LaPorta 105.5 - and tierCliffs flags TE atRisk=1."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Seven of the eight teams picking before pick 69 list TE need high or medium (2,3,4,5,6,7,8 all TE:high/medium), which is why Tyler Warren survives only 10% of runs and both tier-3 TEs survive together in just 6%."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "QB can wait: tier 3 QBs remain in 92.7% of runs (Hurts 77.7%, Daniels 61.7%) and tier 4 has 16 members - the gap from Hurts 309.6 to Dak 287.4 or Herbert 283.8 is ~25 points in a 1QB league, far less than the TE cliff costs us weekly."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "WR tier 8 has 7 members and at least one survives in 93% of runs (McLaurin 15.7%, Egbuka 15.3%, Evans 38%, Watson 71.3%), so passing Flowers costs us a marginal FLEX WR, not a starter."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is 8 - inside the ~10 reach threshold - and Juancho's raw simulation actually prefers Tyler Warren (plan 1375.0 vs Flowers 1362.5, dPlan +12.5); only the reach/anchor penalty pushes him to jRec 3."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:9997",
+      "why": "Flowers is the literal best player available on First Seed's board at pick 52 with a 4% survival rate, and Juancho's penalty-adjusted ranking puts him first."
+    },
+    "strongestCounterargument": "The same-tier pair row shows Tucker Kraft survives 72.3% of runs and the TE tier-3 pair leaves at least one available in 76.3% of runs, so we can very likely still get a 116-point tight end at pick 69 and take the 4%-survival Flowers now instead.",
+    "whyRecommendationStillWins": "76.3% is not 100%, and the 23.7% failure case drops us from a 116-point TE to the 105-point tier-4 pile - an 11-point hit at a starting slot - while the Flowers-vs-tier-8-WR failure case costs at most ~8 points on a second FLEX where WR tier 8 still yields someone in 93% of runs; we would also be gambling our only starting TE on the eight straight teams who all list TE need.",
+    "firstSeedDeviationReason": "Reaching 8 ranks past First Seed's best available (Flowers 52 to Tyler Warren 60) to secure the last-but-one member of TE tier 3; the 10.6-point gap to tier 4 at an empty starting slot exceeds the marginal WR value we forgo, and Juancho's unpenalised simulation values Warren +12.5 final-roster points over Flowers.",
+    "expectedNextPickPlan": "At 69 and 72 (back-to-back with only pick 70/71 between) we take a WR from the tier-8/10 remnant - Mike Evans (38%), Christian Watson (71.3%) or Rome Odunze - plus a QB; Jalen Hurts survives 77.7% and Jayden Daniels 61.7%, and if both are gone Dak Prescott (287.4), Herbert (283.8) and Caleb Williams (284.3) are all 95%+ to be there, so we still land a top-9 QB. RB4 depth (Stevenson 30%, Pollard 65.7%, Dowdle 72.3%) is a fallback if the WRs go.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 7,
+        "why": "Picks 54 and 67; has Loveland but TE:medium and WR:high, and is a plausible taker of Flowers or a second TE."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 55 and 66; QB already set with Josh Allen and needs are RB:high and TE:high, making him a direct competitor for Tyler Warren."
+      },
+      {
+        "rosterId": 8,
+        "why": "Picks 53 and 68; QB filled with Drake Maye, needs WR:high and TE:high - most likely to take either Flowers or Tyler Warren immediately."
+      },
+      {
+        "rosterId": 4,
+        "why": "Picks 57 and 64; five RBs, WR:critical and TE:high, so he will consume exactly the WR/TE names we are choosing between."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 59 and 62; four RBs with WR:high and TE:high, another double-dip on the positions we want."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks 58 and 63; four WRs, needs QB:high, RB:high, TE:high - a strong candidate to take the last tier-3 TE or one of the tier-3 QBs before our turn."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "playerId": "x",
+        "recommendedPlayerId": "jfp:12518",
+        "alternatives": [
+          {
+            "playerId": "jfp:9997",
+            "reason": "Zay Flowers is First Seed's best available at exactly this pick (fsGap 0) and a genuine WR3/FLEX upgrade with only a 4% chance of surviving 16 selections."
+          },
+          {
+            "playerId": "jfp:8228",
+            "reason": "Jaylen Warren (6% survival, RB tier 10 with only 4 left) is the last of the useful standing-back tier and would give us a fourth startable back for the open FLEX."
+          }
+        ],
+        "confidence": 63,
+        "decision": "DRAFT_NOW",
+        "strategy": "We are effectively robust-RB with two elite WRs already; this pick deliberately breaks the RB/WR accumulation to fill the empty TE starting slot from the last tier-3 tight end, leaving QB (deep, 16 left in tier 4) and a FLEX/WR for picks 69/72.",
+        "reasons": [
+          {
+            "code": "starter_need",
+            "detail": "TE is an empty starting slot with zero bodies; RB is already 3 deep (Barkley/Javonte/Judkins fill RB-RB-FLEX) and WR2 is set with Nacua and Pickens, so Flowers or Warren would be a bench/second-FLEX body while Tyler Warren is a starter."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "TE tier 3 has exactly 2 members left (Tyler Warren 116.8, Tucker Kraft 116.3) with a 10.6-point gap to tier 4, whose best remaining are Fannin 105.0, Mark Andrews 105.7 and LaPorta 105.5 - and tierCliffs flags TE atRisk=1."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Seven of the eight teams picking before pick 69 list TE need high or medium (2,3,4,5,6,7,8 all TE:high/medium), which is why Tyler Warren survives only 10% of runs and both tier-3 TEs survive together in just 6%."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "QB can wait: tier 3 QBs remain in 92.7% of runs (Hurts 77.7%, Daniels 61.7%) and tier 4 has 16 members - the gap from Hurts 309.6 to Dak 287.4 or Herbert 283.8 is ~25 points in a 1QB league, far less than the TE cliff costs us weekly."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "WR tier 8 has 7 members and at least one survives in 93% of runs (McLaurin 15.7%, Egbuka 15.3%, Evans 38%, Watson 71.3%), so passing Flowers costs us a marginal FLEX WR, not a starter."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap is 8 - inside the ~10 reach threshold - and Juancho's raw simulation actually prefers Tyler Warren (plan 1375.0 vs Flowers 1362.5, dPlan +12.5); only the reach/anchor penalty pushes him to jRec 3."
+          }
+        ],
+        "strongestAlternative": {
+          "playerId": "jfp:9997",
+          "why": "Flowers is the literal best player available on First Seed's board at pick 52 with a 4% survival rate, and Juancho's penalty-adjusted ranking puts him first."
+        },
+        "strongestCounterargument": "The same-tier pair row shows Tucker Kraft survives 72.3% of runs and the TE tier-3 pair leaves at least one available in 76.3% of runs, so we can very likely still get a 116-point tight end at pick 69 and take the 4%-survival Flowers now instead.",
+        "whyRecommendationStillWins": "76.3% is not 100%, and the 23.7% failure case drops us from a 116-point TE to the 105-point tier-4 pile - an 11-point hit at a starting slot - while the Flowers-vs-tier-8-WR failure case costs at most ~8 points on a second FLEX where WR tier 8 still yields someone in 93% of runs; we would also be gambling our only starting TE on the eight straight teams who all list TE need.",
+        "firstSeedDeviationReason": "Reaching 8 ranks past First Seed's best available (Flowers 52 to Tyler Warren 60) to secure the last-but-one member of TE tier 3; the 10.6-point gap to tier 4 at an empty starting slot exceeds the marginal WR value we forgo, and Juancho's unpenalised simulation values Warren +12.5 final-roster points over Flowers.",
+        "expectedNextPickPlan": "At 69 and 72 (back-to-back with only pick 70/71 between) we take a WR from the tier-8/10 remnant - Mike Evans (38%), Christian Watson (71.3%) or Rome Odunze - plus a QB; Jalen Hurts survives 77.7% and Jayden Daniels 61.7%, and if both are gone Dak Prescott (287.4), Herbert (283.8) and Caleb Williams (284.3) are all 95%+ to be there, so we still land a top-9 QB. RB4 depth (Stevenson 30%, Pollard 65.7%, Dowdle 72.3%) is a fallback if the WRs go.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 7,
+            "why": "Picks 54 and 67; has Loveland but TE:medium and WR:high, and is a plausible taker of Flowers or a second TE."
+          },
+          {
+            "rosterId": 6,
+            "why": "Picks 55 and 66; QB already set with Josh Allen and needs are RB:high and TE:high, making him a direct competitor for Tyler Warren."
+          },
+          {
+            "rosterId": 8,
+            "why": "Picks 53 and 68; QB filled with Drake Maye, needs WR:high and TE:high - most likely to take either Flowers or Tyler Warren immediately."
+          },
+          {
+            "rosterId": 4,
+            "why": "Picks 57 and 64; five RBs, WR:critical and TE:high, so he will consume exactly the WR/TE names we are choosing between."
+          },
+          {
+            "rosterId": 2,
+            "why": "Picks 59 and 62; four RBs with WR:high and TE:high, another double-dip on the positions we want."
+          },
+          {
+            "rosterId": 3,
+            "why": "Picks 58 and 63; four WRs, needs QB:high, RB:high, TE:high - a strong candidate to take the last tier-3 TE or one of the tier-3 QBs before our turn."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 17378,
+        "outputTokens": 2398
+      },
+      "latencyMs": 34449,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 17378,
+    "outputTokens": 2398
+  },
+  "latencyMs": 34449,
+  "error": null,
+  "cachedAt": "2026-08-27T15:23:05.386Z",
+  "key": "1dddbcaf4e9e7bb2b6f4505863e11132",
+  "label": "1398448522730221568 p52 claude-opus-5/playbook-v1"
+}
