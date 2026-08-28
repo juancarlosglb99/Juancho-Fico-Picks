@@ -19,7 +19,10 @@
     "brief": "node scripts/brief.mjs",
     "strategist:eval": "node scripts/strategist-eval.mjs",
     "calibration": "npx vitest run --config vitest.config.ts tests/regression/survival-calibration.test.ts --reporter=verbose",
-    "strategist:size": "node scripts/strategist-size.mjs"
+    "strategist:size": "node scripts/strategist-size.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:check": "node scripts/check-auth-schema.mjs",
+    "account": "node scripts/account.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.121.0",

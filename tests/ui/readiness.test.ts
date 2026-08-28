@@ -47,10 +47,10 @@ function projections(overrides: Partial<ProjectionSnapshot> = {}): ProjectionSna
 
 function readiness({
   projectionSnapshot = projections(),
-  aiAvailable = true as boolean | null,
+  ai = { configured: true, accountsEnabled: false, plan: 'basic' as const, creditsRemaining: null },
 }: {
   projectionSnapshot?: ProjectionSnapshot | null;
-  aiAvailable?: boolean | null;
+  ai?: Parameters<typeof buildDraftReadiness>[0]['ai'];
 } = {}) {
   return buildDraftReadiness({
     attachment,
@@ -60,7 +60,7 @@ function readiness({
     roomRankings: null,
     adp: null,
     ourTeamName: 'Juancho',
-    aiAvailable,
+    ai,
   });
 }
 
@@ -124,13 +124,41 @@ describe('pre-draft verification', () => {
   });
 
   it('reports the AI as unavailable without ever blocking the draft on it', () => {
-    const off = readiness({ aiAvailable: false });
+    const off = readiness({
+      ai: { configured: false, accountsEnabled: false, plan: 'basic', creditsRemaining: null },
+    });
     const check = off.checks.find((entry) => entry.id === 'ai')!;
     expect(check.value).toBe('Not configured');
     expect(check.blocking).toBe(false);
     expect(off.ready).toBe(true);
 
-    const unknown = readiness({ aiAvailable: null });
+    const unknown = readiness({
+      ai: { configured: null, accountsEnabled: false, plan: 'basic', creditsRemaining: null },
+    });
     expect(unknown.checks.find((entry) => entry.id === 'ai')!.status).toBe('unknown');
+  });
+
+  it('separates "this server has no key" from "your plan does not include it"', () => {
+    const aiCheck = (ai: Parameters<typeof buildDraftReadiness>[0]['ai']) =>
+      readiness({ ai }).checks.find((entry) => entry.id === 'ai')!;
+
+    // A Basic user on a perfectly healthy server is not a broken deployment.
+    const basic = aiCheck({ configured: true, accountsEnabled: true, plan: 'basic', creditsRemaining: 0 });
+    expect(basic.value).toBe('Pro feature');
+    expect(basic.detail).toContain('Everything else is unaffected');
+
+    const spent = aiCheck({ configured: true, accountsEnabled: true, plan: 'pro', creditsRemaining: 0 });
+    expect(spent.value).toBe('No credits left');
+
+    const ready = aiCheck({ configured: true, accountsEnabled: true, plan: 'pro', creditsRemaining: 3 });
+    expect(ready).toMatchObject({ status: 'ok', value: '3 drafts left' });
+    expect(aiCheck({ configured: true, accountsEnabled: true, plan: 'pro', creditsRemaining: 1 }).value)
+      .toBe('1 draft left');
+
+    const admin = aiCheck({ configured: true, accountsEnabled: true, plan: 'admin', creditsRemaining: null });
+    expect(admin).toMatchObject({ status: 'ok', value: 'Unlimited' });
+
+    // None of them ever blocks.
+    for (const check of [basic, spent, ready, admin]) expect(check.blocking).toBe(false);
   });
 });

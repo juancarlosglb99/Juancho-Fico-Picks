@@ -24,6 +24,8 @@ export class HttpStrategistTransport implements StrategistTransport {
         context: input.context,
         boardPlayerIds: input.boardPlayerIds,
         state: input.state,
+        leagueId: input.leagueId ?? null,
+        isMock: input.isMock ?? false,
       }),
       signal: input.signal,
     });
@@ -38,7 +40,10 @@ export class HttpStrategistTransport implements StrategistTransport {
         usage: null,
         attempts: 0,
         latencyMs: 0,
-        error: `The strategist request failed (${response.status}).`,
+        error:
+          response.status === 503
+            ? 'The strategist is unavailable on this server.'
+            : `The strategist request failed (${response.status}).`,
       };
     }
 

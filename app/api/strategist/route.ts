@@ -4,7 +4,18 @@
  * The browser already holds the draft state, so it prepares the payload and
  * posts it here rather than making the server re-fetch Sleeper and First Seed
  * to rebuild something that already exists. What the server adds is the
- * credential, the retry, and validation of the reply against the contract.
+ * credential, the retry, validation of the reply against the contract - and, as
+ * of user accounts, the authority to spend money at all.
+ *
+ * THE ORDER MATTERS. Entitlement is resolved, and the credit is spent, BEFORE
+ * Anthropic is called. Doing it afterwards would mean a user with no credits
+ * could still cost us a request by ignoring the answer, and a crash between the
+ * call and the write would give away an answer for nothing.
+ *
+ * Nothing about the caller is taken from the request body. The plan comes from
+ * a row in our database keyed by a signed session cookie; the draft session is
+ * looked up BY that user id, so a request naming somebody else's draft creates
+ * an empty session of its own rather than reading theirs.
  *
  * Advice is deliberately NOT built here. It has to be stamped with the board it
  * was asked about, and the caller is the one holding that brief - so the route
@@ -16,14 +27,19 @@ import {
   PRODUCTION_STRATEGIST,
   resolveStrategistModel,
 } from '../../../packages/engine/strategist/anthropic/client';
+import { estimateCost } from '../../../packages/engine/strategist/anthropic/pricing';
 import type { StrategistPromptContext } from '../../../packages/engine/strategist/prompt-context';
 import type { DraftStateVersion } from '../../../packages/engine/strategist/types';
+import { recordCall, resolveAiAccess } from '../../../packages/accounts/service';
 
 interface StrategistRequestBody {
   context: StrategistPromptContext;
   boardPlayerIds: string[];
   /** Echoed back untouched, so a reply can never be matched to another board. */
   state: DraftStateVersion;
+  /** Session metadata only. Nothing here can affect authorisation. */
+  leagueId?: string | null;
+  isMock?: boolean;
 }
 
 /**
@@ -49,27 +65,52 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Malformed request body.' }, { status: 400 });
   }
 
-  if (!body?.context || !Array.isArray(body.boardPlayerIds) || !body.state) {
+  if (!body?.context || !Array.isArray(body.boardPlayerIds) || !body.state?.draftId) {
     return Response.json(
       { error: 'A context, a board and a draft state are all required.' },
       { status: 400 },
     );
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const strategistConfigured = Boolean(process.env.ANTHROPIC_API_KEY);
+
+  let decision;
+  try {
+    decision = await resolveAiAccess({
+      request,
+      sleeperDraftId: body.state.draftId,
+      leagueId: body.leagueId ?? null,
+      isMock: Boolean(body.isMock),
+      strategistConfigured,
+    });
+  } catch (error) {
+    // A database that is down must not take the draft down with it. The
+    // deterministic recommendation is already on screen; this keeps it there.
+    return Response.json(
+      {
+        ...emptyResult(body.state),
+        error: 'Account lookup failed, so the strategist was not called.',
+        detail: error instanceof Error ? error.message : undefined,
+      },
+      { status: 200 },
+    );
+  }
+
+  if (!decision.allowed) {
     /*
      * Not an error the draft should notice. The deterministic recommendation is
-     * already on screen; this simply means it stays there.
+     * already on screen; this means it stays there, with one quiet line saying
+     * why. 200 rather than 402/403 on purpose: the client's failure path is
+     * "carry on without advice", and an HTTP error would make a normal, expected
+     * plan boundary look like a broken request.
      */
     return Response.json({
-      response: null,
-      problems: [],
-      state: body.state,
-      model: resolveStrategistModel(),
-      usage: null,
-      attempts: 0,
-      latencyMs: 0,
-      error: 'The strategist is not configured.',
+      ...emptyResult(body.state),
+      error: decision.message,
+      refusal: decision.reason,
+      plan: decision.plan,
+      creditsRemaining: decision.creditsRemaining,
+      accountUsage: decision.usage,
     });
   }
 
@@ -82,6 +123,20 @@ export async function POST(request: Request): Promise<Response> {
       request.signal,
     );
 
+    /*
+     * Recorded with the SAME `estimateCost` the client's ledger uses, so the
+     * database and the screen cannot report different money for the same call.
+     */
+    const cost = result.usage ? estimateCost(result.model, result.usage) : 0;
+    const accountUsage = await recordCall({
+      decision,
+      model: result.model,
+      attempts: result.attempts.length,
+      usage: result.usage,
+      estimatedCostUsd: cost,
+      succeeded: result.response !== null,
+    }).catch(() => null);
+
     return Response.json({
       response: result.response,
       problems: result.problems,
@@ -92,17 +147,40 @@ export async function POST(request: Request): Promise<Response> {
       attempts: result.attempts.length,
       latencyMs: result.latencyMs,
       error: result.error,
+      plan: decision.plan,
+      creditsRemaining: decision.creditsRemaining,
+      accountUsage,
     });
   } catch (error) {
-    return Response.json({
-      response: null,
-      problems: [],
-      state: body.state,
+    const accountUsage = await recordCall({
+      decision,
       model: resolveStrategistModel(),
+      attempts: 1,
       usage: null,
-      attempts: 0,
+      estimatedCostUsd: 0,
+      succeeded: false,
+    }).catch(() => null);
+
+    return Response.json({
+      ...emptyResult(body.state),
       latencyMs: Date.now() - startedAt,
       error: error instanceof Error ? error.message : 'The strategist call failed.',
+      plan: decision.plan,
+      creditsRemaining: decision.creditsRemaining,
+      accountUsage,
     });
   }
+}
+
+/** A well-formed "nothing came back", which the client already knows how to use. */
+function emptyResult(state: DraftStateVersion) {
+  return {
+    response: null,
+    problems: [],
+    state,
+    model: resolveStrategistModel(),
+    usage: null,
+    attempts: 0,
+    latencyMs: 0,
+  };
 }

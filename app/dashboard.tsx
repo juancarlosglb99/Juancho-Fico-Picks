@@ -26,6 +26,7 @@ import { buildPlayerPool } from '@/packages/ui/player-pool';
 import { buildDraftReadiness } from '@/packages/ui/readiness';
 import { resolveRecommendationCard } from '@/packages/ui/recommendation';
 import { deriveDraftStatus } from '@/packages/ui/status';
+import { screenForUrl } from '@/packages/ui/auth-flow';
 import type { LeagueRosterView } from '@/packages/sleeper/types';
 import { DiagnosticsPanel, diagnosticsEnabled } from './components/diagnostics';
 import { DraftRoom } from './components/draft-room';
@@ -34,6 +35,9 @@ import { PlayerDrawer, type SimulationState } from './components/player-drawer';
 import { PreDraft, type PreDraftStep } from './components/pre-draft';
 import { ErrorBanner, Notice } from './components/primitives';
 import { FakeStrategistTransport, parseFakeStrategist } from './fake-strategist';
+import { signOut } from './auth-client';
+import { AuthScreenView } from './components/auth-screen';
+import { useAccount } from './use-account';
 import { useDraftEngine } from './use-draft-engine';
 import { useLiveDraftSync } from './use-live-draft-sync';
 import { useSleeperSession } from './use-sleeper-session';
@@ -50,6 +54,7 @@ const IDLE_SIMULATION: SimulationState = {
 
 export function Dashboard() {
   const session = useSleeperSession();
+  const account = useAccount();
   const [username, setUsername] = useState('');
   const [attachInput, setAttachInput] = useState('');
   const [entered, setEntered] = useState(false);
@@ -117,7 +122,10 @@ export function Dashboard() {
       policy: { cadence: 'approaching_turn' as const, analyzeWithin: 999 },
     };
   }, [fakeStrategistMode]);
-  const strategist = useStrategist(entered ? brief : null, strategistOptions);
+  const strategist = useStrategist(entered ? brief : null, {
+    ...strategistOptions,
+    leagueId: workspace?.attachment.league.league_id ?? null,
+  });
 
   /* ------------------------------------------------------------ view models */
 
@@ -278,9 +286,14 @@ export function Dashboard() {
       roomRankings: sources.roomRankings,
       adp: sources.adp,
       ourTeamName: teamNameFor(ourRosterId) ?? session.user?.display_name ?? null,
-      aiAvailable,
+      ai: {
+        configured: aiAvailable,
+        accountsEnabled: account.accountsEnabled,
+        plan: account.plan,
+        creditsRemaining: account.creditsRemaining,
+      },
     });
-  }, [workspace, context, sources, teamNameFor, session.user, aiAvailable]);
+  }, [workspace, context, sources, teamNameFor, session.user, aiAvailable, account]);
 
   /* --------------------------------------------------------------- actions */
 
@@ -369,6 +382,22 @@ export function Dashboard() {
 
   /* ----------------------------------------------------------------- render */
 
+  /*
+   * Accounts gate the product only where they exist. With no database this is a
+   * working single-user deployment, and the draft room opens as it always did -
+   * what is unavailable is the part that spends money.
+   */
+  if (account.accountsEnabled && !account.signedIn && !account.loading) {
+    const requested = screenForUrl(search);
+    return (
+      <AuthScreenView
+        initialScreen={requested.screen}
+        resetToken={requested.token}
+        onSignedIn={account.refresh}
+      />
+    );
+  }
+
   const step: PreDraftStep = !session.user
     ? 'connect'
     : session.attachment
@@ -410,6 +439,18 @@ export function Dashboard() {
         readinessBusy={sources.loading}
         onEnter={() => setEntered(true)}
         onDetach={session.detach}
+        account={
+          account.accountsEnabled && account.signedIn
+            ? {
+                email: account.user?.email ?? null,
+                plan: account.plan,
+                creditsRemaining: account.creditsRemaining,
+                onSignOut: () => {
+                  void signOut().then(() => account.refresh());
+                },
+              }
+            : null
+        }
       />
     );
   }
@@ -466,6 +507,12 @@ export function Dashboard() {
               onImportCsv={(event) => void sources.importCsv(event)}
               onRestoreAutomatic={sources.restoreAutomatic}
               usingCustomProjections={sources.projectionMode === 'custom'}
+              account={{
+                accountsEnabled: account.accountsEnabled,
+                signedIn: account.signedIn,
+                plan: account.plan,
+                creditsRemaining: account.creditsRemaining,
+              }}
             />
           ) : undefined
         }

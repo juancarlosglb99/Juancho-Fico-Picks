@@ -38,6 +38,7 @@ export function DiagnosticsPanel({
   onImportCsv,
   onRestoreAutomatic,
   usingCustomProjections,
+  account,
 }: {
   projections: ProjectionSnapshot | null;
   roomRankings: DraftRoomRankingSnapshot | null;
@@ -50,6 +51,13 @@ export function DiagnosticsPanel({
   onImportCsv: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRestoreAutomatic: () => void;
   usingCustomProjections: boolean;
+  /** What the SERVER said. A refusal now has two quite different causes. */
+  account?: {
+    accountsEnabled: boolean;
+    signedIn: boolean;
+    plan: string;
+    creditsRemaining: number | null;
+  } | null;
 }) {
   return (
     <details className="rounded-2xl border border-[#1a2830] bg-[#08121a] p-3">
@@ -173,6 +181,24 @@ export function DiagnosticsPanel({
                 {recommendation.insight.exceptionalReason}
               </p>
             )}
+          </Card>
+        )}
+
+        {account && (
+          <Card title="Account and entitlement">
+            <dl className="grid grid-cols-2 gap-2">
+              <Row label="Accounts" value={account.accountsEnabled ? 'enabled' : 'not configured'} />
+              <Row label="Signed in" value={account.signedIn ? 'yes' : 'no'} />
+              <Row label="Plan" value={account.plan} />
+              <Row
+                label="AI drafts left"
+                value={account.creditsRemaining === null ? 'unmetered' : String(account.creditsRemaining)}
+              />
+            </dl>
+            <p className="mt-2 text-[11px] leading-5 text-[#5f7280]">
+              Read from the server on every request. Editing anything here changes
+              what this panel draws and nothing about what is authorised.
+            </p>
           </Card>
         )}
 

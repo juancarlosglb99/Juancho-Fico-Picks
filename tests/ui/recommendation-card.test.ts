@@ -68,6 +68,7 @@ function liveState(
     decision,
     reason: null,
     usage: null,
+    entitlement: null,
     ...overrides,
   };
 }

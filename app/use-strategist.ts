@@ -28,13 +28,15 @@ export interface UseStrategistOptions {
   /** Swappable so tests and previews never touch the network. */
   transport?: StrategistTransport;
   policy?: Partial<StrategistCallPolicy>;
+  /** Recorded on the server's draft-session row. Never authorisation. */
+  leagueId?: string | null;
 }
 
 export function useStrategist(
   brief: DraftBrief | null,
   options: UseStrategistOptions = {},
 ): LiveStrategistState {
-  const { transport, policy } = options;
+  const { transport, policy, leagueId = null } = options;
 
   /*
    * One strategist for the life of the component. Rebuilding it on each render
@@ -47,9 +49,10 @@ export function useStrategist(
         transport ?? new HttpStrategistTransport(),
         { ...DEFAULT_CALL_POLICY, ...policy },
         new UsageLedger(),
+        { leagueId },
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transport, policy?.cadence, policy?.analyzeWithin, policy?.enabled],
+    [transport, policy?.cadence, policy?.analyzeWithin, policy?.enabled, leagueId],
   );
 
   const [state, setState] = useState<LiveStrategistState>(() => live.current());

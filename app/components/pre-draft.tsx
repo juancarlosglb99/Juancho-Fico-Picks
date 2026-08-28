@@ -50,18 +50,42 @@ export function PreDraft(props: {
   readinessBusy: boolean;
   onEnter: () => void;
   onDetach: () => void;
+  account?: {
+    email: string | null;
+    plan: string;
+    creditsRemaining: number | null;
+    onSignOut: () => void;
+  } | null;
 }) {
   return (
     <main className="min-h-screen bg-[#071019] text-[#f7f8f2]">
       <header className="border-b border-[#1c2b35] px-5 py-4">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4">
           <Brand />
-          {props.displayName && (
-            <span className="text-[11px] font-bold text-[#7f919c]">
-              {props.displayName}
-              {props.season ? ` · ${props.season}` : ''}
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {props.displayName && (
+              <span className="text-[11px] font-bold text-[#7f919c]">
+                {props.displayName}
+                {props.season ? ` · ${props.season}` : ''}
+              </span>
+            )}
+            {props.account && (
+              <span className="flex items-center gap-2 text-[11px] font-bold text-[#5f7280]">
+                <span className="hidden sm:inline">{props.account.email}</span>
+                <span className="rounded-full border border-[#25373f] px-2 py-0.5 uppercase tracking-[0.08em] text-[#8fa0aa]">
+                  {props.account.plan}
+                  {props.account.creditsRemaining !== null &&
+                    ` · ${props.account.creditsRemaining}`}
+                </span>
+                <button
+                  onClick={props.account.onSignOut}
+                  className="transition hover:text-[#ff9a80]"
+                >
+                  Sign out
+                </button>
+              </span>
+            )}
+          </div>
         </div>
       </header>
 

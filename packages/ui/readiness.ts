@@ -16,11 +16,22 @@ import type {
   DraftRoomRankingSnapshot,
   ProjectionSnapshot,
 } from '../data/types';
+import type { Plan } from '../accounts/entitlements';
 import type { DraftAttachment } from '../sleeper/attachment';
 import type { SleeperDraft } from '../sleeper/types';
 import { displayEnum } from './theme';
 
 export type CheckStatus = 'ok' | 'warn' | 'missing' | 'unknown';
+
+export interface AiReadiness {
+  /** Whether the SERVER has a strategist key. Null while unknown. */
+  configured: boolean | null;
+  /** False when the deployment has no accounts, which is a working mode. */
+  accountsEnabled: boolean;
+  plan: Plan;
+  /** Null means unmetered, or unknown. */
+  creditsRemaining: number | null;
+}
 
 export interface ReadinessCheck {
   id: string;
@@ -63,7 +74,7 @@ export function buildDraftReadiness({
   roomRankings,
   adp,
   ourTeamName,
-  aiAvailable,
+  ai,
 }: {
   attachment: DraftAttachment;
   draft: SleeperDraft;
@@ -72,8 +83,15 @@ export function buildDraftReadiness({
   roomRankings: DraftRoomRankingSnapshot | null;
   adp: AdpSnapshot | null;
   ourTeamName: string | null;
-  /** Null while the server has not been asked whether a key is configured. */
-  aiAvailable: boolean | null;
+  /**
+   * What the SERVER says about the strategist for this user.
+   *
+   * Two independent facts, and the check has to distinguish them: whether the
+   * server has a key at all, and whether this account is entitled to use it. A
+   * Basic user on a fully configured server is not looking at a broken
+   * deployment, and should not be told he is.
+   */
+  ai: AiReadiness;
 }): DraftReadiness {
   const roster = context.roster.value;
   const state = context.draftState.value;
@@ -84,7 +102,7 @@ export function buildDraftReadiness({
     adpCheck(adp),
     seatCheck(state.userRosterId, state.userDraftSlot),
     formatCheck(context),
-    aiCheck(aiAvailable),
+    aiCheck(ai),
   ];
 
   /*
@@ -268,25 +286,58 @@ function formatCheck(context: LeagueContext): ReadinessCheck {
   };
 }
 
-function aiCheck(available: boolean | null): ReadinessCheck {
-  if (available === null) {
+/**
+ * Never blocking, whatever it says.
+ *
+ * The strategist is an upgrade to a product that works without it, so no state
+ * of this check should stop somebody drafting.
+ */
+function aiCheck(ai: AiReadiness): ReadinessCheck {
+  const base = { id: 'ai', label: 'AI strategist', blocking: false } as const;
+
+  if (ai.configured === null) {
+    return { ...base, status: 'unknown', value: 'Checking', detail: 'Asking the server.' };
+  }
+  if (!ai.configured) {
     return {
-      id: 'ai',
-      label: 'AI strategist',
-      status: 'unknown',
-      value: 'Checking',
-      detail: 'Asking the server whether a strategist is configured.',
-      blocking: false,
+      ...base,
+      status: 'warn',
+      value: 'Not configured',
+      detail: 'This server has no strategist key. The draft runs on the deterministic engine.',
+    };
+  }
+  if (!ai.accountsEnabled) {
+    return {
+      ...base,
+      status: 'ok',
+      value: 'Available',
+      detail: 'One call per turn of yours. The deterministic recommendation is shown either way.',
+    };
+  }
+  if (ai.plan === 'admin') {
+    return { ...base, status: 'ok', value: 'Unlimited', detail: 'Admin access: credits are not counted.' };
+  }
+  if (ai.plan !== 'pro') {
+    return {
+      ...base,
+      status: 'warn',
+      value: 'Pro feature',
+      detail: 'Your plan does not include the strategist. Everything else is unaffected.',
+    };
+  }
+  const credits = ai.creditsRemaining;
+  if (credits !== null && credits <= 0) {
+    return {
+      ...base,
+      status: 'warn',
+      value: 'No credits left',
+      detail: 'You have used your AI drafts. The deterministic engine is unaffected.',
     };
   }
   return {
-    id: 'ai',
-    label: 'AI strategist',
-    status: available ? 'ok' : 'warn',
-    value: available ? 'Available' : 'Not configured',
-    detail: available
-      ? 'One call per turn of yours. The deterministic recommendation is shown either way.'
-      : 'The draft runs on the deterministic engine alone.',
-    blocking: false,
+    ...base,
+    status: 'ok',
+    value: credits === null ? 'Available' : `${credits} draft${credits === 1 ? '' : 's'} left`,
+    detail: 'One credit covers this whole draft, and one call per turn of yours.',
   };
 }

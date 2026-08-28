@@ -43,6 +43,33 @@ export interface StrategistTransportResult {
   attempts: number;
   latencyMs: number;
   error: string | null;
+
+  /* --- present once accounts exist; absent when they are switched off --- */
+
+  /**
+   * The draft's running total, from the server's database.
+   *
+   * When this is present it is the AUTHORITY and the local ledger mirrors it,
+   * which is the whole reconciliation: one formula (`estimateCost`, used on
+   * both sides) and one record (the `ai_usage` table). Accumulating locally as
+   * well would produce a second set of books that drifts the first time a
+   * request is retried or a tab is reopened.
+   */
+  accountUsage?: {
+    calls: number;
+    repairCalls: number;
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    cacheWriteTokens: number;
+    estimatedCostUsd: number;
+    failures: number;
+  } | null;
+  /** The plan the server applied. Never something the client asserted. */
+  plan?: 'basic' | 'pro' | 'admin';
+  creditsRemaining?: number | null;
+  /** Why the server declined, when it did. */
+  refusal?: string | null;
 }
 
 export interface StrategistTransport {
@@ -50,6 +77,9 @@ export interface StrategistTransport {
     context: StrategistPromptContext;
     boardPlayerIds: string[];
     state: DraftStateVersion;
+    /** Session metadata. Nothing here can affect what the server authorises. */
+    leagueId?: string | null;
+    isMock?: boolean;
     signal?: AbortSignal;
   }): Promise<StrategistTransportResult>;
 }
@@ -80,6 +110,17 @@ export class UsageLedger {
   private readonly records = new Map<string, UsageRecord>();
 
   record(draftId: string, result: StrategistTransportResult): UsageRecord {
+    /*
+     * The server keeps the books when there are books to keep. Mirroring rather
+     * than accumulating is what stops the screen and the database disagreeing
+     * about what a draft has cost.
+     */
+    if (result.accountUsage) {
+      const authoritative: UsageRecord = { draftId, ...result.accountUsage };
+      this.records.set(draftId, authoritative);
+      return authoritative;
+    }
+
     const entry = this.records.get(draftId) ?? {
       draftId,
       calls: 0,
@@ -229,6 +270,17 @@ export interface LiveStrategistState {
   /** Set on fallback, for a quiet note rather than an error banner. */
   reason: string | null;
   usage: UsageRecord | null;
+  /**
+   * What the server said about this caller's entitlement, when it said anything.
+   *
+   * Display only. Every decision it describes was already made server-side; a
+   * client that rewrote this would change a label and nothing else.
+   */
+  entitlement: {
+    plan: 'basic' | 'pro' | 'admin';
+    creditsRemaining: number | null;
+    refusal: string | null;
+  } | null;
 }
 
 const IDLE: LiveStrategistState = {
@@ -237,6 +289,7 @@ const IDLE: LiveStrategistState = {
   decision: null,
   reason: null,
   usage: null,
+  entitlement: null,
 };
 
 /**
@@ -259,6 +312,12 @@ export class LiveStrategist {
     private readonly transport: StrategistTransport,
     private readonly policy: StrategistCallPolicy = DEFAULT_CALL_POLICY,
     private readonly ledger: UsageLedger = new UsageLedger(),
+    /**
+     * Metadata for the server's draft-session row. Not authorisation: the
+     * server keys everything on the signed session cookie, and nothing here
+     * can change what it decides.
+     */
+    private readonly session: { leagueId?: string | null } = {},
   ) {}
 
   subscribe(listener: (state: LiveStrategistState) => void): () => void {
@@ -337,6 +396,8 @@ export class LiveStrategist {
         context: buildStrategistPromptContext(brief, { blind: true, compact: true }),
         boardPlayerIds: brief.candidates.map((candidate) => candidate.playerId),
         state: brief.state,
+        leagueId: this.session.leagueId ?? null,
+        isMock: brief.league.isMock,
         signal: controller.signal,
       });
     } catch (error) {
@@ -377,6 +438,7 @@ export class LiveStrategist {
         fingerprint,
         reason: `Advice arrived about a different board (${staleness}).`,
         usage,
+        entitlement: entitlementOf(result),
       });
       return;
     }
@@ -414,6 +476,7 @@ export class LiveStrategist {
       decision,
       reason: applied ? null : (result.error ?? describeOutcome(decision)),
       usage,
+      entitlement: entitlementOf(result),
     });
   }
 
@@ -495,6 +558,23 @@ function toLiveAdvice(
     whyRecommendationStillWins: response.whyRecommendationStillWins,
     expectedNextPickPlan: response.expectedNextPickPlan,
     opponentsThatMatter: response.opponentsThatMatter,
+  };
+}
+
+/**
+ * What the server said about this caller, when it said anything.
+ *
+ * Absent means accounts are switched off, which is a different state from
+ * "Basic" and should not be drawn as one.
+ */
+function entitlementOf(
+  result: StrategistTransportResult,
+): LiveStrategistState['entitlement'] {
+  if (!result.plan) return null;
+  return {
+    plan: result.plan,
+    creditsRemaining: result.creditsRemaining ?? null,
+    refusal: result.refusal ?? null,
   };
 }
 
