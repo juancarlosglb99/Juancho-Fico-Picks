@@ -35,13 +35,34 @@ export interface CreditBalance {
 }
 
 /**
- * The plan every signed-in user has by default.
+ * The plan a user has once somebody has activated them.
  *
  * Basic is not a degraded state: the deterministic engine and First Seed are the
  * product, and they are unlimited. Pro adds the strategist, which is the only
  * part that costs anything per draft.
  */
 export const DEFAULT_PLAN: Plan = 'basic';
+
+/**
+ * Whether this account may use the product at all.
+ *
+ * The private beta's access control is a person, not a payment: registering
+ * creates an account with NO entitlement, and an admin activates it. So
+ * "pending" is a real state and it is not the same as Basic - a pending account
+ * has no product, and a Basic one has all of it except the strategist.
+ *
+ * `expired` is deliberately NOT pending. Once somebody has been activated,
+ * letting a subscription lapse costs them the strategist, not the draft board.
+ * Revocation is the deliberate act that takes access away, and it does.
+ */
+export type AccessState = 'pending' | 'active' | 'revoked';
+
+export interface Access {
+  state: AccessState;
+  plan: Plan;
+  /** True when an active entitlement has run past its end date. */
+  expired: boolean;
+}
 
 export const FREE_ENTITLEMENT: Entitlement = {
   plan: DEFAULT_PLAN,
@@ -65,6 +86,7 @@ const UNMETERED_PLANS: ReadonlySet<Plan> = new Set<Plan>(['admin']);
 
 export type AiRefusal =
   | 'not_signed_in'
+  | 'not_activated'
   | 'plan_does_not_include_ai'
   | 'entitlement_expired'
   | 'no_credits_remaining'
@@ -90,33 +112,58 @@ export interface AiAccess {
 }
 
 /**
- * The plan in force right now.
+ * What this account may do right now.
  *
- * An entitlement that has lapsed does not leave the user with nothing; it leaves
- * them on Basic, which is a whole working product. Expiry is a downgrade, never
- * a lockout.
+ * Three outcomes, and the distinction between the first two is the whole beta:
+ * an account nobody has activated has no product, an activated one has all of
+ * it, and what its plan is decides only whether the strategist is included.
  */
-export function effectivePlan(
-  entitlement: Entitlement | null,
-  now: Date,
-): { plan: Plan; expired: boolean } {
-  if (!entitlement) return { plan: DEFAULT_PLAN, expired: false };
-  if (entitlement.status !== 'active') {
-    return { plan: DEFAULT_PLAN, expired: entitlement.status === 'expired' };
+export function resolveAccess(entitlement: Entitlement | null, now: Date): Access {
+  // Registered, not yet activated by an admin.
+  if (!entitlement) return { state: 'pending', plan: DEFAULT_PLAN, expired: false };
+
+  // Taken away deliberately. This is the one that locks somebody out.
+  if (entitlement.status === 'revoked') {
+    return { state: 'revoked', plan: DEFAULT_PLAN, expired: false };
+  }
+
+  // Lapsed on its own. A downgrade, not a lockout.
+  if (entitlement.status === 'expired') {
+    return { state: 'active', plan: DEFAULT_PLAN, expired: true };
   }
 
   const from = Date.parse(entitlement.validFrom);
   if (Number.isFinite(from) && now.getTime() < from) {
-    return { plan: DEFAULT_PLAN, expired: false };
+    // Granted, but not started yet: nothing to use.
+    return { state: 'pending', plan: DEFAULT_PLAN, expired: false };
   }
 
   if (entitlement.validUntil !== null) {
     const until = Date.parse(entitlement.validUntil);
     if (Number.isFinite(until) && now.getTime() >= until) {
-      return { plan: DEFAULT_PLAN, expired: true };
+      return { state: 'active', plan: DEFAULT_PLAN, expired: true };
     }
   }
-  return { plan: entitlement.plan, expired: false };
+  return { state: 'active', plan: entitlement.plan, expired: false };
+}
+
+/** Whether the draft room opens at all. */
+export function hasProductAccess(entitlement: Entitlement | null, now: Date): boolean {
+  return resolveAccess(entitlement, now).state === 'active';
+}
+
+/**
+ * The plan in force right now.
+ *
+ * Kept as a narrower view over `resolveAccess` for the callers that only care
+ * which features are included.
+ */
+export function effectivePlan(
+  entitlement: Entitlement | null,
+  now: Date,
+): { plan: Plan; expired: boolean } {
+  const access = resolveAccess(entitlement, now);
+  return { plan: access.plan, expired: access.expired };
 }
 
 /** Never negative, and zero once the allowance has expired. */
@@ -168,7 +215,8 @@ export function decideAiAccess({
     };
   }
 
-  const { plan, expired } = effectivePlan(entitlement, now);
+  const access = resolveAccess(entitlement, now);
+  const { plan, expired } = access;
   const unmetered = UNMETERED_PLANS.has(plan);
   const remaining = unmetered ? null : creditsRemaining(credits, now);
 
@@ -179,6 +227,10 @@ export function decideAiAccess({
     creditsRemaining: remaining,
     plan,
   });
+
+  // Not activated at all: a different answer from "your plan does not include
+  // it", because there is nothing to upgrade from yet.
+  if (access.state !== 'active') return refuse('not_activated');
 
   if (!AI_PLANS.has(plan)) {
     return refuse(expired ? 'entitlement_expired' : 'plan_does_not_include_ai');
@@ -203,6 +255,7 @@ export function decideAiAccess({
 /** What a screen says about a refusal. Kept beside the rules so they cannot drift. */
 export const REFUSAL_MESSAGE: Record<AiRefusal, string> = {
   not_signed_in: 'Sign in to use the AI strategist.',
+  not_activated: 'Your account is waiting to be activated.',
   plan_does_not_include_ai:
     'The AI strategist is part of Pro. Your drafts still get the full deterministic engine.',
   entitlement_expired:

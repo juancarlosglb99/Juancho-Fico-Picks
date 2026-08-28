@@ -78,6 +78,23 @@ explicitly, and neither can reach the Anthropic API.
 | `?diagnostics=1` | Reveals the engine panel: source provenance and match rates, reaction-time percentiles, the model inspector, league context. Always on in development. |
 | `?ai=confirmed` \| `override` \| `analyzing` \| `fallback` | Answers with a **fake** strategist transport so every state of the recommendation card can be looked at without spending anything. The fake response still goes through the real validator, guardrails and staleness gate. |
 
+## Running it in production
+
+The whole production artefact is `dist/standalone/` - a Node server with its own
+`node_modules` beside it - wrapped in a container. Exact DigitalOcean App
+Platform settings, the environment-variable list, which of them must be
+encrypted, and the admin bootstrap are in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Production refuses to run unconfigured. With no `DATABASE_URL` this application
+happily serves a draft room with no accounts and no authorisation, which is
+correct on a laptop and an unsecured public application on the internet - so
+`scripts/preflight.mjs` runs before the server and exits non-zero, and
+`/api/health` fails a production instance for the same reasons.
+
+Access during the private beta is a person rather than a payment: registering
+creates an account with no entitlement and a "waiting for activation" screen,
+and `npm run account -- plan <email> basic|pro` lets somebody in.
+
 ## Where the numbers come from
 
 | Source | Owns | Never used for |

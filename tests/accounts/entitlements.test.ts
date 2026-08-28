@@ -14,6 +14,8 @@ import {
   creditsRemaining,
   decideAiAccess,
   effectivePlan,
+  hasProductAccess,
+  resolveAccess,
   type CreditBalance,
   type Entitlement,
 } from '../../packages/accounts/entitlements';
@@ -45,6 +47,44 @@ function ask(overrides: Partial<Parameters<typeof decideAiAccess>[0]> = {}) {
     ...overrides,
   });
 }
+
+/**
+ * The private beta's access control is a person: registering creates an account
+ * with no entitlement, and an admin activates it. "Pending" is therefore a real
+ * state, and telling it apart from Basic is the whole point - a pending account
+ * has no product at all, and a Basic one has everything except the strategist.
+ */
+describe('whether the product opens at all', () => {
+  it('is pending until somebody activates it', () => {
+    expect(resolveAccess(null, NOW)).toEqual({ state: 'pending', plan: 'basic', expired: false });
+    expect(hasProductAccess(null, NOW)).toBe(false);
+  });
+
+  it('opens as soon as an entitlement is granted, on any plan', () => {
+    expect(hasProductAccess(entitlement({ plan: 'basic' }), NOW)).toBe(true);
+    expect(hasProductAccess(entitlement({ plan: 'pro' }), NOW)).toBe(true);
+    expect(hasProductAccess(entitlement({ plan: 'admin' }), NOW)).toBe(true);
+  });
+
+  it('closes again when access is revoked, which is the deliberate act', () => {
+    expect(resolveAccess(entitlement({ status: 'revoked' }), NOW).state).toBe('revoked');
+    expect(hasProductAccess(entitlement({ status: 'revoked' }), NOW)).toBe(false);
+  });
+
+  it('stays open when an entitlement merely lapses', () => {
+    // Expiry costs the strategist. It does not take the draft board away from
+    // somebody who has already been let in.
+    const lapsed = entitlement({ validUntil: '2026-08-15T00:00:00.000Z' });
+    expect(resolveAccess(lapsed, NOW)).toEqual({ state: 'active', plan: 'basic', expired: true });
+    expect(hasProductAccess(lapsed, NOW)).toBe(true);
+    expect(hasProductAccess(entitlement({ status: 'expired' }), NOW)).toBe(true);
+  });
+
+  it('is pending for an entitlement that has not started yet', () => {
+    const future = entitlement({ validFrom: '2026-10-01T00:00:00.000Z' });
+    expect(resolveAccess(future, NOW).state).toBe('pending');
+  });
+});
 
 describe('which plan is in force', () => {
   it('falls back to basic with no entitlement at all', () => {
@@ -134,7 +174,19 @@ describe('may this user have an AI answer', () => {
       reason: 'plan_does_not_include_ai',
       consumesCredit: false,
     });
-    expect(ask({ entitlement: null })).toMatchObject({ reason: 'plan_does_not_include_ai' });
+  });
+
+  it('tells an unactivated account something different from an unentitled one', () => {
+    // "Upgrade to Pro" is the wrong thing to say to somebody who has not been
+    // let in yet - there is nothing to upgrade from.
+    expect(ask({ entitlement: null })).toMatchObject({
+      allowed: false,
+      reason: 'not_activated',
+      consumesCredit: false,
+    });
+    expect(ask({ entitlement: entitlement({ status: 'revoked' }) })).toMatchObject({
+      reason: 'not_activated',
+    });
   });
 
   it('distinguishes an expired entitlement from a plan that never had AI', () => {
@@ -157,6 +209,16 @@ describe('may this user have an AI answer', () => {
     expect(
       ask({ credits: credits({ expiresAt: '2026-08-01T00:00:00.000Z' }) }),
     ).toMatchObject({ allowed: false, reason: 'credits_expired' });
+  });
+
+  it('still logs an admin’s usage even though it charges them nothing', () => {
+    // Unmetered is not unmeasured: the cost of admin drafts has to be visible.
+    const admin = ask({ entitlement: entitlement({ plan: 'admin', validUntil: null }) });
+    expect(admin.allowed).toBe(true);
+    expect(admin.consumesCredit).toBe(false);
+    // `recordCall` runs for every allowed decision regardless of plan, which is
+    // what puts the row in `ai_usage`. See tests/smoke/accounts.smoke.ts.
+    expect(admin.plan).toBe('admin');
   });
 
   it('lets an admin through unmetered, and never charges them', () => {
@@ -190,6 +252,7 @@ describe('may this user have an AI answer', () => {
     const refusals = [
       ask({ signedIn: false }),
       ask({ entitlement: null }),
+      ask({ entitlement: entitlement({ plan: 'basic' }) }),
       ask({ entitlement: entitlement({ validUntil: '2026-01-01T00:00:00.000Z' }) }),
       ask({ credits: NO_CREDITS }),
       ask({ credits: credits({ expiresAt: '2020-01-01T00:00:00.000Z' }) }),
@@ -207,6 +270,7 @@ describe('may this user have an AI answer', () => {
       [
         ask({ signedIn: false }),
         ask({ entitlement: null }),
+        ask({ entitlement: entitlement({ plan: 'basic' }) }),
         ask({ entitlement: entitlement({ validUntil: '2026-01-01T00:00:00.000Z' }) }),
         ask({ credits: NO_CREDITS }),
         ask({ credits: credits({ expiresAt: '2020-01-01T00:00:00.000Z' }) }),
@@ -216,6 +280,7 @@ describe('may this user have an AI answer', () => {
     expect(produced).toEqual(
       new Set([
         'not_signed_in',
+        'not_activated',
         'plan_does_not_include_ai',
         'entitlement_expired',
         'no_credits_remaining',

@@ -9,33 +9,47 @@
  * state in which sign-in silently breaks.
  */
 import { databaseConfigured, databaseReachable } from '../../../packages/db/client';
-import { schemaUpToDate } from '../../../packages/db/migrate';
+import { schemaStatus } from '../../../packages/db/migrate';
 import { authConfigured, authUnavailableReason } from '../../../packages/auth/server';
+import { inspectRuntime } from '../../../packages/config/runtime';
 
+/**
+ * What a load balancer asks, and what an operator needs when it says no.
+ *
+ * In PRODUCTION this is strict, because the alternative to failing is worse
+ * than failing: an instance with no database would serve a perfectly
+ * functional-looking application with no accounts and no authorisation. So a
+ * production instance is unhealthy unless it is configured, the database
+ * answers, and the schema is current - and App Platform will refuse to promote
+ * a deploy whose health check never passes.
+ *
+ * In development it is generous. A draft room needs neither the database nor
+ * the strategist, and saying so is more useful than a red light.
+ */
 export async function GET(): Promise<Response> {
-  const database = databaseConfigured();
-  const reachable = database ? await databaseReachable() : false;
-  const schema = reachable ? await schemaUpToDate() : false;
+  const runtime = inspectRuntime();
+  const configured = databaseConfigured();
+  const reachable = configured ? await databaseReachable() : false;
+  const schema = reachable ? await schemaStatus() : configured ? 'unreachable' : 'unknown';
 
-  const healthy = !database || !reachable || schema;
+  const healthy = runtime.production
+    ? runtime.problems.length === 0 && reachable && schema === 'current'
+    : true;
 
   return Response.json(
     {
       status: healthy ? 'ok' : 'degraded',
       uptimeSeconds: Math.round(process.uptime()),
-      database: {
-        configured: database,
-        reachable,
-        schemaUpToDate: schema,
+      environment: runtime.production ? 'production' : 'development',
+      // Names and presence only. No value is ever read out of here.
+      configuration: {
+        present: runtime.present,
+        problems: runtime.problems,
+        warnings: runtime.warnings,
       },
-      auth: {
-        configured: authConfigured(),
-        reason: authUnavailableReason(),
-      },
-      strategist: {
-        // Presence only. The key itself never appears in any response.
-        configured: Boolean(process.env.ANTHROPIC_API_KEY),
-      },
+      database: { configured, reachable, schema },
+      auth: { configured: authConfigured(), reason: authUnavailableReason() },
+      strategist: { configured: Boolean(process.env.ANTHROPIC_API_KEY) },
     },
     { status: healthy ? 200 : 503 },
   );

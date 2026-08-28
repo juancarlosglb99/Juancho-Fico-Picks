@@ -26,7 +26,7 @@ import {
   setEntitlement,
   startDraftSession,
 } from '../../packages/accounts/repository';
-import { decideAiAccess } from '../../packages/accounts/entitlements';
+import { decideAiAccess, hasProductAccess } from '../../packages/accounts/entitlements';
 
 const configured = databaseConfigured();
 const suite = configured ? describe : describe.skip;
@@ -64,7 +64,25 @@ suite('the account model, against a real database', () => {
     expect(first.credits.includedCredits).toBe(0);
     // Idempotent: a second sign-in must not reset a display name or a balance.
     expect(again.profile.createdAt.getTime()).toBe(first.profile.createdAt.getTime());
+    // Registering does not let you in. An admin has to activate the account.
     expect(first.entitlement).toBeNull();
+    expect(hasProductAccess(first.entitlement, new Date())).toBe(false);
+  });
+
+  it('opens the product the moment an admin activates it', async () => {
+    await setEntitlement({ userId: BOB, plan: 'basic', note: 'private beta' });
+    const activated = await loadAccount(BOB);
+    expect(hasProductAccess(activated!.entitlement, new Date())).toBe(true);
+    // Basic is the whole product except the strategist.
+    const ai = decideAiAccess({
+      signedIn: true,
+      entitlement: activated!.entitlement,
+      credits: activated!.credits,
+      draftAlreadyConsumedCredit: false,
+      strategistConfigured: true,
+      now: new Date(),
+    });
+    expect(ai).toMatchObject({ allowed: false, reason: 'plan_does_not_include_ai' });
   });
 
   it('keeps exactly one active entitlement, however many are granted', async () => {
@@ -153,7 +171,7 @@ suite('the account model, against a real database', () => {
     );
   });
 
-  it('gives an admin an answer without touching the balance', async () => {
+  it('gives an admin an answer without touching the balance, but still logs it', async () => {
     await setEntitlement({ userId: BOB, plan: 'admin' });
     const session = await startDraftSession({
       userId: BOB,
@@ -162,8 +180,29 @@ suite('the account model, against a real database', () => {
       isMock: true,
     });
     await consumeDraftCredit({ userId: BOB, sessionId: session.id, unmetered: true });
-    const account = await loadAccount(BOB);
-    expect(account!.credits.consumedCredits).toBe(0);
+    expect((await loadAccount(BOB))!.credits.consumedCredits).toBe(0);
+
+    /*
+     * Unmetered is not unmeasured. An admin costs the same money as anybody
+     * else and it has to be visible, so the usage row is written regardless of
+     * whether a credit was spent.
+     */
+    await recordAiUsage({
+      userId: BOB,
+      draftSessionId: session.id,
+      model: 'claude-opus-5',
+      repairCalls: 0,
+      inputTokens: 14_400,
+      outputTokens: 520,
+      cacheReadTokens: 13_900,
+      cacheWriteTokens: 0,
+      estimatedCostUsd: 0.23,
+      succeeded: true,
+    });
+    const totals = await draftUsageTotals(session.id);
+    expect(totals.calls).toBe(1);
+    expect(totals.estimatedCostUsd).toBeCloseTo(0.23, 5);
+    expect((await loadAccount(BOB))!.credits.consumedCredits).toBe(0);
   });
 
   it('keeps one user out of another user’s draft, even with the same draft id', async () => {

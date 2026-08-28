@@ -103,7 +103,14 @@ function createAuth() {
     },
 
     emailVerification: {
-      sendOnSignUp: true,
+      /*
+       * Off while the beta is private. There is no email provider, and a
+       * "verification" that writes a token to the server log is worse than
+       * none. The flow itself is built and unchanged: turning
+       * AUTH_REQUIRE_EMAIL_VERIFICATION on is the whole change when
+       * registration opens to the public.
+       */
+      sendOnSignUp: process.env.AUTH_REQUIRE_EMAIL_VERIFICATION === 'true',
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, url }) => {
         await mail.send(verificationEmail(user.email, url));

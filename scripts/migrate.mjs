@@ -18,7 +18,12 @@ import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const MIGRATIONS_DIR = join(here, '..', 'packages', 'db', 'migrations');
+/*
+ * The container sets this explicitly. Outside one, the migrations sit beside
+ * the database package as they do in the source tree.
+ */
+const MIGRATIONS_DIR =
+  process.env.MIGRATIONS_DIR?.trim() || join(here, '..', 'packages', 'db', 'migrations');
 /** Any 64-bit constant; it only has to be the same in every instance. */
 const ADVISORY_LOCK_KEY = '8531202612004771';
 

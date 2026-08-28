@@ -11,7 +11,7 @@
  * server again.
  */
 import { useCallback, useEffect, useState } from 'react';
-import type { Plan } from '@/packages/accounts/entitlements';
+import type { AccessState, Plan } from '@/packages/accounts/entitlements';
 
 export interface AccountState {
   loading: boolean;
@@ -20,7 +20,11 @@ export interface AccountState {
   signedIn: boolean;
   user: { id: string; email: string; name: string | null; emailVerified: boolean } | null;
   plan: Plan;
+  /** Whether an admin has activated this account. The private beta's gate. */
+  access: AccessState;
   creditsRemaining: number | null;
+  /** Fatal server configuration problems. Empty in any healthy deployment. */
+  misconfigured: string[];
   refresh: () => void;
 }
 
@@ -29,7 +33,9 @@ const INITIAL = {
   signedIn: false,
   user: null,
   plan: 'basic' as Plan,
+  access: 'pending' as AccessState,
   creditsRemaining: null as number | null,
+  misconfigured: [] as string[],
 };
 
 export function useAccount(): AccountState {

@@ -12,10 +12,13 @@
  * empty session of your own rather than reading theirs.
  */
 import { currentUser, type SessionUser } from '../auth/server';
+import { inspectRuntime } from '../config/runtime';
 import { databaseConfigured } from '../db/client';
 import {
   decideAiAccess,
   REFUSAL_MESSAGE,
+  resolveAccess,
+  type AccessState,
   type AiAccess,
   type AiRefusal,
   type Plan,
@@ -228,35 +231,64 @@ export async function recordCall({
 }
 
 /** What the account screen shows. Never derived from anything the client sent. */
-export async function accountSummary(request: Request): Promise<{
+export interface AccountSummary {
   signedIn: boolean;
   user: SessionUser | null;
   plan: Plan;
+  /**
+   * Whether an admin has activated this account.
+   *
+   * The private beta's gate. `pending` means registered and waiting; the draft
+   * room does not open until somebody says so.
+   */
+  access: AccessState;
   creditsRemaining: number | null;
   accountsEnabled: boolean;
-} | null> {
-  if (!accountsEnabled()) {
-    return { signedIn: false, user: null, plan: 'basic', creditsRemaining: null, accountsEnabled: false };
-  }
+  /**
+   * Fatal configuration problems, in production only.
+   *
+   * The container refuses to start when this is non-empty, so seeing it here
+   * means something started the server past its own preflight. The screen says
+   * so rather than serving an application with no authorisation behind it.
+   */
+  misconfigured: string[];
+}
+
+export async function accountSummary(request: Request): Promise<AccountSummary> {
+  const runtime = inspectRuntime();
+  const signedOut = (accountsOn: boolean): AccountSummary => ({
+    signedIn: false,
+    user: null,
+    plan: 'basic',
+    access: 'pending',
+    creditsRemaining: null,
+    accountsEnabled: accountsOn,
+    misconfigured: runtime.problems,
+  });
+
+  if (!accountsEnabled()) return signedOut(false);
   const user = await currentUser(request);
-  if (!user) {
-    return { signedIn: false, user: null, plan: 'basic', creditsRemaining: null, accountsEnabled: true };
-  }
+  if (!user) return signedOut(true);
+
   const account = await ensureAccount({ userId: user.id, displayName: user.name });
-  const access = decideAiAccess({
+  const now = new Date();
+  const access = resolveAccess(account.entitlement, now);
+  const ai = decideAiAccess({
     signedIn: true,
     entitlement: account.entitlement,
     credits: account.credits,
     draftAlreadyConsumedCredit: false,
     strategistConfigured: true,
-    now: new Date(),
+    now,
   });
   return {
     signedIn: true,
     user,
     plan: access.plan,
-    creditsRemaining: access.creditsRemaining,
+    access: access.state,
+    creditsRemaining: ai.creditsRemaining,
     accountsEnabled: true,
+    misconfigured: runtime.problems,
   };
 }
 

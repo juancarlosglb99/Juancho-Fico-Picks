@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "start": "vinext start",
+    "start": "node dist/standalone/server.js",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "test": "vitest run --config vitest.config.ts",
     "test:smoke": "vitest run --config vitest.smoke.config.ts",
@@ -22,7 +22,9 @@
     "strategist:size": "node scripts/strategist-size.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "db:check": "node scripts/check-auth-schema.mjs",
-    "account": "node scripts/account.mjs"
+    "account": "node scripts/account.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "start:preflight": "node scripts/preflight.mjs && node dist/standalone/server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.121.0",

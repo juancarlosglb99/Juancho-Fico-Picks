@@ -37,6 +37,7 @@ import { ErrorBanner, Notice } from './components/primitives';
 import { FakeStrategistTransport, parseFakeStrategist } from './fake-strategist';
 import { signOut } from './auth-client';
 import { AuthScreenView } from './components/auth-screen';
+import { PendingScreen } from './components/pending-screen';
 import { useAccount } from './use-account';
 import { useDraftEngine } from './use-draft-engine';
 import { useLiveDraftSync } from './use-live-draft-sync';
@@ -383,9 +384,37 @@ export function Dashboard() {
   /* ----------------------------------------------------------------- render */
 
   /*
+   * A deployment that started past its own preflight. The container refuses to
+   * boot when this list is non-empty, so reaching here means something bypassed
+   * that - and serving an application with no authorisation behind it is the
+   * one outcome worth a blank screen.
+   */
+  if (account.misconfigured.length > 0) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#071019] px-5 text-[#f7f8f2]">
+        <div className="max-w-xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ff9a80]">
+            Server not configured
+          </p>
+          <h1 className="mt-3 text-2xl font-black tracking-[-0.03em]">
+            This deployment is missing required configuration.
+          </h1>
+          <ul className="mt-4 flex flex-col gap-2">
+            {account.misconfigured.map((problem) => (
+              <li key={problem} className="text-[13px] leading-6 text-[#a3b1ba]">
+                · {problem}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </main>
+    );
+  }
+
+  /*
    * Accounts gate the product only where they exist. With no database this is a
-   * working single-user deployment, and the draft room opens as it always did -
-   * what is unavailable is the part that spends money.
+   * local single-user deployment, and the draft room opens as it always did -
+   * production refuses to start in that state, so it can never be that here.
    */
   if (account.accountsEnabled && !account.signedIn && !account.loading) {
     const requested = screenForUrl(search);
@@ -394,6 +423,27 @@ export function Dashboard() {
         initialScreen={requested.screen}
         resetToken={requested.token}
         onSignedIn={account.refresh}
+      />
+    );
+  }
+
+  /*
+   * Registered, not yet activated. The beta's gate is a person, so this is a
+   * real state and not an error - and it must not look like a broken product.
+   */
+  if (
+    account.accountsEnabled &&
+    account.signedIn &&
+    !account.loading &&
+    account.access !== 'active'
+  ) {
+    return (
+      <PendingScreen
+        email={account.user?.email ?? null}
+        revoked={account.access === 'revoked'}
+        onSignOut={() => {
+          void signOut().then(() => account.refresh());
+        }}
       />
     );
   }
