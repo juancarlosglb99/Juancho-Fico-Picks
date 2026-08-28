@@ -27,6 +27,7 @@
  * over anything set here, so it cannot be undone with `ai on`.
  */
 import pg from 'pg';
+import { databaseTls } from '../packages/db/ssl.mjs';
 
 const url = process.env.DATABASE_URL?.trim();
 if (!url) {
@@ -52,10 +53,11 @@ if (!command || (!isAiCommand && !email)) {
   process.exit(1);
 }
 
-const client = new pg.Client({
-  connectionString: url,
-  ssl: /@(localhost|127\.0\.0\.1)[:/]/.test(url) ? undefined : { rejectUnauthorized: true },
-});
+// The same rule the pool, the migration script and the preflight use. This
+// file had its own copy, which is how the very first `ai status` on the real
+// Droplet failed with "The server does not support SSL connections" against a
+// container the app itself was already talking to.
+const client = new pg.Client({ connectionString: url, ssl: databaseTls(url).ssl });
 
 async function main() {
   await client.connect();

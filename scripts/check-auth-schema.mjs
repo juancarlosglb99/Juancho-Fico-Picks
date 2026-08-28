@@ -15,6 +15,7 @@
 import { betterAuth } from 'better-auth';
 import { getMigrations } from 'better-auth/db/migration';
 import pg from 'pg';
+import { databaseTls } from '../packages/db/ssl.mjs';
 
 const url = process.env.DATABASE_URL?.trim();
 if (!url) {
@@ -22,7 +23,8 @@ if (!url) {
   process.exit(1);
 }
 
-const pool = new pg.Pool({ connectionString: url });
+// The one TLS rule, so this cannot be the next copy to drift.
+const pool = new pg.Pool({ connectionString: url, ssl: databaseTls(url).ssl });
 const auth = betterAuth({
   database: pool,
   secret: 'x'.repeat(48),
