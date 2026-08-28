@@ -43,6 +43,10 @@ import { useDraftEngine } from './use-draft-engine';
 import { useLiveDraftSync } from './use-live-draft-sync';
 import { useSleeperSession } from './use-sleeper-session';
 import { useStrategist } from './use-strategist';
+import { useDraftAi } from './use-draft-ai';
+import { isMockDraft } from '@/packages/sleeper/attachment';
+import { resolveDraftMode } from '@/packages/ui/draft-mode';
+import { CreditPromptBanner, DraftModeBadge } from './components/draft-mode-badge';
 
 /** How many complete draft continuations the on-demand simulation runs. */
 const SIMULATION_RUNS = 60;
@@ -129,7 +133,36 @@ export function Dashboard() {
       policy: { cadence: 'approaching_turn' as const, analyzeWithin: 999 },
     };
   }, [fakeStrategistMode]);
-  const strategist = useStrategist(entered ? brief : null, {
+  /*
+   * Whether this draft is an AI draft, which is a choice rather than a plan.
+   *
+   * Read before the strategist is wired up, because it decides whether the
+   * strategist is asked at all - a Pro drafter in Standard Mode should not even
+   * make the request, and the server would refuse it anyway.
+   */
+  const draftAi = useDraftAi({
+    sleeperDraftId: workspace?.draft.draft_id ?? null,
+    leagueId: workspace?.attachment.league.league_id ?? null,
+    isMock: workspace ? isMockDraft(workspace.draft) : false,
+    plan: account.plan,
+    accountsEnabled: account.accountsEnabled,
+    onCreditsChanged: account.refresh,
+  });
+
+  const draftMode = useMemo(
+    () =>
+      resolveDraftMode({
+        plan: account.plan,
+        aiEnabledForDraft: draftAi.enabled,
+        creditsRemaining: account.creditsRemaining,
+        // Null means "not asked yet", which is not the same as unavailable -
+        // but it is the safe reading while the answer is in flight.
+        aiConfigured: aiAvailable === true,
+      }),
+    [account.plan, account.creditsRemaining, draftAi.enabled, aiAvailable],
+  );
+
+  const strategist = useStrategist(entered && draftMode.aiActive ? brief : null, {
     ...strategistOptions,
     leagueId: workspace?.attachment.league.league_id ?? null,
   });
@@ -447,6 +480,8 @@ export function Dashboard() {
       <PendingScreen
         email={account.user?.email ?? null}
         revoked={account.access === 'revoked'}
+        requestedPlan={account.requestedPlan}
+        onPlanChosen={account.refresh}
         onSignOut={() => {
           void signOut().then(() => account.refresh());
         }}
@@ -531,17 +566,39 @@ export function Dashboard() {
         onLeave={leaveRoom}
         showSpend={showDiagnostics}
         headerActions={
-          compareIds.length > 0 ? (
-            <button
-              onClick={() => setSelectedPlayerId(null)}
-              className="rounded-full border border-[#b9ff38]/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#b9ff38]"
-            >
-              Compare {compareIds.length}
-            </button>
-          ) : undefined
+          /*
+           * The mode badge is always there, on every screen size. It is the
+           * answer to "am I getting the AI or not", and it should never require
+           * opening anything to find.
+           */
+          <div className="flex items-center gap-2">
+            {compareIds.length > 0 && (
+              <button
+                onClick={() => setSelectedPlayerId(null)}
+                className="rounded-full border border-[#b9ff38]/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#b9ff38]"
+              >
+                Compare {compareIds.length}
+              </button>
+            )}
+            {account.accountsEnabled && account.signedIn && <DraftModeBadge mode={draftMode} />}
+          </div>
         }
         banner={
-          result ? undefined : workspace.draft.status === 'complete' ? (
+          /*
+           * The credit question comes first when it is owed, because it is the
+           * only thing on this screen that costs money and the drafter has not
+           * answered it yet.
+           */
+          draftAi.needsChoice ? (
+            <CreditPromptBanner
+              creditsRemaining={account.creditsRemaining}
+              busy={draftAi.busy}
+              onUseAi={() => draftAi.choose(true)}
+              onStandard={() => draftAi.choose(false)}
+            />
+          ) : draftAi.error ? (
+            <ErrorBanner message={draftAi.error} />
+          ) : result ? undefined : workspace.draft.status === 'complete' ? (
             <Notice message="This draft is complete. The board below is final, and no further advice is given." />
           ) : sources.projectionError ? (
             <ErrorBanner message={sources.projectionError} />

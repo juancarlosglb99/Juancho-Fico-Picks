@@ -33,6 +33,7 @@ import { getRosterPositionCounts } from './roster-fit';
 import { buildProjectionTiers } from './tiers';
 import { buildFillerCandidates } from './late-round-fillers';
 import { supplementalRankIndex } from '../../fantasy-pros/mapping';
+import { SUPPLEMENTAL_POSITIONS } from '../../fantasy-pros/types';
 import type { SupplementalRankingSnapshot } from '../../fantasy-pros/types';
 import {
   DRAFT_NOW_THRESHOLD,
@@ -637,14 +638,69 @@ export function generateDraftRecommendations({
     }),
   );
 
+/*
+ * Where the supplemental board sits in the shared rank space.
+ *
+ * Past any rank First Seed publishes (its board is a few hundred deep), and
+ * below the unranked constant so a K or DST the supplemental source does not
+ * cover still sorts behind one it does.
+ */
+const SUPPLEMENTAL_RANK_BASE = 900;
+
+/** Not on any board we have. Deliberately the worst rank there is. */
+const UNRANKED_CONSENSUS_RANK = 999;
+
   /* ------------------------------------------------- the plannable candidate pool */
 
+  /**
+   * Where the board says this player sits. Ordering only, never a value.
+   *
+   * WHY KICKERS USED TO COME OUT IN ALPHABETICAL ORDER. First Seed publishes
+   * quarterbacks, backs, receivers and tight ends and nothing else, so a kicker
+   * misses the room lookup - and then lands on `leagueRankByPlayer`, which is
+   * OUR OWN ordering of every scored projection by points, ties broken by name.
+   * Every filler is worth the same nominal number by construction, so for K and
+   * DEF that map carries no information at all: it degenerates to the alphabet.
+   * Every candidate then tied on `decisionValue` and on `immediate`, and this
+   * rank - the last tie-break - decided the winner alphabetically.
+   *
+   * That is how a K4 was recommended over a K2 in every draft, and why the
+   * first attempt at this fix did nothing: consulting the supplemental board
+   * AFTER the league fallback is consulting it never, because the fallback
+   * always has an answer.
+   *
+   * So for the positions First Seed does not cover, the supplemental board is
+   * checked FIRST. Three properties make that safe to state plainly:
+   *
+   *   It is gated on position, so nothing a QB/RB/WR/TE does can reach it. The
+   *   supplemental source is never merged into the core ranking logic.
+   *
+   *   It is offset past every real First Seed rank and kept below the unranked
+   *   constant, so a kicker can never displace a skill player anywhere this
+   *   number is compared, and a kicker with no ranking still sorts last.
+   *
+   *   It is a RANK. Nothing here becomes a projection - the nominal K/DEF value
+   *   in `late-round-fillers.ts` is unchanged, because turning an ordering into
+   *   points would be inventing a projection for a position nobody projects.
+   */
   const consensusRankFor = (projection: MappedProjection): number => {
     // First Seed's Sleeper draft-room rank is the market signal for a Sleeper
     // draft. Market ADP is deliberately NOT consulted here.
     const room = roomByPlayerId.get(projection.playerId);
     if (room) return room.rank;
-    return leagueRankByPlayer.get(projection.playerId) ?? 999;
+    /*
+     * Before the league fallback, and only for K and DEF. Our own
+     * projection-derived ordering knows nothing about a position where every
+     * projection is the same nominal number, so an expert board is strictly
+     * better information there - and it is the only place it is consulted.
+     */
+    if (SUPPLEMENTAL_POSITIONS.includes(projection.position)) {
+      const supplemental = supplementalByPlayer.get(projection.playerId);
+      if (supplemental) return SUPPLEMENTAL_RANK_BASE + supplemental.positionRank;
+    }
+    const league = leagueRankByPlayer.get(projection.playerId);
+    if (league !== undefined) return league;
+    return UNRANKED_CONSENSUS_RANK;
   };
 
   const plannable: PlannablePlayer[] = candidates.map(({ scored }) => ({

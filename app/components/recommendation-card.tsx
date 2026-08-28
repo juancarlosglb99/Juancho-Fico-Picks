@@ -9,21 +9,24 @@
  * answer stays exactly where it was; when it fails, one grey sentence appears
  * underneath and nothing else changes.
  */
+import { cardBanner } from '@/packages/ui/draft-mode';
 import type { RecommendationCard } from '@/packages/ui/recommendation';
 import type { UsageRecord } from '@/packages/engine/strategist/live';
 import { SURVIVAL_COLOR, survivalTone } from '@/packages/ui/theme';
 import { Dot, Meter, Pill, PositionTag } from './primitives';
 
-const STATE_BADGE: Record<
-  RecommendationCard['state'],
-  { label: string; tone: 'accent' | 'neutral' | 'warn' } | null
-> = {
-  unavailable: null,
-  engine: { label: 'Engine pick', tone: 'accent' },
-  engine_ai_running: { label: 'Engine pick', tone: 'accent' },
-  engine_ai_unavailable: { label: 'Engine pick', tone: 'accent' },
-  ai_confirmed: { label: '✓ AI confirmed', tone: 'accent' },
-  ai_override: { label: '↗ AI override', tone: 'warn' },
+/**
+ * The tone each state is drawn in. The WORDS come from `cardBanner`, which is
+ * shared with everything else that has to describe these states - so a colour
+ * here can never be the only thing separating "AI agreed" from "AI disagreed".
+ */
+const STATE_TONE: Record<RecommendationCard['state'], 'accent' | 'neutral' | 'warn'> = {
+  unavailable: 'neutral',
+  engine: 'accent',
+  engine_ai_running: 'accent',
+  engine_ai_unavailable: 'neutral',
+  ai_confirmed: 'accent',
+  ai_override: 'warn',
 };
 
 export function RecommendationCardView({
@@ -40,7 +43,7 @@ export function RecommendationCardView({
 }) {
   if (card.state === 'unavailable' || !card.primary) return null;
 
-  const badge = STATE_BADGE[card.state];
+  const banner = cardBanner(card.state);
   const player = card.primary;
   const tone = survivalTone(player.survival);
   const override = card.state === 'ai_override';
@@ -53,25 +56,29 @@ export function RecommendationCardView({
           : 'border-[#b9ff38]/35 bg-gradient-to-b from-[#101d0d] to-[#0c1822]'
       }`}
     >
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#ffffff0f] px-4 py-2.5">
-        {badge && <Pill tone={badge.tone}>{badge.label}</Pill>}
-        {card.urgency && (
-          <Pill
-            tone={card.urgency.tone === 'now' ? 'danger' : card.urgency.tone === 'soon' ? 'warn' : 'quiet'}
-          >
-            {card.urgency.label}
+      <div className="border-b border-[#ffffff0f] px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Pill tone={STATE_TONE[card.state]}>
+            {/* The mark is a second, non-colour signal on the two states a
+                person most needs to tell apart. */}
+            {banner.mark ? `${banner.mark} ${banner.label}` : banner.label}
           </Pill>
-        )}
-        {card.state === 'engine_ai_running' && (
-          <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#8fa0aa]">
-            <Dot color="#b9ff38" pulse />
-            AI strategist analyzing this board…
-          </span>
-        )}
-        {card.aiConfidence !== null && (
-          <span className="ml-auto text-[10px] font-black uppercase tracking-[0.12em] text-[#8fa0aa]">
-            {card.aiConfidence}% confident
-          </span>
+          {banner.busy && <Dot color="#b9ff38" pulse />}
+          {card.urgency && (
+            <Pill
+              tone={card.urgency.tone === 'now' ? 'danger' : card.urgency.tone === 'soon' ? 'warn' : 'quiet'}
+            >
+              {card.urgency.label}
+            </Pill>
+          )}
+          {card.aiConfidence !== null && (
+            <span className="ml-auto text-[10px] font-black uppercase tracking-[0.12em] text-[#8fa0aa]">
+              {card.aiConfidence}% confident
+            </span>
+          )}
+        </div>
+        {banner.detail && (
+          <p className="mt-1.5 text-[11.5px] leading-5 text-[#8fa0aa]">{banner.detail}</p>
         )}
       </div>
 
@@ -193,7 +200,7 @@ export function RecommendationCardView({
         {card.enginePick && (
           <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-[#22333e] bg-[#0a141c] px-3 py-2">
             <span className="text-[11px] text-[#7f919c]">
-              Engine pick:{' '}
+              Juancho’s pick:{' '}
               <button
                 onClick={() => onOpenPlayer(card.enginePick!.playerId)}
                 className="font-bold text-[#c3d1d9] underline decoration-[#c3d1d9]/30 underline-offset-2"

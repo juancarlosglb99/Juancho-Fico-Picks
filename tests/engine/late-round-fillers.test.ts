@@ -14,9 +14,11 @@ import {
   FILLER_SHORTLIST,
 } from '../../packages/engine/draft/late-round-fillers';
 import { lineupSlotsFor } from '../../packages/engine/draft/lineup';
+import { generateDraftRecommendations } from '../../packages/engine/draft/recommendations';
+import type { SupplementalRankingSnapshot } from '../../packages/fantasy-pros/types';
 import { deriveDraftBoardState } from '../../packages/engine/draft/state';
 import { buildCanonicalPlayerMap } from '../../packages/players/player-map';
-import { makeDraft, makeLeague, makeRosters, makeContext } from './fixtures';
+import { makeDraft, makeLeague, makeRosters, makeContext, makePlayerPool, makeProjections } from './fixtures';
 
 /** Ten kickers whose alphabetical order is deliberately the reverse of merit. */
 const kickers = Object.fromEntries(
@@ -128,5 +130,157 @@ describe('kicker and defense shortlist', () => {
         alreadyProjected: new Set(),
       }),
     ).toEqual([]);
+  });
+});
+
+
+/* ---------------------------- the root cause, through the real engine */
+
+/**
+ * WHY THE SAME MEDIOCRE KICKER CAME UP EVERY DRAFT.
+ *
+ * Two bugs wore the same costume, and fixing the first only made the second
+ * visible.
+ *
+ *   The SHORTLIST was alphabetical, because the player map is sorted by name
+ *   and every filler ties on value. That is the one that produced Adam
+ *   Vinatieri, and ordering the shortlist off the supplemental board fixed it.
+ *
+ *   The ORDER INSIDE the shortlist was still decided by `consensusRank`, and
+ *   First Seed does not publish kickers - so every kicker carried the same
+ *   fallback constant, the engine's last tie-break compared 999 with 999, and
+ *   the winner was whichever happened to be first in the array. A shortlist in
+ *   merit order went in and the engine reordered it back to arbitrary.
+ *
+ * This drives the whole engine rather than restating its rule, because what was
+ * broken was the interaction between two layers that each looked right alone.
+ */
+describe('which kicker the engine actually recommends', () => {
+  /** Merit is the reverse of alphabetical, so the two orders cannot be confused. */
+  const MERIT = ['Jack', 'Ivan', 'Harold', 'Gary', 'Ernie', 'Frank', 'Dennis', 'Colin', 'Bruce', 'Aaron'];
+
+  /** Real players, so the engine runs its normal path, plus the ten kickers. */
+  const skill = makePlayerPool(30);
+  const pool = buildCanonicalPlayerMap({
+    ...Object.fromEntries(
+      skill.players.map((player) => [
+        player.externalIds.sleeper!,
+        {
+          player_id: player.externalIds.sleeper!,
+          full_name: player.name,
+          position: player.position,
+          team: 'TST',
+        },
+      ]),
+    ),
+    ...kickers,
+  });
+  const projections = makeProjections(pool).filter(
+    (projection) => projection.position !== 'K' && projection.position !== 'DEF',
+  );
+
+  /*
+   * A league that actually STARTS a kicker and a defense. The default fixture
+   * does not, and without those slots there is nothing for a filler to fill -
+   * which is its own small lesson about why this bug survived so long.
+   */
+  const fillerLeague = makeLeague({
+    teams: 12,
+    rosterPositions: [
+      'QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'K', 'DEF',
+      'BN', 'BN', 'BN', 'BN', 'BN', 'BN',
+    ],
+  });
+
+  function boardFor() {
+    const rosters = makeRosters(12);
+    const { context, board } = makeContext({
+      league: fillerLeague,
+      draft,
+      picks: [],
+      rosters,
+      players: pool,
+    });
+    return { context, rosters, board: { ...board, currentRound: 14, rounds: 15 } };
+  }
+
+  function supplementalBoard(): SupplementalRankingSnapshot {
+    return {
+      kind: 'supplemental-ranking',
+      provenance: {
+        sourceId: 'fantasypros-test',
+        sourceLabel: 'FantasyPros 2026 draft rankings (test)',
+        season: '2026',
+        fetchedAt: '2026-08-01T00:00:00.000Z',
+        sourceUpdatedAt: null,
+        sourceConfidence: 'high',
+      },
+      season: '2026',
+      positions: ['K', 'DEF'],
+      records: MERIT.map((first, index) => {
+        const player = pool.byName.get(`${first.toLowerCase()} kicker`)![0];
+        return {
+          playerId: player.id,
+          sleeperId: player.externalIds.sleeper!,
+          sourceName: `${first} Kicker`,
+          name: player.name,
+          team: 'TST',
+          position: 'K' as const,
+          positionRank: index + 1,
+          overallRank: index + 1,
+        };
+      }),
+      unresolved: [],
+      resolution: {
+        total: MERIT.length,
+        matched: MERIT.length,
+        directExternalId: MERIT.length,
+        exactCanonical: 0,
+        normalizedName: 0,
+        ambiguous: 0,
+        unresolved: 0,
+      },
+    };
+  }
+
+  function kickersRecommended(supplementalRankings: SupplementalRankingSnapshot | null) {
+    const { context, rosters, board: late } = boardFor();
+    const result = generateDraftRecommendations({
+      context,
+      picks: [],
+      rosters,
+      board: late,
+      players: pool,
+      projections,
+      supplementalRankings,
+    });
+    return result.recommendations
+      .filter((recommendation) => recommendation.player.position === 'K')
+      .map((recommendation) => recommendation.player.name);
+  }
+
+  it('leads with the best-ranked kicker, not the first one alphabetically', () => {
+    const ranked = kickersRecommended(supplementalBoard());
+    expect(ranked.length).toBeGreaterThan(1);
+    // Jack is K1 and LAST alphabetically. Before the fix he was never offered.
+    expect(ranked[0]).toBe('Jack Kicker');
+    // Aaron is K10 and first alphabetically. He used to be the recommendation;
+    // now he does not make the shortlist at all.
+    expect(ranked).not.toContain('Aaron Kicker');
+  });
+
+  it('orders every offered kicker by the supplemental board', () => {
+    const ranked = kickersRecommended(supplementalBoard());
+    const byMerit = MERIT.map((first) => `${first} Kicker`).filter((name) => ranked.includes(name));
+    /*
+     * Not merely "the best one first": the tie-break has to hold all the way
+     * down, because that is exactly what was broken. A K4 above a K2 anywhere
+     * in this list is the original bug.
+     */
+    expect(ranked).toEqual(byMerit);
+  });
+
+  it('is deterministic with no board, so a draft never depends on iteration order', () => {
+    expect(kickersRecommended(null)).toEqual(kickersRecommended(null));
   });
 });

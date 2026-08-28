@@ -26,6 +26,8 @@ import {
   type FieldErrors,
 } from '@/packages/ui/auth-flow';
 import { requestPasswordReset, resetPassword, signIn, signUp } from '../auth-client';
+import { PlanCards, PlanCardsIntro } from './plan-cards';
+import { offerFor, type RequestedPlan } from '@/packages/ui/plans';
 import { Brand, ErrorBanner, LoadingMark, Panel } from './primitives';
 
 interface Result {
@@ -50,6 +52,13 @@ export function AuthScreenView({
   const [message, setMessage] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /*
+   * What they picked on the pricing page, carried into signup and posted after
+   * the account exists. Held here rather than in the URL so it survives a typo
+   * in the form, and it grants nothing either way - the server records it as a
+   * request against the new account and an admin still has to activate it.
+   */
+  const [chosenPlan, setChosenPlan] = useState<RequestedPlan | null>(null);
 
   const go = (next: AuthScreen) => {
     setScreen(next);
@@ -89,7 +98,40 @@ export function AuthScreenView({
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-5xl items-start gap-10 px-5 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+      {screen === 'plans' && (
+        /*
+         * Full width, and shown before anything can be typed. A visitor cannot
+         * reach the signup form without passing this, which is the entire point:
+         * signing up must never quietly mean "Basic".
+         */
+        <div className="mx-auto w-full max-w-4xl px-5 py-10">
+          <PlanCardsIntro signedIn={false} />
+          <PlanCards
+            onChoose={(plan) => {
+              setChosenPlan(plan);
+              go('sign_up');
+            }}
+            selected={chosenPlan}
+          />
+          <p className="mt-6 text-[13px] leading-6 text-[#7f919c]">
+            Payment is arranged privately while we are in beta - choosing a plan
+            here does not charge you.{' '}
+            <button
+              type="button"
+              onClick={() => go('sign_in')}
+              className="font-bold text-[#b9ff38] underline-offset-2 hover:underline"
+            >
+              Already have an account?
+            </button>
+          </p>
+        </div>
+      )}
+
+      <div
+        className={`mx-auto w-full max-w-5xl items-start gap-10 px-5 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] ${
+          screen === 'plans' ? 'hidden' : 'grid'
+        }`}
+      >
         <div className="hidden lg:block">
           <h1 className="max-w-md text-4xl font-black leading-[1.05] tracking-[-0.05em]">
             Know who to draft
@@ -148,13 +190,46 @@ export function AuthScreenView({
                   validateSignUp({ name, email, password }),
                   () => signUp.email({ name, email, password }),
                   () => {
+                    /*
+                     * Recorded straight after the account exists, because this
+                     * is the only moment we still hold the choice. It is a
+                     * request, not a grant - the account stays pending until an
+                     * admin activates it - so a failure here costs a label on
+                     * the pending screen, never access.
+                     */
+                    if (chosenPlan) {
+                      void fetch('/api/account/plan', {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ plan: chosenPlan }),
+                      })
+                        .catch(() => null)
+                        .finally(() => onSignedIn());
+                      setMessage(VERIFICATION_SENT_MESSAGE);
+                      return;
+                    }
                     setMessage(VERIFICATION_SENT_MESSAGE);
                     onSignedIn();
                   },
                 )
               }
-              footer={<Link onClick={() => go('sign_in')}>Already have an account?</Link>}
+              footer={
+                <>
+                  <Link onClick={() => go('sign_in')}>Already have an account?</Link>
+                  <Link onClick={() => go('plans')}>Compare plans</Link>
+                </>
+              }
             >
+              {chosenPlan && (
+                <p className="mb-1 rounded-xl border border-[#2a3b46] bg-[#0d1922] px-3 py-2.5 text-[12.5px] leading-5 text-[#a3b1ba]">
+                  <span className="font-black text-[#f7f8f2]">
+                    {offerFor(chosenPlan).label} · {offerFor(chosenPlan).price}
+                  </span>{' '}
+                  - {offerFor(chosenPlan).productName}. Nothing is charged now; an
+                  admin activates your account once payment is arranged.
+                </p>
+              )}
               <Field label="Name" value={name} onChange={setName} error={errors.name} autoComplete="name" />
               <Field label="Email" type="email" value={email} onChange={setEmail} error={errors.email} autoComplete="email" />
               <Field

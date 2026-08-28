@@ -182,14 +182,29 @@ export function PlayerCompare({
               ))}
             </div>
             <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
-              <JointStat label="Both survive" value={pair.bothSurvive} color={JOINT_COLORS.both} />
               <JointStat
-                label="Exactly one"
+                label="Both still there"
+                value={pair.bothSurvive}
+                color={JOINT_COLORS.both}
+              />
+              <JointStat
+                label="Just one of them"
                 value={pair.atLeastOneSurvives - pair.bothSurvive}
                 color={JOINT_COLORS.one}
               />
-              <JointStat label="Neither" value={pair.neitherSurvives} color={JOINT_COLORS.neither} />
+              <JointStat
+                label="Both gone"
+                value={pair.neitherSurvives}
+                color={JOINT_COLORS.neither}
+              />
             </dl>
+            {/* The decision the chart is actually about, said in one line. */}
+            <p className="mt-3 text-[12px] leading-5 text-[#c3d1d9]">
+              Chance you can still get one of these two at your next pick:{' '}
+              <span className="font-black text-[#e2e8eb]">
+                {Math.round(pair.atLeastOneSurvives)}%
+              </span>
+            </p>
             {pair.bSurvivesGivenAGone !== null && (
               <p className="mt-3 text-[11.5px] leading-5 text-[#8fa0aa]">
                 If {analyses[0].header.name} is gone, {analyses[1].header.name} is still there{' '}

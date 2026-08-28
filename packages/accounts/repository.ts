@@ -14,6 +14,7 @@
 import { query, queryOne, transaction } from '../db/client';
 import { AI_CONTROL_DEFAULT, type AiControl, type GlobalSpend, type SelectionSpend } from './ai-limits';
 import type { CreditBalance, Entitlement, Plan } from './entitlements';
+import type { RequestedPlan } from '../ui/plans';
 
 export interface UserProfile {
   userId: string;
@@ -21,6 +22,14 @@ export interface UserProfile {
   sleeperUsername: string | null;
   sleeperUserId: string | null;
   preferences: Record<string, unknown>;
+  /**
+   * The plan this person asked for at signup. NEVER what they were granted.
+   *
+   * Kept beside the profile rather than beside the entitlement precisely so
+   * that reading one can never be mistaken for reading the other.
+   */
+  requestedPlan: RequestedPlan | null;
+  requestedPlanAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +44,8 @@ export interface DraftSession {
   completedAt: Date | null;
   aiEnabled: boolean;
   aiCreditConsumed: boolean;
+  /** The drafter explicitly switched the strategist on for this draft. */
+  aiRequested: boolean;
 }
 
 export interface Account {
@@ -93,6 +104,8 @@ export async function loadAccount(userId: string): Promise<Account | null> {
     sleeper_username: string | null;
     sleeper_user_id: string | null;
     preferences: Record<string, unknown>;
+    requested_plan: RequestedPlan | null;
+    requested_plan_at: Date | null;
     created_at: Date;
     updated_at: Date;
   }>(`select * from user_profile where user_id = $1`, [userId]);
@@ -129,6 +142,8 @@ export async function loadAccount(userId: string): Promise<Account | null> {
       sleeperUsername: profile.sleeper_username,
       sleeperUserId: profile.sleeper_user_id,
       preferences: profile.preferences ?? {},
+      requestedPlan: profile.requested_plan,
+      requestedPlanAt: profile.requested_plan_at,
       createdAt: profile.created_at,
       updatedAt: profile.updated_at,
     },
@@ -416,6 +431,7 @@ interface DraftSessionRow extends Record<string, unknown> {
   completed_at: Date | null;
   ai_enabled: boolean;
   ai_credit_consumed: boolean;
+  ai_requested: boolean;
 }
 
 function toDraftSession(row: DraftSessionRow): DraftSession {
@@ -429,6 +445,7 @@ function toDraftSession(row: DraftSessionRow): DraftSession {
     completedAt: row.completed_at,
     aiEnabled: row.ai_enabled,
     aiCreditConsumed: row.ai_credit_consumed,
+    aiRequested: row.ai_requested,
   };
 }
 
@@ -616,5 +633,197 @@ export async function releaseRequestLease(
         set released_at = now(), outcome = $2
       where id = $1 and released_at is null`,
     [leaseId, outcome],
+  );
+}
+
+/* --------------------------------------------- what somebody asked to buy */
+
+/**
+ * Records that a person chose a plan. Grants nothing.
+ *
+ * Worth being explicit about what this function does NOT touch: `entitlement`,
+ * `ai_draft_credits`, and anything that decides access. It writes one column on
+ * the profile. An admin still has to activate the account, and that is a
+ * separate, deliberate act by a different function.
+ */
+export async function setRequestedPlan({
+  userId,
+  plan,
+}: {
+  userId: string;
+  plan: RequestedPlan;
+}): Promise<void> {
+  await query(
+    `update user_profile
+        set requested_plan = $2, requested_plan_at = now(), updated_at = now()
+      where user_id = $1`,
+    [userId, plan],
+  );
+}
+
+/**
+ * Switches the strategist on, or off, for one draft.
+ *
+ * Deliberately does not spend anything. The credit is charged by
+ * `consumeDraftCredit` when the first request is actually authorised, so a
+ * person who enables AI and then closes the tab has spent nothing, and one who
+ * enables it on a draft their plan does not cover is refused without being
+ * charged for the privilege.
+ *
+ * Turning it back OFF does not refund a credit that has already been spent -
+ * the draft is paid for, and re-enabling it later costs nothing more.
+ */
+export async function setDraftAiRequested({
+  userId,
+  sessionId,
+  enabled,
+}: {
+  userId: string;
+  sessionId: string;
+  enabled: boolean;
+}): Promise<DraftSession | null> {
+  const row = await queryOne<DraftSessionRow>(
+    `update draft_session
+        set ai_requested = $3,
+            ai_requested_at = case when $3 then now() else ai_requested_at end,
+            updated_at = now()
+      where id = $1 and user_id = $2
+      returning *`,
+    [sessionId, userId, enabled],
+  );
+  return row ? toDraftSession(row) : null;
+}
+
+/* ------------------------------------------------------------ the admin view */
+
+/** One row of the admin user list. Everything an operator needs, nothing more. */
+export interface AdminUserRow {
+  userId: string;
+  email: string;
+  name: string | null;
+  registeredAt: Date;
+  requestedPlan: RequestedPlan | null;
+  plan: Plan | null;
+  entitlementStatus: Entitlement['status'] | null;
+  creditsIncluded: number;
+  creditsConsumed: number;
+  aiDraftsUsed: number;
+  aiCalls: number;
+  aiSpendUsd: number;
+  draftCount: number;
+  lastDraftAt: Date | null;
+  lastActivityAt: Date | null;
+}
+
+/**
+ * Every user, with the numbers an operator actually acts on.
+ *
+ * One query rather than one-per-user: a list of twenty accounts that issues
+ * eighty round trips is how an admin page becomes the slowest page in a product.
+ * The aggregates are subqueries so a user with no drafts still appears - an
+ * inner join would hide exactly the people waiting to be activated.
+ */
+export async function listAdminUsers({
+  search = null,
+  limit = 200,
+}: {
+  search?: string | null;
+  limit?: number;
+} = {}): Promise<AdminUserRow[]> {
+  const rows = await query<{
+    user_id: string;
+    email: string;
+    name: string | null;
+    registered_at: Date;
+    requested_plan: RequestedPlan | null;
+    plan: Plan | null;
+    entitlement_status: Entitlement['status'] | null;
+    included_credits: number;
+    consumed_credits: number;
+    ai_drafts_used: string;
+    ai_calls: string;
+    ai_spend_usd: string;
+    draft_count: string;
+    last_draft_at: Date | null;
+    last_activity_at: Date | null;
+  }>(
+    `select u.id                                as user_id,
+            u.email,
+            u.name,
+            u."createdAt"                       as registered_at,
+            p.requested_plan,
+            e.plan,
+            e.status                            as entitlement_status,
+            coalesce(c.included_credits, 0)     as included_credits,
+            coalesce(c.consumed_credits, 0)     as consumed_credits,
+            (select count(*) from draft_session s
+              where s.user_id = u.id and s.ai_credit_consumed) as ai_drafts_used,
+            (select coalesce(sum(a.calls), 0) from ai_usage a
+              where a.user_id = u.id)           as ai_calls,
+            (select coalesce(sum(a.estimated_cost_usd), 0) from ai_usage a
+              where a.user_id = u.id)           as ai_spend_usd,
+            (select count(*) from draft_session s where s.user_id = u.id) as draft_count,
+            (select max(s.started_at) from draft_session s
+              where s.user_id = u.id)           as last_draft_at,
+            greatest(
+              u."createdAt",
+              coalesce((select max(s.updated_at) from draft_session s where s.user_id = u.id), u."createdAt"),
+              coalesce((select max(a.created_at) from ai_usage a where a.user_id = u.id), u."createdAt")
+            )                                   as last_activity_at
+       from "user" u
+       left join user_profile p on p.user_id = u.id
+       left join entitlement e  on e.user_id = u.id and e.status = 'active'
+       left join ai_draft_credits c on c.user_id = u.id
+      where $1::text is null
+         or u.email ilike '%' || $1 || '%'
+         or coalesce(u.name, '') ilike '%' || $1 || '%'
+      order by (e.plan is null) desc, u."createdAt" desc
+      limit $2`,
+    [search?.trim() || null, Math.min(Math.max(limit, 1), 500)],
+  );
+
+  return rows.map((row) => ({
+    userId: row.user_id,
+    email: row.email,
+    name: row.name,
+    registeredAt: row.registered_at,
+    requestedPlan: row.requested_plan,
+    plan: row.plan,
+    entitlementStatus: row.entitlement_status,
+    creditsIncluded: Number(row.included_credits),
+    creditsConsumed: Number(row.consumed_credits),
+    aiDraftsUsed: Number(row.ai_drafts_used),
+    aiCalls: Number(row.ai_calls),
+    aiSpendUsd: Number(row.ai_spend_usd),
+    draftCount: Number(row.draft_count),
+    lastDraftAt: row.last_draft_at,
+    lastActivityAt: row.last_activity_at,
+  }));
+}
+
+/** Takes access away. The deliberate act, as opposed to letting one lapse. */
+export async function revokeEntitlement(userId: string): Promise<void> {
+  await query(
+    `update entitlement set status = 'revoked', updated_at = now()
+      where user_id = $1 and status = 'active'`,
+    [userId],
+  );
+}
+
+/** Sets the balance outright, for an operator correcting a mistake. */
+export async function setCredits({
+  userId,
+  included,
+}: {
+  userId: string;
+  included: number;
+}): Promise<void> {
+  await query(
+    `insert into ai_draft_credits (user_id, included_credits)
+     values ($1, $2)
+     on conflict (user_id) do update
+        set included_credits = greatest(excluded.included_credits, ai_draft_credits.consumed_credits),
+            updated_at = now()`,
+    [userId, Math.max(0, Math.round(included))],
   );
 }

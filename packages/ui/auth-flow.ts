@@ -13,7 +13,20 @@
  * enumeration attack.
  */
 
-export type AuthScreen = 'sign_in' | 'sign_up' | 'forgot_password' | 'reset_password' | 'sent';
+export type AuthScreen =
+  /**
+   * The two products, before anybody types anything.
+   *
+   * The default for a visitor with no link telling us otherwise, because a
+   * signup that does not first say what Basic and Pro are is a signup that
+   * silently means Basic - which is the thing this screen exists to prevent.
+   */
+  | 'plans'
+  | 'sign_in'
+  | 'sign_up'
+  | 'forgot_password'
+  | 'reset_password'
+  | 'sent';
 
 /** Better Auth's own minimum. Kept here so the form can say so before posting. */
 export const MIN_PASSWORD_LENGTH = 12;
@@ -126,7 +139,13 @@ export function screenForUrl(search: string): { screen: AuthScreen; token: strin
   const token = params.get('token');
   if (token) return { screen: 'reset_password', token };
   const requested = params.get('auth');
+  if (requested === 'sign_in') return { screen: 'sign_in', token: null };
   if (requested === 'sign_up') return { screen: 'sign_up', token: null };
   if (requested === 'forgot') return { screen: 'forgot_password', token: null };
-  return { screen: 'sign_in', token: null };
+  /*
+   * Pricing first. A returning customer reaches sign-in in one click from
+   * there, and a new one cannot arrive inside the product without having been
+   * shown what the two versions are.
+   */
+  return { screen: 'plans', token: null };
 }

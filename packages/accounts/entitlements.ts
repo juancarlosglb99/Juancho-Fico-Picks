@@ -101,6 +101,14 @@ export type AiRefusal =
   | 'no_credits_remaining'
   | 'credits_expired'
   | 'strategist_not_configured'
+  /**
+   * The drafter has not switched the strategist on for this draft.
+   *
+   * Not a failure and not a plan problem: a credit buys a draft, and this is
+   * the state before somebody has chosen to spend one. Opening a draft or
+   * running a mock leaves an account here, costing nothing.
+   */
+  | 'ai_not_enabled_for_draft'
   /** The deployment-wide kill switch, from the environment or the control row. */
   | 'ai_disabled'
   /** This user, or this draft, already has a call in flight. */
@@ -284,6 +292,8 @@ export const REFUSAL_MESSAGE: Record<AiRefusal, string> = {
     'You have used all of your AI drafts. The deterministic engine is unaffected.',
   credits_expired: 'Your AI draft credits have expired.',
   strategist_not_configured: 'The AI strategist is not configured on this server.',
+  ai_not_enabled_for_draft:
+    'The AI Strategist is not switched on for this draft. Your draft is running in Standard Mode.',
   ai_disabled: 'The AI strategist is switched off right now. Your draft is unaffected.',
   request_in_flight: 'The strategist is already working on a pick for you.',
   selection_already_answered: 'The strategist has already answered this pick.',

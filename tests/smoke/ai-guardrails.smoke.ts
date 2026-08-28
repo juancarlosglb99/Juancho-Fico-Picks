@@ -22,7 +22,9 @@ import {
   ensureAccount,
   grantCredits,
   setAiControl,
+  setDraftAiRequested,
   setEntitlement,
+  startDraftSession,
 } from '../../packages/accounts/repository';
 import { DEFAULT_AI_LIMITS } from '../../packages/accounts/ai-limits';
 
@@ -118,6 +120,23 @@ async function body(response: Response) {
 let draftSeq = 0;
 const nextDraft = () => `smoke-guard-${(draftSeq += 1)}`;
 
+/**
+ * Switch the strategist on for a draft, the way the drafter's own click does.
+ *
+ * Every test below that expects a call has to do this first, which is the
+ * point: a credit buys a draft and nothing is spent until somebody asks.
+ */
+async function enableAi(sleeperDraftId: string) {
+  const session = await startDraftSession({
+    userId: USER.id,
+    sleeperDraftId,
+    leagueId: null,
+    isMock: true,
+  });
+  await setDraftAiRequested({ userId: USER.id, sessionId: session.id, enabled: true });
+  return sleeperDraftId;
+}
+
 suite('the route, with the SDK replaced by a counter', () => {
   beforeAll(async () => {
     process.env.ANTHROPIC_API_KEY ||= 'not-a-real-key-and-never-sent';
@@ -150,8 +169,8 @@ suite('the route, with the SDK replaced by a counter', () => {
     delete process.env.AI_KILL_SWITCH;
   });
 
-  it('calls once for a Pro drafter with credits', async () => {
-    const answer = await body(await post(1, nextDraft()));
+  it('calls once for a Pro drafter who switched AI on', async () => {
+    const answer = await body(await post(1, await enableAi(nextDraft())));
     expect(anthropicCalls).toBe(1);
     expect(answer.refusal).toBeUndefined();
   });
@@ -182,21 +201,23 @@ suite('the route, with the SDK replaced by a counter', () => {
   });
 
   it('never reaches Anthropic while the environment kill switch is pulled', async () => {
+    const draft = await enableAi(nextDraft());
     process.env.AI_KILL_SWITCH = 'true';
-    const answer = await body(await post(1, nextDraft()));
+    const answer = await body(await post(1, draft));
     expect(anthropicCalls).toBe(0);
     expect(answer.refusal).toBe('ai_disabled');
   });
 
   it('never reaches Anthropic while the control row is switched off', async () => {
+    const draft = await enableAi(nextDraft());
     await setAiControl({ enabled: false, disabledReason: 'smoke' });
-    const answer = await body(await post(1, nextDraft()));
+    const answer = await body(await post(1, draft));
     expect(anthropicCalls).toBe(0);
     expect(answer.refusal).toBe('ai_disabled');
   });
 
   it('never asks twice about the same pick', async () => {
-    const draft = nextDraft();
+    const draft = await enableAi(nextDraft());
     await post(7, draft);
     const second = await body(await post(7, draft));
     /*
@@ -212,7 +233,7 @@ suite('the route, with the SDK replaced by a counter', () => {
   });
 
   it('stops at eighteen calls in one draft, whatever the client does', async () => {
-    const draft = nextDraft();
+    const draft = await enableAi(nextDraft());
     // Cheap calls, so the spend cap cannot be the thing that stops it.
     costPerCall = { inputTokens: 500, outputTokens: 50 };
     const refusals: (string | undefined)[] = [];
@@ -224,7 +245,7 @@ suite('the route, with the SDK replaced by a counter', () => {
   });
 
   it('stops on the spend cap before it stops on the call count', async () => {
-    const draft = nextDraft();
+    const draft = await enableAi(nextDraft());
     // Roughly $0.60 a call on the production model: nine of these is $5.40.
     costPerCall = { inputTokens: 30_000, outputTokens: 2_000 };
     const refusals: (string | undefined)[] = [];
@@ -246,14 +267,15 @@ suite('the route, with the SDK replaced by a counter', () => {
   });
 
   it('stops on the deployment-wide daily ceiling', async () => {
+    const draft = await enableAi(nextDraft());
     await setAiControl({ dailySpendLimitUsd: 0 });
-    const answer = await body(await post(1, nextDraft()));
+    const answer = await body(await post(1, draft));
     expect(anthropicCalls).toBe(0);
     expect(answer.refusal).toBe('daily_spend_limit');
   });
 
   it('lets exactly one of four simultaneous requests through', async () => {
-    const draft = nextDraft();
+    const draft = await enableAi(nextDraft());
     // The first call holds its slot long enough for the others to arrive, which
     // is the shape a retrying or duplicated client actually produces against a
     // strategist that takes twenty seconds.
@@ -270,7 +292,7 @@ suite('the route, with the SDK replaced by a counter', () => {
   });
 
   it('gives the slot back after every call, so the next pick is askable', async () => {
-    const draft = nextDraft();
+    const draft = await enableAi(nextDraft());
     await post(1, draft);
     const held = await query<{ n: string }>(
       `select count(*) as n from ai_request_lease l
@@ -304,6 +326,85 @@ suite('the route, with the SDK replaced by a counter', () => {
       [draft],
     );
     expect(Number(logged[0].n)).toBe(1);
+  });
+
+  /* ------------------------------------------- a credit buys a DRAFT, once */
+
+  /**
+   * The commercial contract, against a real database.
+   *
+   * A Pro customer has a fixed number of AI drafts. Every one of these tests is
+   * a way that number could be silently wrong.
+   */
+  async function creditsConsumed(): Promise<number> {
+    const rows = await query<{ consumed: number }>(
+      `select consumed_credits as consumed from ai_draft_credits where user_id = $1`,
+      [USER.id],
+    );
+    return Number(rows[0].consumed);
+  }
+
+  it('does NOT spend a credit when a Pro drafter only opens a draft', async () => {
+    const before = await creditsConsumed();
+    const answer = await body(await post(1, nextDraft()));
+    expect(anthropicCalls).toBe(0);
+    expect(answer.refusal).toBe('ai_not_enabled_for_draft');
+    // The part that costs money if it is wrong.
+    expect(await creditsConsumed()).toBe(before);
+  });
+
+  it('does NOT spend a credit merely by switching AI on', async () => {
+    const before = await creditsConsumed();
+    await enableAi(nextDraft());
+    // Enabling is a commitment, not a charge. Closing the tab here costs nothing.
+    expect(await creditsConsumed()).toBe(before);
+    expect(anthropicCalls).toBe(0);
+  });
+
+  it('spends exactly one credit on the first allowed request', async () => {
+    const before = await creditsConsumed();
+    const draft = await enableAi(nextDraft());
+    await post(1, draft);
+    expect(anthropicCalls).toBe(1);
+    expect(await creditsConsumed()).toBe(before + 1);
+  });
+
+  it('spends NOTHING more for the rest of that same draft', async () => {
+    const draft = await enableAi(nextDraft());
+    await post(1, draft);
+    const afterFirst = await creditsConsumed();
+    for (const pick of [2, 3, 4, 5]) await post(pick, draft);
+    expect(anthropicCalls).toBe(5);
+    // Five calls, one credit. This is what "a credit buys a draft" has to mean.
+    expect(await creditsConsumed()).toBe(afterFirst);
+  });
+
+  it('spends nothing when the same draft is reopened later', async () => {
+    const draft = await enableAi(nextDraft());
+    await post(1, draft);
+    const afterFirst = await creditsConsumed();
+    // Re-entering the room: a fresh session row is not created, and the draft
+    // is already paid for.
+    await enableAi(draft);
+    await post(9, draft);
+    expect(await creditsConsumed()).toBe(afterFirst);
+  });
+
+  it('spends a new credit on a DIFFERENT draft', async () => {
+    const first = await enableAi(nextDraft());
+    await post(1, first);
+    const afterFirst = await creditsConsumed();
+    const second = await enableAi(nextDraft());
+    await post(1, second);
+    expect(await creditsConsumed()).toBe(afterFirst + 1);
+  });
+
+  it('spends nothing for an admin, on any number of drafts', async () => {
+    await setEntitlement({ userId: USER.id, plan: 'admin' });
+    const before = await creditsConsumed();
+    for (const pick of [1, 2, 3]) await post(pick, 'smoke-guard-admin-credits');
+    expect(anthropicCalls).toBe(3);
+    expect(await creditsConsumed()).toBe(before);
   });
 
   it('holds an admin to the same ceilings as everybody else', async () => {

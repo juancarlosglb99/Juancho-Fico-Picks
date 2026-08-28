@@ -12,6 +12,7 @@
  * empty session of your own rather than reading theirs.
  */
 import { currentUser, type SessionUser } from '../auth/server';
+import { isRequestedPlan, type RequestedPlan } from '../ui/plans';
 import { inspectRuntime } from '../config/runtime';
 import { databaseConfigured } from '../db/client';
 import {
@@ -23,6 +24,7 @@ import {
   type AiLimits,
 } from './ai-limits';
 import {
+  creditsRemaining,
   decideAiAccess,
   REFUSAL_MESSAGE,
   resolveAccess,
@@ -34,6 +36,8 @@ import {
 import {
   acquireRequestLease,
   consumeDraftCredit,
+  setDraftAiRequested,
+  setRequestedPlan,
   draftUsageTotals,
   ensureAccount,
   findDraftSession,
@@ -224,6 +228,60 @@ export async function resolveAiAccess({
   }
 
   /*
+   * Is AI switched on for the deployment at all?
+   *
+   * Read before the per-draft question, because "we have switched AI off" is a
+   * better answer than "you have not switched it on" - and because a drafter
+   * should not be invited to spend a credit on a strategist that is not going
+   * to answer. The rest of the ceilings are checked further down, after the
+   * cheaper gates.
+   */
+  const control = await readAiControl().catch(() => AI_CONTROL_DEFAULT);
+  if (killSwitch || !control.enabled) {
+    return {
+      allowed: false,
+      reason: 'ai_disabled',
+      message: REFUSAL_MESSAGE.ai_disabled,
+      plan: access.plan,
+      creditsRemaining: access.creditsRemaining,
+      user,
+      session,
+      usage,
+      leaseId: null,
+      limits: null,
+    };
+  }
+
+  /*
+   * Has this drafter actually asked for AI on this draft?
+   *
+   * A credit buys a DRAFT, so this is the gate that stops opening one, watching
+   * one, or running a casual mock from spending anything. It sits after the
+   * entitlement check - a Basic account should be told their plan does not
+   * include the strategist, not that they forgot to switch it on - and before
+   * the credit, which is the whole point.
+   *
+   * Admin is exempt because an admin account has nothing to spend and its badge
+   * says the strategist is always on; there would be nothing for the switch to
+   * mean.
+   */
+  const aiEnabledForDraft = access.plan === 'admin' || session.aiRequested;
+  if (!aiEnabledForDraft) {
+    return {
+      allowed: false,
+      reason: 'ai_not_enabled_for_draft',
+      message: REFUSAL_MESSAGE.ai_not_enabled_for_draft,
+      plan: access.plan,
+      creditsRemaining: access.creditsRemaining,
+      user,
+      session,
+      usage,
+      leaseId: null,
+      limits: null,
+    };
+  }
+
+  /*
    * The ceilings. Deliberately AFTER the entitlement check and BEFORE anything
    * that costs money or takes a lock, so a refusal here leaves the database in
    * exactly the state it was in.
@@ -231,7 +289,6 @@ export async function resolveAiAccess({
    * An admin is exempt from paying, not from the ceilings: a runaway loop on a
    * support account spends real money in exactly the same way.
    */
-  const control = await readAiControl().catch(() => AI_CONTROL_DEFAULT);
   const limits = effectiveLimits(process.env, control);
   const reservedUsd = reservedCallCostUsd(model, { inputTokens: promptTokens });
   const [global, selection] = await Promise.all([
@@ -419,6 +476,13 @@ export interface AccountSummary {
    */
   access: AccessState;
   creditsRemaining: number | null;
+  /**
+   * What this person asked for at signup, if anything.
+   *
+   * Reported so the pending screen can say "you selected Pro" and the draft
+   * room can tell a never-chose from a chose-and-waiting. It confers nothing.
+   */
+  requestedPlan: RequestedPlan | null;
   accountsEnabled: boolean;
   /**
    * Fatal configuration problems, in production only.
@@ -438,6 +502,7 @@ export async function accountSummary(request: Request): Promise<AccountSummary> 
     plan: 'basic',
     access: 'pending',
     creditsRemaining: null,
+    requestedPlan: null,
     accountsEnabled: accountsOn,
     misconfigured: runtime.problems,
   });
@@ -463,6 +528,7 @@ export async function accountSummary(request: Request): Promise<AccountSummary> 
     plan: access.plan,
     access: access.state,
     creditsRemaining: ai.creditsRemaining,
+    requestedPlan: account.profile.requestedPlan,
     accountsEnabled: true,
     misconfigured: runtime.problems,
   };
@@ -498,4 +564,162 @@ export async function markDraftComplete(request: Request, sleeperDraftId: string
     const { completeDraftSession } = await import('./repository');
     await completeDraftSession(session.id);
   }
+}
+
+/* ---------------------------------------------- what a person asked to buy */
+
+/**
+ * Records a plan choice against the signed-in account.
+ *
+ * The user id comes from the session cookie, never from the body, so there is
+ * no parameter through which one person can choose a plan for another. And it
+ * grants nothing: the entitlement table is untouched, and an admin still has to
+ * activate the account by hand.
+ */
+export async function requestPlan(
+  request: Request,
+  plan: unknown,
+): Promise<{ ok: boolean; requestedPlan: RequestedPlan | null; error?: string }> {
+  if (!accountsEnabled()) return { ok: false, requestedPlan: null, error: 'Accounts are not configured.' };
+  if (!isRequestedPlan(plan)) {
+    return { ok: false, requestedPlan: null, error: 'Choose either Basic or Pro.' };
+  }
+  const user = await currentUser(request);
+  if (!user) return { ok: false, requestedPlan: null, error: 'Sign in first.' };
+
+  await ensureAccount({ userId: user.id, displayName: user.name });
+  await setRequestedPlan({ userId: user.id, plan });
+  return { ok: true, requestedPlan: plan };
+}
+
+/* ------------------------------------ switching the strategist on for a draft */
+
+export interface DraftAiState {
+  ok: boolean;
+  /** Whether the strategist will be asked on this draft from now on. */
+  aiRequested: boolean;
+  /** True once this draft has actually been charged. */
+  creditConsumed: boolean;
+  creditsRemaining: number | null;
+  plan: Plan;
+  error?: string;
+}
+
+/**
+ * The moment a drafter chooses to spend a credit - or takes it back.
+ *
+ * Nothing is charged here. This sets a flag; `resolveAiAccess` refuses to call
+ * anything while that flag is false, and charges on the first request it
+ * actually authorises. The two-step matters: a person who switches AI on and
+ * then closes the tab has spent nothing, and one who switches it on for a draft
+ * their plan does not cover is refused without being billed for finding out.
+ *
+ * Switching it back off does not refund a draft already paid for. Re-enabling
+ * it costs nothing more, which is what "a credit buys a draft" has to mean.
+ */
+export async function setDraftAi(
+  request: Request,
+  {
+    sleeperDraftId,
+    leagueId = null,
+    isMock = false,
+    enabled,
+  }: { sleeperDraftId: string; leagueId?: string | null; isMock?: boolean; enabled: boolean },
+): Promise<DraftAiState> {
+  const refuse = (error: string): DraftAiState => ({
+    ok: false,
+    aiRequested: false,
+    creditConsumed: false,
+    creditsRemaining: null,
+    plan: 'basic',
+    error,
+  });
+
+  if (!accountsEnabled()) return refuse('Accounts are not configured.');
+  if (!sleeperDraftId) return refuse('A draft is required.');
+
+  const user = await currentUser(request);
+  if (!user) return refuse(REFUSAL_MESSAGE.not_signed_in);
+
+  const account = await ensureAccount({ userId: user.id, displayName: user.name });
+  const access = resolveAccess(account.entitlement, new Date());
+  if (access.state !== 'active') return refuse(REFUSAL_MESSAGE.not_activated);
+
+  /*
+   * Basic never reaches this, and it is refused here as well as in
+   * `resolveAiAccess`. Two gates for one rule is deliberate: this one keeps a
+   * Basic account from ever setting a flag that implies it has the strategist,
+   * and that one is the gate that actually stands in front of the money.
+   */
+  if (access.plan === 'basic') return refuse(REFUSAL_MESSAGE.plan_does_not_include_ai);
+
+  /*
+   * Refuse to switch AI ON while the deployment has it off.
+   *
+   * No money is at risk either way - `resolveAiAccess` would refuse every
+   * request - but a badge reading "AI draft" over a draft that will never get
+   * an AI answer is a worse lie than a plain refusal.
+   */
+  if (enabled) {
+    const control = await readAiControl().catch(() => AI_CONTROL_DEFAULT);
+    if (killSwitchEngaged() || !control.enabled) {
+      return { ...refuse(REFUSAL_MESSAGE.ai_disabled), plan: access.plan };
+    }
+  }
+
+  const session = await startDraftSession({
+    userId: user.id,
+    sleeperDraftId,
+    leagueId,
+    isMock,
+  });
+
+  /*
+   * Out of credits, and this draft has not been paid for. Refused BEFORE the
+   * flag is set, so the draft room does not show "AI draft" to somebody who
+   * will be declined on their first pick.
+   */
+  if (
+    enabled &&
+    access.plan !== 'admin' &&
+    !session.aiCreditConsumed &&
+    creditsRemaining(account.credits, new Date()) <= 0
+  ) {
+    return { ...refuse(REFUSAL_MESSAGE.no_credits_remaining), plan: access.plan, creditsRemaining: 0 };
+  }
+
+  const updated = await setDraftAiRequested({
+    userId: user.id,
+    sessionId: session.id,
+    enabled,
+  });
+  if (!updated) return refuse('That draft does not belong to this account.');
+
+  return {
+    ok: true,
+    aiRequested: updated.aiRequested,
+    creditConsumed: updated.aiCreditConsumed,
+    creditsRemaining:
+      access.plan === 'admin' ? null : creditsRemaining(account.credits, new Date()),
+    plan: access.plan,
+  };
+}
+
+/* --------------------------------------------------------- the admin guard */
+
+/**
+ * Is the caller an admin? Decided from the cookie and our own rows, only.
+ *
+ * There is deliberately no parameter here. Not a header, not a body field, not
+ * a query string - nothing an attacker can set. The session cookie identifies
+ * the user, the entitlement table says what they are, and an admin whose
+ * entitlement has been revoked stops being one the moment the row changes.
+ */
+export async function requireAdmin(request: Request): Promise<SessionUser | null> {
+  if (!accountsEnabled()) return null;
+  const user = await currentUser(request);
+  if (!user) return null;
+  const account = await ensureAccount({ userId: user.id, displayName: user.name });
+  const access = resolveAccess(account.entitlement, new Date());
+  return access.state === 'active' && access.plan === 'admin' ? user : null;
 }

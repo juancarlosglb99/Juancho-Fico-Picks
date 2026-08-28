@@ -200,7 +200,7 @@ function ConnectStep({
         <PanelTitle>What you get in the room</PanelTitle>
         <ul className="flex flex-col gap-2.5 text-[12.5px] leading-6 text-[#a3b1ba]">
           <li>· One recommendation, with the case against it.</li>
-          <li>· Whether each player survives to your next selection.</li>
+          <li>· The chance each player is still there at your next pick.</li>
           <li>· A live draft board and your roster, side by side.</li>
           <li>· Deeper analysis on any player, when you ask for it.</li>
         </ul>

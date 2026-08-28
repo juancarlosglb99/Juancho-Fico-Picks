@@ -98,8 +98,14 @@ describe('which screen a link asks for', () => {
     expect(screenForUrl('?token=abc123')).toEqual({ screen: 'reset_password', token: 'abc123' });
   });
 
-  it('defaults to signing in', () => {
-    expect(screenForUrl('')).toEqual({ screen: 'sign_in', token: null });
+  it('defaults to the pricing page, not to a signup box', () => {
+    /*
+     * The requirement this encodes: a visitor must be shown what Basic and Pro
+     * are BEFORE they can create an account, because a signup that skips that
+     * silently means Basic.
+     */
+    expect(screenForUrl('')).toEqual({ screen: 'plans', token: null });
+    expect(screenForUrl('?auth=sign_in').screen).toBe('sign_in');
     expect(screenForUrl('?auth=sign_up').screen).toBe('sign_up');
     expect(screenForUrl('?auth=forgot').screen).toBe('forgot_password');
   });

@@ -12,6 +12,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import type { AccessState, Plan } from '@/packages/accounts/entitlements';
+import type { RequestedPlan } from '@/packages/ui/plans';
 
 export interface AccountState {
   loading: boolean;
@@ -23,6 +24,8 @@ export interface AccountState {
   /** Whether an admin has activated this account. The private beta's gate. */
   access: AccessState;
   creditsRemaining: number | null;
+  /** What they asked for at signup. Never what they were granted. */
+  requestedPlan: RequestedPlan | null;
   /** Fatal server configuration problems. Empty in any healthy deployment. */
   misconfigured: string[];
   refresh: () => void;
@@ -35,6 +38,7 @@ const INITIAL = {
   plan: 'basic' as Plan,
   access: 'pending' as AccessState,
   creditsRemaining: null as number | null,
+  requestedPlan: null as RequestedPlan | null,
   misconfigured: [] as string[],
 };
 
