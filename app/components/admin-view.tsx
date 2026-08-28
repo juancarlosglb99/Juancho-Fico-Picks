@@ -42,6 +42,23 @@ interface AiControls {
   maxCallsPerDraft: number;
   maxRepairsPerDraft: number;
   inFlight: number;
+  attempts?: {
+    createdAt: string;
+    sleeperDraftId: string;
+    selectionKey: string | null;
+    attemptIndex: number;
+    isRepair: boolean;
+    outcome: string;
+    stopReason: string | null;
+    hadToolUse: boolean;
+    toolInputKeyCount: number | null;
+    validationFaults: string[];
+    providerStatus: number | null;
+    providerErrorType: string | null;
+    estimatedCostUsd: number;
+    latencyMs: number | null;
+    email: string;
+  }[];
 }
 
 const STATUS_TONE = {
@@ -340,6 +357,47 @@ function AiPanel({
         {ai.maxRepairsPerDraft} retries. When any cap is reached the draft keeps
         working on Juancho and no AI request is made.
       </p>
+
+      {ai.attempts && ai.attempts.length > 0 && (
+        <div className="mt-4 border-t border-[#16242d] pt-3">
+          <PanelTitle>Recent AI attempts</PanelTitle>
+          <ul className="mt-2 flex flex-col gap-1">
+            {ai.attempts.slice(0, 12).map((attempt, index) => (
+              <li
+                key={`${attempt.createdAt}-${index}`}
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[11.5px] text-[#8fa0aa]"
+              >
+                <span className="font-mono text-[#5f7280]">
+                  {attempt.sleeperDraftId.slice(0, 6)}…
+                </span>
+                <span className="font-bold text-[#c3d1d9]">
+                  Pick {attempt.selectionKey ?? '?'}
+                </span>
+                {attempt.isRepair && <span className="text-[#e0a13c]">repair</span>}
+                <span
+                  className="font-black uppercase tracking-[0.08em]"
+                  style={{ color: attempt.outcome === 'answered' ? '#b9ff38' : '#ff9a80' }}
+                >
+                  {attempt.outcome.replace(/_/g, ' ')}
+                </span>
+                {attempt.stopReason && <span>stop={attempt.stopReason}</span>}
+                {attempt.hadToolUse && attempt.toolInputKeyCount === 0 && (
+                  <span className="text-[#ff9a80]">empty tool input</span>
+                )}
+                {attempt.providerErrorType && (
+                  <span className="text-[#ff9a80]">
+                    {attempt.providerStatus} {attempt.providerErrorType}
+                  </span>
+                )}
+                {attempt.validationFaults.length > 0 && (
+                  <span>missing: {attempt.validationFaults.slice(0, 3).join(', ')}</span>
+                )}
+                <span className="text-[#5f7280]">{formatSpend(attempt.estimatedCostUsd)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </Panel>
   );
 }

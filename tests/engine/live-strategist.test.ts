@@ -17,6 +17,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { generateDraftRecommendations } from '../../packages/engine/draft/recommendations';
 import { buildDraftBrief } from '../../packages/engine/strategist/brief';
 import {
+  AI_UNAVAILABLE_NOTE,
   APPROACHING_TURN_POLICY,
   DEFAULT_CALL_POLICY,
   LiveStrategist,
@@ -413,7 +414,13 @@ describe('when the strategist fails', () => {
     const state = live.current();
 
     expect(state.phase).toBe('fallback');
-    expect(state.reason).toContain('529');
+    /*
+     * This assertion used to be `toContain('529')`, which encoded the bug: the
+     * transport's own text was what the drafter saw. A provider status code is
+     * ours to read, not theirs.
+     */
+    expect(state.reason).toBe(AI_UNAVAILABLE_NOTE);
+    expect(state.technicalDetail).toContain('529');
     // No decision object at all, so the panel simply keeps showing Juancho.
     expect(state.decision).toBeNull();
   });
@@ -796,5 +803,152 @@ describe('why the strategist’s pick was set aside', () => {
     // Whatever it says, it must describe THIS rejection rather than a generic one.
     expect(live.current().phase).toBe('fallback');
     expect(reason.toLowerCase()).toMatch(/could not identify|not available|already drafted/);
+  });
+});
+
+/* ------------------- every way the strategist can fail a customer */
+
+/**
+ * The production incident, as a suite.
+ *
+ * A live mock put this on a paying customer's screen:
+ *
+ *   "The strategist's response did not satisfy the contract.
+ *    recommendedPlayerId: Required field ..."
+ *
+ * followed by every required field in the schema. The cause was one line
+ * preferring the transport's own error text over the curated sentence; the
+ * deeper lesson is that there are eight ways for a model call to come back
+ * useless and only one of them had ever been exercised end to end.
+ *
+ * Two properties are asserted for every one of them: the drafter is shown a
+ * sentence written for a drafter, and a usable deterministic recommendation is
+ * still on screen. The technical fault is kept, on a field the draft UI does
+ * not render.
+ */
+describe('however the strategist fails, the draft keeps working', () => {
+  const RAW_LEAK = /required field|contract|schema|tool_use|stop_reason|max_tokens|429|500|529|\bapi\b/i;
+
+  function transportResult(
+    brief: DraftBrief,
+    overrides: Partial<StrategistTransportResult>,
+  ): StrategistTransportResult {
+    return { ...result(brief), ...overrides };
+  }
+
+  const cases: {
+    name: string;
+    reply: (brief: DraftBrief) => StrategistTransportResult | Error;
+  }[] = [
+    {
+      // The exact production failure: a tool call whose input was empty, so
+      // every required field is reported missing at once.
+      name: 'empty structured output - every required field missing',
+      reply: (brief) =>
+        transportResult(brief, {
+          response: null,
+          problems: [
+            'recommendedPlayerId: Required field is missing.',
+            'alternatives: Required field is missing.',
+            'confidence: Required field is missing.',
+            'urgency: Required field is missing.',
+            'strategy: Required field is missing.',
+          ] as unknown as StrategistTransportResult['problems'],
+          error:
+            "The strategist's response did not satisfy the contract. recommendedPlayerId: Required field is missing. alternatives: Required field is missing.",
+        }),
+    },
+    {
+      name: 'no tool call at all',
+      reply: (brief) =>
+        transportResult(brief, {
+          response: null,
+          problems: [],
+          error: 'The strategist returned no recommendation.',
+        }),
+    },
+    {
+      name: 'a text-only answer, with no structured output',
+      reply: (brief) =>
+        transportResult(brief, {
+          response: null,
+          problems: [],
+          error: 'The strategist returned no recommendation.',
+        }),
+    },
+    {
+      name: 'a partial response - some fields present, some missing',
+      reply: (brief) =>
+        transportResult(brief, {
+          response: null,
+          problems: ['urgency: Required field is missing.'] as unknown as StrategistTransportResult['problems'],
+          error: "The strategist's response did not satisfy the contract. urgency: Required field is missing.",
+        }),
+    },
+    {
+      name: 'a truncated tool call - max_tokens',
+      reply: (brief) =>
+        transportResult(brief, {
+          response: null,
+          problems: [],
+          error: 'The strategist stopped early (max_tokens) before completing its answer.',
+        }),
+    },
+    {
+      name: 'a provider error - rate limit or outage',
+      reply: () => new Error('429 rate_limit_error: too many requests'),
+    },
+    {
+      name: 'a repair that also failed',
+      reply: (brief) =>
+        transportResult(brief, {
+          response: null,
+          attempts: 2,
+          problems: ['recommendedPlayerId: Required field is missing.'] as unknown as StrategistTransportResult['problems'],
+          error: "The strategist's response did not satisfy the contract after a repair.",
+        }),
+    },
+    {
+      name: 'a stale answer about a board that has moved',
+      reply: (brief) =>
+        transportResult(brief, {
+          state: { ...brief.state, picksMade: brief.state.picksMade + 3, boardFingerprint: 'moved' },
+        }),
+    },
+  ];
+
+  for (const scenario of cases) {
+    it(`${scenario.name}: shows a drafter's sentence, keeps Juancho`, async () => {
+      const brief = ourTurn(1);
+      const { transport } = fakeTransport([scenario.reply(brief)]);
+      const live = new LiveStrategist(transport);
+
+      await live.update(brief);
+      const state = live.current();
+
+      // 1. The draft still has a recommendation to act on.
+      expect(brief.deterministic.recommended, scenario.name).not.toBeNull();
+      expect(state.decision?.final?.source, scenario.name).not.toBe('strategist');
+
+      // 2. Whatever is shown is written for a person, not for us.
+      const shown = state.reason ?? '';
+      expect(shown, scenario.name).toBeTruthy();
+      expect(shown, scenario.name).not.toMatch(RAW_LEAK);
+    });
+  }
+
+  it('keeps the exact fault for diagnostics, off the draft screen', async () => {
+    const brief = ourTurn(1);
+    const raw =
+      "The strategist's response did not satisfy the contract. recommendedPlayerId: Required field is missing.";
+    const { transport } = fakeTransport([
+      transportResult(brief, { response: null, problems: [], error: raw }),
+    ]);
+    const live = new LiveStrategist(transport);
+    await live.update(brief);
+
+    // The detail is not lost - it is just not where a customer reads.
+    expect(live.current().technicalDetail).toBe(raw);
+    expect(live.current().reason).not.toContain('recommendedPlayerId');
   });
 });

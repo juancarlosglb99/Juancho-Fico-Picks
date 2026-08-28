@@ -42,6 +42,7 @@ import { estimateCost } from '../../../packages/engine/strategist/anthropic/pric
 import type { StrategistPromptContext } from '../../../packages/engine/strategist/prompt-context';
 import type { DraftStateVersion } from '../../../packages/engine/strategist/types';
 import {
+  recordAttempts,
   recordCall,
   releaseAiRequest,
   resolveAiAccess,
@@ -189,6 +190,39 @@ export async function POST(request: Request): Promise<Response> {
      * Recorded with the SAME `estimateCost` the client's ledger uses, so the
      * database and the screen cannot report different money for the same call.
      */
+    /*
+     * The audit row, before anything else. It is what lets a failure be
+     * diagnosed without paying to reproduce it, and it is best-effort - a
+     * broken audit must not break a draft.
+     */
+    await recordAttempts({
+      decision,
+      boardFingerprint: body.state.boardFingerprint ?? null,
+      selectionKey,
+      model: result.model,
+      attempts: result.attempts,
+    }).catch(() => undefined);
+
+    // Logged too, so an operator with a terminal sees it without SQL.
+    if (result.response === null) {
+      console.error(
+        '[strategist] no usable answer',
+        JSON.stringify({
+          draft: body.state.draftId,
+          pick: selectionKey,
+          attempts: result.attempts.map((attempt) => ({
+            stop: attempt.diagnostics.stopReason,
+            blocks: attempt.diagnostics.contentBlockTypes,
+            toolUse: attempt.diagnostics.hadToolUse,
+            toolKeys: attempt.diagnostics.toolInputKeyCount,
+            status: attempt.diagnostics.providerErrorStatus,
+            type: attempt.diagnostics.providerErrorType,
+            out: attempt.usage?.outputTokens ?? 0,
+          })),
+        }),
+      );
+    }
+
     const cost = result.usage ? estimateCost(result.model, result.usage) : 0;
     const accountUsage = await recordCall({
       decision,

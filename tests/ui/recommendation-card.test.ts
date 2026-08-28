@@ -67,6 +67,7 @@ function liveState(
     fingerprint: brief.state.boardFingerprint,
     decision,
     reason: null,
+    technicalDetail: null,
     usage: null,
     entitlement: null,
     ...overrides,

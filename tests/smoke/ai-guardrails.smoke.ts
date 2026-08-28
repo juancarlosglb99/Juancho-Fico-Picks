@@ -77,7 +77,30 @@ vi.mock('../../packages/engine/strategist/anthropic/client', async (importOrigin
             cacheReadTokens: 0,
             cacheWriteTokens: 0,
           },
-          attempts: [{}],
+          attempts: [
+            {
+              problems: [],
+              usage: {
+                inputTokens: costPerCall.inputTokens,
+                outputTokens: costPerCall.outputTokens,
+                cacheReadTokens: 0,
+                cacheWriteTokens: 0,
+              },
+              latencyMs: 10,
+              error: null,
+              // The audit path reads this; a fake without it would let the
+              // persistence quietly no-op in the one suite that exercises it.
+              diagnostics: {
+                stopReason: 'tool_use',
+                contentBlockTypes: ['tool_use'],
+                hadToolUse: true,
+                toolName: 'recommend_pick',
+                toolInputKeyCount: 12,
+                providerErrorStatus: null,
+                providerErrorType: null,
+              },
+            },
+          ],
           latencyMs: 10,
           error: null,
         };
@@ -301,6 +324,52 @@ suite('the route, with the SDK replaced by a counter', () => {
       [draft],
     );
     expect(Number(held[0].n)).toBe(0);
+  });
+
+  /* ---------------------------------------- the audit the incident needed */
+
+  it('records the SHAPE of every attempt, so a failure needs no paid replay', async () => {
+    /*
+     * Written after a live mock where the AI failed twelve times and all we had
+     * was "output tokens zero, $2.51". A stop reason and a list of content
+     * block types would have separated a truncated tool call from a provider
+     * rejection; both were thrown away.
+     */
+    const draft = await enableAi(nextDraft());
+    await post(4, draft);
+
+    const rows = await query<{
+      outcome: string; stop_reason: string | null; had_tool_use: boolean;
+      tool_input_key_count: number | null; content_block_types: string[];
+      input_tokens: string; selection_key: string | null;
+    }>(
+      `select a.outcome, a.stop_reason, a.had_tool_use, a.tool_input_key_count,
+              a.content_block_types, a.input_tokens, a.selection_key
+         from ai_attempt a join draft_session s on s.id = a.draft_session_id
+        where s.sleeper_draft_id = $1`,
+      [draft],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].stop_reason).toBe('tool_use');
+    expect(rows[0].content_block_types).toEqual(['tool_use']);
+    expect(rows[0].had_tool_use).toBe(true);
+    expect(rows[0].selection_key).toBe('4');
+    expect(Number(rows[0].input_tokens)).toBeGreaterThan(0);
+  });
+
+  it('never records prompt text, player names or a key', async () => {
+    const draft = await enableAi(nextDraft());
+    await post(5, draft);
+    const rows = await query<Record<string, unknown>>(
+      `select * from ai_attempt a join draft_session s on s.id = a.draft_session_id
+        where s.sleeper_draft_id = $1`,
+      [draft],
+    );
+    const dumped = JSON.stringify(rows);
+    // Shape, not content. The audit must never become a copy of the draft.
+    for (const forbidden of ['sk-ant', 'Current draft state', 'boardPlayerIds', 'jfp:']) {
+      expect(dumped, forbidden).not.toContain(forbidden);
+    }
   });
 
   it('logs an admin call without spending a credit', async () => {

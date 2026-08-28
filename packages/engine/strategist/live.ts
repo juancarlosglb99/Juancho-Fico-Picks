@@ -268,8 +268,21 @@ export interface LiveStrategistState {
   /** The board this state describes. Never rendered against another. */
   fingerprint: string | null;
   decision: StrategistDecision | null;
-  /** Set on fallback, for a quiet note rather than an error banner. */
+  /**
+   * What the DRAFTER is told. Always a curated sentence, never a raw fault.
+   *
+   * Production incident: a malformed model response put
+   * "The strategist's response did not satisfy the contract.
+   * recommendedPlayerId: Required field ..." on a customer's screen, because
+   * this used to prefer the transport's own error string over the curated one.
+   * The transport's string is written for us, not for them.
+   */
   reason: string | null;
+  /**
+   * The exact fault, for diagnostics and the server log. NEVER rendered in the
+   * normal draft UI.
+   */
+  technicalDetail: string | null;
   usage: UsageRecord | null;
   /**
    * What the server said about this caller's entitlement, when it said anything.
@@ -317,6 +330,7 @@ const IDLE: LiveStrategistState = {
   fingerprint: null,
   decision: null,
   reason: null,
+  technicalDetail: null,
   usage: null,
   entitlement: null,
 };
@@ -453,7 +467,9 @@ export class LiveStrategist {
       this.publish({
         ...this.idleFor(brief, fingerprint),
         phase: 'fallback',
-        reason: error instanceof Error ? error.message : String(error),
+        // A thrown transport error is our text, not theirs.
+        reason: AI_UNAVAILABLE_NOTE,
+        technicalDetail: error instanceof Error ? error.message : String(error),
       });
       return;
     } finally {
@@ -468,7 +484,12 @@ export class LiveStrategist {
     const usage = this.ledger.record(brief.state.draftId, result);
 
     if (result.refusal && TERMINAL_REFUSALS.has(result.refusal)) {
-      this.blocked = result.error ?? 'The strategist is unavailable for this draft.';
+      /*
+       * A refusal message is written for the drafter by `REFUSAL_MESSAGE` - "You
+       * have used all of your AI drafts", not a fault code - so it is safe to
+       * show. Anything unrecognised falls back to the neutral line.
+       */
+      this.blocked = result.error ?? AI_UNAVAILABLE_NOTE;
     }
 
     /*
@@ -523,7 +544,17 @@ export class LiveStrategist {
       phase: applied ? 'ready' : 'fallback',
       fingerprint,
       decision,
-      reason: applied ? null : (result.error ?? describeOutcome(decision)),
+      /*
+       * `describeOutcome`, NEVER `result.error`.
+       *
+       * This is the line that put a schema-validation dump on a customer's
+       * screen. `result.error` is the transport's own text - written for us,
+       * naming required fields and contract violations - and it used to take
+       * precedence over the curated sentence. It now goes to `technicalDetail`,
+       * which the draft UI does not render.
+       */
+      reason: applied ? null : describeOutcome(decision),
+      technicalDetail: applied ? null : (result.error ?? null),
       usage,
       entitlement: entitlementOf(result),
     });
@@ -650,11 +681,24 @@ const REJECTION_NOTE: Record<GuardrailViolationCode, string> = {
   meaningless_stack: 'The strategist suggested a stack that does not help this roster.',
 };
 
+/**
+ * The one sentence a drafter sees when the strategist does not contribute.
+ *
+ * Deliberately identical for every technical cause. Whether the model returned
+ * an empty tool call, the provider rate-limited us, or a repair failed is our
+ * problem to read in the logs - to the person drafting they are the same event,
+ * and the only thing that matters is the half of the sentence about Juancho.
+ */
+export const AI_UNAVAILABLE_NOTE =
+  "AI analysis wasn't available for this pick. Juancho's recommendation is still active.";
+
 /** A short, non-alarming note for the screen. Never an error banner. */
 function describeOutcome(decision: StrategistDecision): string {
   switch (decision.outcome) {
     case 'ai_malformed':
-      return 'The strategist did not answer in the required form.';
+    case 'ai_unavailable':
+      // One line, whatever the technical cause. The detail is in the logs.
+      return AI_UNAVAILABLE_NOTE;
     case 'ai_rejected': {
       const violation: GuardrailViolationCode | undefined =
         decision.audit.guardrail?.violations[0]?.code;
@@ -664,8 +708,6 @@ function describeOutcome(decision: StrategistDecision): string {
     }
     case 'ai_stale':
       return 'The board moved before the strategist answered.';
-    case 'ai_unavailable':
-      return 'The strategist is unavailable.';
     default:
       return 'Showing the deterministic recommendation.';
   }

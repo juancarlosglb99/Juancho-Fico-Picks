@@ -44,6 +44,7 @@ import {
   globalSpend,
   readAiControl,
   recordAiUsage,
+  recordAttempt,
   releaseRequestLease,
   selectionSpend,
   startDraftSession,
@@ -563,6 +564,87 @@ export async function markDraftComplete(request: Request, sleeperDraftId: string
   if (session && !session.completedAt) {
     const { completeDraftSession } = await import('./repository');
     await completeDraftSession(session.id);
+  }
+}
+
+/**
+ * Records the shape of every attempt behind one strategist call.
+ *
+ * Best-effort by construction: an audit row that will not write must never take
+ * a working draft down with it, so every failure here is swallowed. The row is
+ * what lets "why did the AI stop" be answered from a table rather than from a
+ * paid reproduction.
+ */
+export async function recordAttempts({
+  decision,
+  boardFingerprint,
+  selectionKey,
+  model,
+  attempts,
+}: {
+  decision: AiDecision;
+  boardFingerprint: string | null;
+  selectionKey: string | null;
+  model: string | null;
+  attempts: {
+    problems: { field?: string; path?: string; message?: string }[];
+    usage: {
+      inputTokens: number;
+      outputTokens: number;
+      cacheReadTokens: number;
+      cacheWriteTokens: number;
+    } | null;
+    latencyMs: number;
+    error: string | null;
+    diagnostics: {
+      stopReason: string | null;
+      contentBlockTypes: string[];
+      hadToolUse: boolean;
+      toolName: string | null;
+      toolInputKeyCount: number | null;
+      providerErrorStatus: number | null;
+      providerErrorType: string | null;
+    };
+  }[];
+  estimatedCostUsd?: number;
+}): Promise<void> {
+  if (!decision.user || !decision.session) return;
+  for (const [index, attempt] of attempts.entries()) {
+    const diagnostics = attempt.diagnostics;
+    const outcome = diagnostics.providerErrorStatus !== null || (attempt.error && !diagnostics.hadToolUse && diagnostics.contentBlockTypes.length === 0)
+      ? 'provider_error'
+      : !diagnostics.hadToolUse
+        ? 'no_tool_use'
+        : attempt.problems.length > 0
+          ? 'malformed'
+          : 'answered';
+    await recordAttempt({
+      userId: decision.user.id,
+      draftSessionId: decision.session.id,
+      boardFingerprint,
+      selectionKey,
+      attemptIndex: index,
+      isRepair: index > 0,
+      model,
+      outcome,
+      stopReason: diagnostics.stopReason,
+      contentBlockTypes: diagnostics.contentBlockTypes,
+      hadToolUse: diagnostics.hadToolUse,
+      toolName: diagnostics.toolName,
+      toolInputKeyCount: diagnostics.toolInputKeyCount,
+      // Field NAMES only. Which part of the contract broke, never what was in it.
+      validationFaults: attempt.problems
+        .map((problem) => problem.field ?? problem.path ?? 'unknown')
+        .slice(0, 40),
+      providerStatus: diagnostics.providerErrorStatus,
+      providerErrorType: diagnostics.providerErrorType,
+      inputTokens: attempt.usage?.inputTokens ?? 0,
+      outputTokens: attempt.usage?.outputTokens ?? 0,
+      cacheReadTokens: attempt.usage?.cacheReadTokens ?? 0,
+      cacheWriteTokens: attempt.usage?.cacheWriteTokens ?? 0,
+      estimatedCostUsd: 0,
+      latencyMs: attempt.latencyMs,
+    }).catch(() => undefined);
   }
 }
 

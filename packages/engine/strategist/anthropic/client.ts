@@ -93,6 +93,8 @@ export interface CallAttempt {
   usage: CallUsage | null;
   latencyMs: number;
   error: string | null;
+  /** Shape of the reply, for the audit record. Never its content. */
+  diagnostics: AttemptDiagnostics;
 }
 
 export interface StrategistCallResult {
@@ -260,6 +262,7 @@ export class AnthropicStrategist implements StrategistClient {
           usage: outcome.usage,
           latencyMs: outcome.latencyMs,
           error: outcome.transportError,
+          diagnostics: outcome.diagnostics,
         });
         // A network or API failure is not something the model can repair.
         return assemble(attempts, null, null, thinking, this.model, outcome.transportError);
@@ -272,6 +275,7 @@ export class AnthropicStrategist implements StrategistClient {
           usage: outcome.usage,
           latencyMs: outcome.latencyMs,
           error: 'The strategist returned no recommendation.',
+          diagnostics: outcome.diagnostics,
         });
         return assemble(
           attempts,
@@ -292,6 +296,7 @@ export class AnthropicStrategist implements StrategistClient {
         error: validation.ok
           ? null
           : `The strategist's response did not satisfy the contract. ${describeProblems(validation.problems)}`,
+        diagnostics: outcome.diagnostics,
       });
 
       if (validation.ok) {
@@ -335,6 +340,16 @@ export class AnthropicStrategist implements StrategistClient {
     usage: CallUsage | null;
     latencyMs: number;
     transportError: string | null;
+    /**
+     * The shape of what came back, with none of what was in it.
+     *
+     * A production failure was diagnosed down to "13 attempts, output_tokens
+     * zero" and no further, because none of this was kept. Block TYPES and a
+     * stop reason are enough to separate a truncated tool call from a refusal
+     * from a provider error - and they carry no prompt text, no player data and
+     * no credential.
+     */
+    diagnostics: AttemptDiagnostics;
   }> {
     const startedAt = Date.now();
     try {
@@ -385,18 +400,44 @@ export class AnthropicStrategist implements StrategistClient {
         .map((block) => block.thinking)
         .join('\n')
         .trim();
+      const toolUse =
+        message.content.find(
+          (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use',
+        ) ?? null;
       return {
-        toolUse:
-          message.content.find(
-            (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use',
-          ) ?? null,
+        toolUse,
         content: message.content,
         thinking: thinking || null,
         usage: usageOf(message),
         latencyMs: Date.now() - startedAt,
         transportError: null,
+        diagnostics: {
+          stopReason: message.stop_reason ?? null,
+          contentBlockTypes: message.content.map((block) => block.type),
+          hadToolUse: toolUse !== null,
+          toolName: toolUse?.name ?? null,
+          /*
+           * How many keys the tool input had - not what they were. An empty
+           * object is the signature of a truncated tool call, and that is the
+           * whole question; the values are the customer's draft.
+           */
+          toolInputKeyCount:
+            toolUse && typeof toolUse.input === 'object' && toolUse.input !== null
+              ? Object.keys(toolUse.input as Record<string, unknown>).length
+              : null,
+          providerErrorStatus: null,
+          providerErrorType: null,
+        },
       };
     } catch (error) {
+      /*
+       * The SDK's error carries the HTTP status and Anthropic's own error type
+       * - "rate_limit_error", "invalid_request_error" for an exhausted credit
+       * balance, "overloaded_error". Those three are the difference between
+       * "the model misbehaved", "we are being throttled" and "the account is
+       * out of money", and the forensic pass could not tell them apart.
+       */
+      const shaped = error as { status?: number; error?: { error?: { type?: string } } };
       return {
         toolUse: null,
         content: [],
@@ -404,9 +445,29 @@ export class AnthropicStrategist implements StrategistClient {
         usage: null,
         latencyMs: Date.now() - startedAt,
         transportError: redactSecrets(error instanceof Error ? error.message : String(error)),
+        diagnostics: {
+          stopReason: null,
+          contentBlockTypes: [],
+          hadToolUse: false,
+          toolName: null,
+          toolInputKeyCount: null,
+          providerErrorStatus: typeof shaped?.status === 'number' ? shaped.status : null,
+          providerErrorType: shaped?.error?.error?.type ?? null,
+        },
       };
     }
   }
+}
+
+/** Shape, never content. Safe to persist and safe to log. */
+export interface AttemptDiagnostics {
+  stopReason: string | null;
+  contentBlockTypes: string[];
+  hadToolUse: boolean;
+  toolName: string | null;
+  toolInputKeyCount: number | null;
+  providerErrorStatus: number | null;
+  providerErrorType: string | null;
 }
 
 /**

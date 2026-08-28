@@ -827,3 +827,117 @@ export async function setCredits({
     [userId, Math.max(0, Math.round(included))],
   );
 }
+
+/* ------------------------------------------- the strategist attempt audit */
+
+export interface AttemptRecord {
+  userId: string;
+  draftSessionId: string;
+  boardFingerprint: string | null;
+  selectionKey: string | null;
+  attemptIndex: number;
+  isRepair: boolean;
+  model: string | null;
+  outcome: string;
+  stopReason: string | null;
+  contentBlockTypes: string[];
+  hadToolUse: boolean;
+  toolName: string | null;
+  toolInputKeyCount: number | null;
+  /** Field NAMES the validator objected to. Never their values. */
+  validationFaults: string[];
+  providerStatus: number | null;
+  providerErrorType: string | null;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  estimatedCostUsd: number;
+  latencyMs: number | null;
+}
+
+/**
+ * Records the SHAPE of one strategist attempt.
+ *
+ * Deliberately best-effort at the call site: an audit row that failed to write
+ * must never turn a working draft into a broken one. What it buys is the
+ * ability to answer "why did the AI stop" from a table instead of from a paid
+ * reproduction.
+ */
+export async function recordAttempt(record: AttemptRecord): Promise<void> {
+  await query(
+    `insert into ai_attempt (
+       user_id, draft_session_id, board_fingerprint, selection_key,
+       attempt_index, is_repair, model, outcome, stop_reason,
+       content_block_types, had_tool_use, tool_name, tool_input_key_count,
+       validation_faults, provider_status, provider_error_type,
+       input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
+       estimated_cost_usd, latency_ms
+     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)`,
+    [
+      record.userId, record.draftSessionId, record.boardFingerprint, record.selectionKey,
+      record.attemptIndex, record.isRepair, record.model, record.outcome, record.stopReason,
+      record.contentBlockTypes, record.hadToolUse, record.toolName, record.toolInputKeyCount,
+      record.validationFaults, record.providerStatus, record.providerErrorType,
+      record.inputTokens, record.outputTokens, record.cacheReadTokens, record.cacheWriteTokens,
+      record.estimatedCostUsd, record.latencyMs,
+    ],
+  );
+}
+
+/** The admin timeline: "Draft 139… · Pick 9.1 · AI malformed · $0.46". */
+export interface AttemptSummary {
+  createdAt: Date;
+  sleeperDraftId: string;
+  selectionKey: string | null;
+  attemptIndex: number;
+  isRepair: boolean;
+  outcome: string;
+  stopReason: string | null;
+  hadToolUse: boolean;
+  toolInputKeyCount: number | null;
+  validationFaults: string[];
+  providerStatus: number | null;
+  providerErrorType: string | null;
+  estimatedCostUsd: number;
+  latencyMs: number | null;
+  email: string;
+}
+
+export async function recentAttempts(limit = 100): Promise<AttemptSummary[]> {
+  const rows = await query<{
+    created_at: Date; sleeper_draft_id: string; selection_key: string | null;
+    attempt_index: number; is_repair: boolean; outcome: string; stop_reason: string | null;
+    had_tool_use: boolean; tool_input_key_count: number | null; validation_faults: string[] | null;
+    provider_status: number | null; provider_error_type: string | null;
+    estimated_cost_usd: string; latency_ms: number | null; email: string;
+  }>(
+    `select a.created_at, s.sleeper_draft_id, a.selection_key, a.attempt_index, a.is_repair,
+            a.outcome, a.stop_reason, a.had_tool_use, a.tool_input_key_count,
+            a.validation_faults, a.provider_status, a.provider_error_type,
+            a.estimated_cost_usd, a.latency_ms, u.email
+       from ai_attempt a
+       join draft_session s on s.id = a.draft_session_id
+       join "user" u on u.id = a.user_id
+      order by a.created_at desc
+      limit $1`,
+    [Math.min(Math.max(limit, 1), 500)],
+  );
+  return rows.map((row) => ({
+    createdAt: row.created_at,
+    sleeperDraftId: row.sleeper_draft_id,
+    selectionKey: row.selection_key,
+    attemptIndex: row.attempt_index,
+    isRepair: row.is_repair,
+    outcome: row.outcome,
+    stopReason: row.stop_reason,
+    hadToolUse: row.had_tool_use,
+    toolInputKeyCount: row.tool_input_key_count,
+    validationFaults: row.validation_faults ?? [],
+    providerStatus: row.provider_status,
+    providerErrorType: row.provider_error_type,
+    estimatedCostUsd: Number(row.estimated_cost_usd),
+    latencyMs: row.latency_ms,
+    email: row.email,
+  }));
+}

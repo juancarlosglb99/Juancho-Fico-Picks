@@ -13,6 +13,7 @@
 import {
   globalSpend,
   readAiControl,
+  recentAttempts,
   setAiControl,
 } from '../../../../packages/accounts/repository';
 import { requireAdmin } from '../../../../packages/accounts/service';
@@ -48,6 +49,11 @@ async function snapshot() {
     maxCallsPerDraft: limits.maxPrimaryCallsPerDraft,
     maxRepairsPerDraft: limits.maxRepairCallsPerDraft,
     inFlight: Number(inFlight[0]?.n ?? 0),
+    /*
+     * The last few strategist attempts, so "why did the AI stop" is a page
+     * rather than an SSH session. Shape only - no prompt text, no player data.
+     */
+    attempts: await recentAttempts(25),
   };
 }
 
