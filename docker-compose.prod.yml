@@ -71,6 +71,17 @@ services:
       BETTER_AUTH_URL: https://${DOMAIN}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       JUANCHO_STRATEGIST_MODEL: ${JUANCHO_STRATEGIST_MODEL:-claude-opus-5}
+      # The AI spending ceilings. All optional: the application has safe
+      # defaults, and anything set here can only LOWER them. The live switch
+      # and the live caps are the ai_control row - see DEPLOYMENT.md 4.5a -
+      # which is what an incident should reach for, because it needs no
+      # restart. These are the deploy-time position.
+      AI_KILL_SWITCH: ${AI_KILL_SWITCH:-}
+      AI_DAILY_SPEND_LIMIT_USD: ${AI_DAILY_SPEND_LIMIT_USD:-}
+      AI_MONTHLY_SPEND_LIMIT_USD: ${AI_MONTHLY_SPEND_LIMIT_USD:-}
+      AI_MAX_DRAFT_SPEND_USD: ${AI_MAX_DRAFT_SPEND_USD:-}
+      AI_MAX_CALLS_PER_DRAFT: ${AI_MAX_CALLS_PER_DRAFT:-}
+      AI_MAX_REPAIRS_PER_DRAFT: ${AI_MAX_REPAIRS_PER_DRAFT:-}
     depends_on:
       db:
         condition: service_healthy

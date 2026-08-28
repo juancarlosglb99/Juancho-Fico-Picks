@@ -283,6 +283,34 @@ export interface LiveStrategistState {
   } | null;
 }
 
+/**
+ * Refusals that mean "stop asking for the rest of this draft".
+ *
+ * The server enforces every one of these on its own and will keep refusing, so
+ * this changes nothing about what is authorised - it only stops a poll that
+ * fires every few seconds from making a pointless round trip on every tick for
+ * the next two hours.
+ *
+ * `request_in_flight` and `selection_already_answered` are deliberately NOT
+ * here: both are about this moment or this pick, and the next pick is a fair
+ * question again.
+ */
+const TERMINAL_REFUSALS: ReadonlySet<string> = new Set([
+  'not_signed_in',
+  'not_activated',
+  'plan_does_not_include_ai',
+  'entitlement_expired',
+  'no_credits_remaining',
+  'credits_expired',
+  'strategist_not_configured',
+  'ai_disabled',
+  'draft_call_limit',
+  'draft_repair_limit',
+  'draft_spend_limit',
+  'daily_spend_limit',
+  'monthly_spend_limit',
+]);
+
 const IDLE: LiveStrategistState = {
   phase: 'idle',
   fingerprint: null,
@@ -307,6 +335,14 @@ export class LiveStrategist {
   private readonly spend = new Map<string, SelectionSpend>();
   /** The selection currently in flight, so a poll cannot start a second one. */
   private pending: string | null = null;
+  /**
+   * Why this draft has stopped asking, once the server has said so.
+   *
+   * Set from a refusal the server will keep repeating. Not authorisation -
+   * clearing it would only produce a refused request - and it is per draft
+   * because a new draft has a new session, a new allowance and a new answer.
+   */
+  private blocked: string | null = null;
 
   constructor(
     private readonly transport: StrategistTransport,
@@ -370,6 +406,14 @@ export class LiveStrategist {
       return;
     }
 
+    // The server has already said no in a way that will not change today.
+    if (this.blocked !== null) {
+      if (this.state.phase !== 'fallback') {
+        this.publish({ ...this.idleFor(brief, fingerprint), phase: 'fallback', reason: this.blocked });
+      }
+      return;
+    }
+
     // A request is already running for this pick. Polling must not start
     // another one on top of it.
     if (this.pending !== null) return;
@@ -421,6 +465,10 @@ export class LiveStrategist {
     if (controller.signal.aborted) return;
 
     const usage = this.ledger.record(brief.state.draftId, result);
+
+    if (result.refusal && TERMINAL_REFUSALS.has(result.refusal)) {
+      this.blocked = result.error ?? 'The strategist is unavailable for this draft.';
+    }
 
     /*
      * The staleness gate, checked twice over: once against the board the

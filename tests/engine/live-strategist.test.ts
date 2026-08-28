@@ -684,3 +684,79 @@ describe('what it has cost', () => {
     expect(ledger.all()).toHaveLength(2);
   });
 });
+
+/* -------------------------------------- when the server says the draft is done */
+
+/**
+ * The server enforces every ceiling on its own, so nothing here is
+ * authorisation. What is being tested is politeness: once the server has
+ * refused for a reason that will not change today, a poll that fires every
+ * 800ms must stop asking.
+ */
+describe('a refusal the server will keep repeating', () => {
+  const refused = (brief: DraftBrief, refusal: string): StrategistTransportResult => ({
+    ...result(brief),
+    response: null,
+    usage: null,
+    attempts: 0,
+    latencyMs: 0,
+    error: 'This draft has used its AI allowance.',
+    refusal,
+  });
+
+  it('stops asking for the rest of the draft when a ceiling is hit', async () => {
+    const first = ourTurn(1);
+    const second = ourTurn(2);
+    const { transport, calls } = fakeTransport([refused(first, 'draft_spend_limit')]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(first);
+    expect(calls).toHaveLength(1);
+
+    // A later turn, a different board: nothing is asked.
+    await live.update(second);
+    await live.update(second);
+    expect(calls).toHaveLength(1);
+    expect(live.current().phase).toBe('fallback');
+    expect(live.current().reason).toContain('allowance');
+  });
+
+  it('does the same for a plan that does not include the strategist', async () => {
+    const first = ourTurn(1);
+    const { transport, calls } = fakeTransport([refused(first, 'plan_does_not_include_ai')]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(first);
+    await live.update(ourTurn(2));
+    expect(calls).toHaveLength(1);
+  });
+
+  it('keeps asking after a refusal that is only about this moment', async () => {
+    const first = ourTurn(1);
+    const second = ourTurn(2);
+    const { transport, calls } = fakeTransport([
+      refused(first, 'request_in_flight'),
+      result(second),
+    ]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(first);
+    await live.update(second);
+    // A request already in flight is not a reason to give up on the next pick.
+    expect(calls).toHaveLength(2);
+  });
+
+  it('leaves the deterministic recommendation showing either way', async () => {
+    const brief = ourTurn(1);
+    const { transport } = fakeTransport([refused(brief, 'ai_disabled')]);
+    const live = new LiveStrategist(transport);
+
+    await live.update(brief);
+
+    // Nothing threw, nothing from the model was applied, and what is left
+    // standing is the engine's own pick.
+    expect(live.current().phase).toBe('fallback');
+    expect(live.current().decision?.final?.source).not.toBe('strategist');
+    expect(brief.deterministic.recommended).not.toBeNull();
+  });
+});

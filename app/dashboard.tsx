@@ -90,7 +90,13 @@ export function Dashboard() {
     void fetch('/api/strategist')
       .then((response) => (response.ok ? response.json() : null))
       .then((body) => {
-        if (!cancelled) setAiAvailable(Boolean((body as { configured?: boolean } | null)?.configured));
+        /*
+         * `available` is configured AND switched on, so a deployment with the
+         * kill switch pulled says "no AI" up front rather than offering a
+         * feature that will decline every request.
+         */
+        const status = body as { configured?: boolean; available?: boolean } | null;
+        if (!cancelled) setAiAvailable(Boolean(status?.available ?? status?.configured));
       })
       .catch(() => {
         if (!cancelled) setAiAvailable(false);

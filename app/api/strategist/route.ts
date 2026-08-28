@@ -21,6 +21,17 @@
  * was asked about, and the caller is the one holding that brief - so the route
  * returns the validated response and the caller turns it into advice and runs
  * the guardrails against its own state.
+ *
+ * WHAT STOPS A RUNAWAY BILL. Everything: the kill switch, the deployment's
+ * daily and monthly ceilings, the per-draft call, repair and spend caps, the
+ * one-request-at-a-time lease and the per-selection dedupe. All of them are
+ * decided in `resolveAiAccess` before this function has a client, and none of
+ * them can be influenced by the request body beyond which pick it names. A
+ * client that removed every guardrail of its own would still hit all of them.
+ *
+ * The slot taken by a granted request is given back in a `finally`, on every
+ * path out of here, because a lease released only on success would lock a user
+ * out of their own draft for two minutes every time the network hiccuped.
  */
 import {
   AnthropicStrategist,
@@ -30,7 +41,14 @@ import {
 import { estimateCost } from '../../../packages/engine/strategist/anthropic/pricing';
 import type { StrategistPromptContext } from '../../../packages/engine/strategist/prompt-context';
 import type { DraftStateVersion } from '../../../packages/engine/strategist/types';
-import { recordCall, resolveAiAccess } from '../../../packages/accounts/service';
+import {
+  recordCall,
+  releaseAiRequest,
+  resolveAiAccess,
+} from '../../../packages/accounts/service';
+import { killSwitchEngaged } from '../../../packages/accounts/ai-limits';
+import { readAiControl } from '../../../packages/accounts/repository';
+import { databaseConfigured } from '../../../packages/db/client';
 
 interface StrategistRequestBody {
   context: StrategistPromptContext;
@@ -50,9 +68,25 @@ interface StrategistRequestBody {
  * a boolean and the model name, both of which are already visible in any advice
  * the route returns. The key itself never leaves the server.
  */
-export function GET(): Response {
+export async function GET(): Promise<Response> {
+  const configured = Boolean(process.env.ANTHROPIC_API_KEY);
+  /*
+   * The switch is read here as well as in the authorisation path, so a draft
+   * room opened while AI is off says so up front rather than offering a feature
+   * that will decline every request. A database that will not answer is treated
+   * as "not switched off", because the authorisation path is the one that
+   * actually gates spending and it fails closed on its own.
+   */
+  const control = databaseConfigured()
+    ? await readAiControl().catch(() => ({ enabled: true, disabledReason: null }))
+    : { enabled: true, disabledReason: null };
+  const enabled = !killSwitchEngaged() && control.enabled;
+
   return Response.json({
-    configured: Boolean(process.env.ANTHROPIC_API_KEY),
+    configured,
+    enabled,
+    available: configured && enabled,
+    disabledReason: enabled ? null : (control.disabledReason ?? null),
     model: resolveStrategistModel(),
   });
 }
@@ -73,12 +107,22 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const strategistConfigured = Boolean(process.env.ANTHROPIC_API_KEY);
+  const model = resolveStrategistModel();
+
+  /*
+   * Which pick this is, taken from the state the client already echoes rather
+   * than from a field of its own. One less thing to send, and one less place
+   * for the key that dedupes a paid call to disagree with the board it names.
+   */
+  const selectionKey = String(body.state.currentOverallPick ?? 'unknown');
 
   let decision;
   try {
     decision = await resolveAiAccess({
       request,
       sleeperDraftId: body.state.draftId,
+      selectionKey,
+      model,
       leagueId: body.leagueId ?? null,
       isMock: Boolean(body.isMock),
       strategistConfigured,
@@ -103,6 +147,10 @@ export async function POST(request: Request): Promise<Response> {
      * why. 200 rather than 402/403 on purpose: the client's failure path is
      * "carry on without advice", and an HTTP error would make a normal, expected
      * plan boundary look like a broken request.
+     *
+     * Every ceiling in `ai-limits.ts` arrives here, so hitting a spend cap and
+     * being on the wrong plan degrade identically: no call is made, and the
+     * draft carries on unchanged.
      */
     return Response.json({
       ...emptyResult(body.state),
@@ -115,6 +163,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const startedAt = Date.now();
+  /*
+   * From here the request holds one of this user's slots, so every exit runs
+   * the release. The outcome is recorded with it: only a call that actually
+   * produced a response marks the selection answered, which is what stops a
+   * failed call from permanently consuming the pick it failed on.
+   */
+  let outcome: 'answered' | 'failed' | 'abandoned' = 'failed';
   try {
     const strategist = new AnthropicStrategist(PRODUCTION_STRATEGIST);
     const result = await strategist.callWithContext(
@@ -122,6 +177,7 @@ export async function POST(request: Request): Promise<Response> {
       body.boardPlayerIds,
       request.signal,
     );
+    outcome = result.response !== null ? 'answered' : 'failed';
 
     /*
      * Recorded with the SAME `estimateCost` the client's ledger uses, so the
@@ -152,9 +208,12 @@ export async function POST(request: Request): Promise<Response> {
       accountUsage,
     });
   } catch (error) {
+    // An aborted request spent nothing worth attributing to the pick, so it is
+    // recorded as abandoned and the selection stays askable.
+    outcome = request.signal.aborted ? 'abandoned' : 'failed';
     const accountUsage = await recordCall({
       decision,
-      model: resolveStrategistModel(),
+      model,
       attempts: 1,
       usage: null,
       estimatedCostUsd: 0,
@@ -169,6 +228,8 @@ export async function POST(request: Request): Promise<Response> {
       creditsRemaining: decision.creditsRemaining,
       accountUsage,
     });
+  } finally {
+    await releaseAiRequest(decision, outcome);
   }
 }
 

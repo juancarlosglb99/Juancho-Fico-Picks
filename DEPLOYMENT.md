@@ -270,7 +270,7 @@ A healthy instance:
   "environment": "production",
   "database": { "configured": true, "reachable": true, "schema": "current" },
   "auth": { "configured": true, "reason": null },
-  "strategist": { "configured": true },
+  "strategist": { "configured": true, "killSwitch": false, "limits": { … } },
   "configuration": { "problems": [], "warnings": [] }
 }
 ```
@@ -314,6 +314,57 @@ A credit buys a **draft**, not a request: a draft that has spent one keeps
 answering to the end even if the balance hits zero mid-way. **Admin** has full
 access and AI, consumes no credits, and is **still logged** — every call writes
 an `ai_usage` row with its cost.
+
+### 4.5a The AI spending limits
+
+Every limit below is enforced **on the server**, before the Anthropic SDK is
+constructed. A client with every guardrail of its own removed hits all of them,
+and hitting one is not an error: the deterministic engine carries the draft
+exactly as it always does, and Anthropic is not contacted.
+
+| Limit | Default | Where it comes from |
+|---|---|---|
+| Concurrent requests per user | 1 | `ai_request_lease`, partial unique index |
+| Concurrent requests per draft | 1 | Same table, second index |
+| Requests per selection | 2, and 0 once one has answered | `ai_request_lease` |
+| Primary calls per draft | 18 | `AI_MAX_CALLS_PER_DRAFT` |
+| Repair calls per draft | 5 | `AI_MAX_REPAIRS_PER_DRAFT` |
+| Estimated spend per draft | $5 | `AI_MAX_DRAFT_SPEND_USD` |
+| Estimated spend per UTC day | $25 | `AI_DAILY_SPEND_LIMIT_USD` or the `ai_control` row |
+| Estimated spend per UTC month | $250 | `AI_MONTHLY_SPEND_LIMIT_USD` or the `ai_control` row |
+| Basic accounts | never reach Anthropic | Entitlement, checked before the caps |
+| Pro accounts | need a credit for the draft | Entitlement |
+| Admin accounts | no credit spent, **every call still logged** | Entitlement, and `ai_usage` regardless |
+
+An environment variable and the `ai_control` row compose rather than override:
+**off wins, and the lower number wins.** There is no combination of settings
+that raises a ceiling, which is asserted directly in
+`tests/accounts/ai-limits.test.ts`.
+
+The spend caps reserve the worst case a call could cost *before* making it —
+the largest prompt ever recorded, twice, for the repair — so `$5 per draft` is
+a ceiling that is never crossed rather than one that is usually respected. An
+admin is exempt from paying, **not** from the ceilings: a runaway loop on a
+support account spends the same real money.
+
+#### The kill switch
+
+```bash
+DC="docker compose -f docker-compose.prod.yml --env-file .env.production exec app node scripts/account.mjs"
+
+$DC ai status                       # switch, caps, spend today and this month, requests in flight
+$DC ai off "runaway spend, 14:20"   # stops every strategist request, immediately
+$DC ai on
+$DC ai daily 10                     # lower today's ceiling to $10
+$DC ai monthly none                 # clear the row's opinion; the env default applies
+```
+
+`ai off` takes effect on the **next request anybody makes** — no restart, no
+redeploy, and drafts already running keep working on the deterministic engine.
+
+`AI_KILL_SWITCH=true` in `.env.production` does the same thing at deploy time
+and **wins over the row**, so `ai on` will not undo it. Use the row for an
+incident and the variable for a deployment that should never call out at all.
 
 ### 4.5b Switching to the real domain
 
@@ -415,6 +466,8 @@ Pull a copy down by hand before anything risky.
 | Sign-in required in production | The preflight refuses to start without `DATABASE_URL` and `BETTER_AUTH_SECRET` |
 | No insecure single-user fallback | `AI_ALLOW_WITHOUT_ACCOUNTS` is **refused** in production |
 | Secrets not in the repo | `.env.production` is `chmod 600` on the Droplet and gitignored |
+| AI spending is bounded server-side | §4.5a — per draft, per day, per month, with a live kill switch |
+| A Basic account cannot reach Anthropic | Entitlement is checked before any call; asserted in `tests/smoke/ai-guardrails.smoke.ts` |
 
 ---
 

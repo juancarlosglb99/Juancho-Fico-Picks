@@ -12,6 +12,7 @@ import { databaseConfigured, databaseReachable } from '../../../packages/db/clie
 import { schemaStatus } from '../../../packages/db/migrate';
 import { authConfigured, authUnavailableReason } from '../../../packages/auth/server';
 import { inspectRuntime } from '../../../packages/config/runtime';
+import { effectiveLimits, killSwitchEngaged } from '../../../packages/accounts/ai-limits';
 
 /**
  * What a load balancer asks, and what an operator needs when it says no.
@@ -49,7 +50,18 @@ export async function GET(): Promise<Response> {
       },
       database: { configured, reachable, schema },
       auth: { configured: authConfigured(), reason: authUnavailableReason() },
-      strategist: { configured: Boolean(process.env.ANTHROPIC_API_KEY) },
+      /*
+       * The ceilings as the ENVIRONMENT sets them. The `ai_control` row can
+       * lower them further and can switch AI off entirely, and it is not read
+       * here on purpose: a health check that needed the database to report the
+       * spend caps would go quiet at exactly the moment an operator wanted to
+       * know what they were.
+       */
+      strategist: {
+        configured: Boolean(process.env.ANTHROPIC_API_KEY),
+        killSwitch: killSwitchEngaged(),
+        limits: effectiveLimits(),
+      },
     },
     { status: healthy ? 200 : 503 },
   );

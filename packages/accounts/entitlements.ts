@@ -84,6 +84,15 @@ const AI_PLANS: ReadonlySet<Plan> = new Set<Plan>(['pro', 'admin']);
 /** Plans that ignore the credit allowance. Development and support only. */
 const UNMETERED_PLANS: ReadonlySet<Plan> = new Set<Plan>(['admin']);
 
+/**
+ * Every reason the strategist is not called.
+ *
+ * Two families, and they are worth keeping distinguishable. The first seven are
+ * about WHO is asking - a plan, a balance, a session - and a person can usually
+ * do something about them. The rest are about HOW MUCH has already been spent,
+ * they are enforced by `ai-limits.ts` from our own usage rows, and there is
+ * nothing for the person to do except keep drafting, which still works.
+ */
 export type AiRefusal =
   | 'not_signed_in'
   | 'not_activated'
@@ -91,7 +100,18 @@ export type AiRefusal =
   | 'entitlement_expired'
   | 'no_credits_remaining'
   | 'credits_expired'
-  | 'strategist_not_configured';
+  | 'strategist_not_configured'
+  /** The deployment-wide kill switch, from the environment or the control row. */
+  | 'ai_disabled'
+  /** This user, or this draft, already has a call in flight. */
+  | 'request_in_flight'
+  /** This pick has had its answer, or its allowed retries. */
+  | 'selection_already_answered'
+  | 'draft_call_limit'
+  | 'draft_repair_limit'
+  | 'draft_spend_limit'
+  | 'daily_spend_limit'
+  | 'monthly_spend_limit';
 
 export interface AiAccess {
   allowed: boolean;
@@ -264,4 +284,33 @@ export const REFUSAL_MESSAGE: Record<AiRefusal, string> = {
     'You have used all of your AI drafts. The deterministic engine is unaffected.',
   credits_expired: 'Your AI draft credits have expired.',
   strategist_not_configured: 'The AI strategist is not configured on this server.',
+  ai_disabled: 'The AI strategist is switched off right now. Your draft is unaffected.',
+  request_in_flight: 'The strategist is already working on a pick for you.',
+  selection_already_answered: 'The strategist has already answered this pick.',
+  draft_call_limit:
+    'This draft has used its AI allowance. The deterministic engine carries the rest of it.',
+  draft_repair_limit:
+    'This draft has used its AI allowance. The deterministic engine carries the rest of it.',
+  draft_spend_limit:
+    'This draft has used its AI allowance. The deterministic engine carries the rest of it.',
+  daily_spend_limit: 'AI is paused for today. Your draft is unaffected.',
+  monthly_spend_limit: 'AI is paused for this month. Your draft is unaffected.',
 };
+
+/**
+ * Refusals that mean a ceiling was reached rather than a plan was wrong.
+ *
+ * Worth separating because the screen should say different things: a plan
+ * problem is an invitation to upgrade, and a ceiling is a statement of fact
+ * that no action of the user's will change today.
+ */
+export const LIMIT_REFUSALS: ReadonlySet<AiRefusal> = new Set<AiRefusal>([
+  'ai_disabled',
+  'request_in_flight',
+  'selection_already_answered',
+  'draft_call_limit',
+  'draft_repair_limit',
+  'draft_spend_limit',
+  'daily_spend_limit',
+  'monthly_spend_limit',
+]);

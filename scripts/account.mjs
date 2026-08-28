@@ -11,6 +11,20 @@
  *   npm run account -- plan   juan@example.com pro [2026-12-31]
  *   npm run account -- credits juan@example.com 5
  *   npm run account -- admin  juan@example.com
+ *
+ * And the deployment-wide AI controls, which take no email:
+ *
+ *   npm run account -- ai status
+ *   npm run account -- ai off "runaway spend on 2026-08-28"
+ *   npm run account -- ai on
+ *   npm run account -- ai daily 10
+ *   npm run account -- ai monthly 100
+ *
+ * `ai off` is the live kill switch: it stops every strategist request from
+ * every account immediately, with no restart and no deploy. Drafts keep working
+ * on the deterministic engine, which is the entire reason it is safe to reach
+ * for. `AI_KILL_SWITCH=true` in the environment does the same thing and wins
+ * over anything set here, so it cannot be undone with `ai on`.
  */
 import pg from 'pg';
 
@@ -21,14 +35,20 @@ if (!url) {
 }
 
 const [command, email, value, until] = process.argv.slice(2);
-if (!command || !email) {
-  console.error(
-    'Usage:\n' +
-      '  npm run account -- show <email>\n' +
-      '  npm run account -- plan <email> basic|pro|admin [validUntil]\n' +
-      '  npm run account -- credits <email> <count>\n' +
-      '  npm run account -- admin <email>',
-  );
+const USAGE =
+  'Usage:\n' +
+  '  npm run account -- show <email>\n' +
+  '  npm run account -- plan <email> basic|pro|admin [validUntil]\n' +
+  '  npm run account -- credits <email> <count>\n' +
+  '  npm run account -- admin <email>\n' +
+  '  npm run account -- ai status\n' +
+  '  npm run account -- ai on|off [reason]\n' +
+  '  npm run account -- ai daily|monthly <usd|none>';
+
+// The AI controls are about the deployment, not a person, so they take no email.
+const isAiCommand = command === 'ai';
+if (!command || (!isAiCommand && !email)) {
+  console.error(USAGE);
   process.exit(1);
 }
 
@@ -39,6 +59,7 @@ const client = new pg.Client({
 
 async function main() {
   await client.connect();
+  if (isAiCommand) return aiControl();
   const found = await client.query('select id, email from "user" where email = $1', [email]);
   if (found.rowCount === 0) throw new Error(`No account for ${email}.`);
   const userId = found.rows[0].id;
@@ -105,6 +126,75 @@ async function main() {
       `  credits  ${row.included_credits - row.consumed_credits} of ${row.included_credits} left\n` +
       `  drafts   ${row.drafts}\n` +
       `  ai spend $${Number(row.spent).toFixed(3)}`,
+  );
+}
+
+/**
+ * The deployment-wide AI switch and spend ceilings.
+ *
+ * One row, edited in place. The application reads it on every request and does
+ * not cache it, so a change here is in force for the next call anybody makes -
+ * including a draft that is already running.
+ */
+async function aiControl() {
+  const sub = process.argv[3] ?? 'status';
+  const rest = process.argv.slice(4).join(' ').trim();
+
+  await client.query('insert into ai_control (id) values (true) on conflict (id) do nothing');
+
+  if (sub === 'off') {
+    await client.query(
+      `update ai_control set enabled = false, disabled_reason = $1, updated_at = now() where id = true`,
+      [rest || 'switched off from the command line'],
+    );
+  } else if (sub === 'on') {
+    await client.query(
+      `update ai_control set enabled = true, disabled_reason = null, updated_at = now() where id = true`,
+    );
+  } else if (sub === 'daily' || sub === 'monthly') {
+    const column = sub === 'daily' ? 'daily_spend_limit_usd' : 'monthly_spend_limit_usd';
+    // "none" clears the row's opinion; the environment default then applies.
+    const limit = rest === '' || rest === 'none' ? null : Number(rest);
+    if (limit !== null && (!Number.isFinite(limit) || limit < 0)) {
+      throw new Error(`"${rest}" is not a spend limit. Give a number of dollars, or "none".`);
+    }
+    await client.query(
+      `update ai_control set ${column} = $1, updated_at = now() where id = true`,
+      [limit],
+    );
+  } else if (sub !== 'status') {
+    throw new Error(`Unknown ai command "${sub}". Use status, on, off, daily or monthly.`);
+  }
+
+  const row = (await client.query(`select * from ai_control where id = true`)).rows[0];
+  const spend = (
+    await client.query(`
+      select
+        coalesce(sum(estimated_cost_usd)
+          filter (where created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'),
+          0) as today,
+        coalesce(sum(estimated_cost_usd), 0) as month,
+        count(*) filter (where created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc')
+          as calls_today
+      from ai_usage
+      where created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'`)
+  ).rows[0];
+  const live = (
+    await client.query(
+      `select count(*) as n from ai_request_lease where released_at is null and expires_at > now()`,
+    )
+  ).rows[0];
+
+  const envSwitch = process.env.AI_KILL_SWITCH?.trim().toLowerCase() === 'true';
+  console.log(
+    `\nAI strategist\n` +
+      `  switch     ${row.enabled ? 'on' : 'off'}${row.disabled_reason ? ` - ${row.disabled_reason}` : ''}` +
+      `${envSwitch ? '\n  environment AI_KILL_SWITCH=true (overrides the row; "ai on" will not undo it)' : ''}\n` +
+      `  daily cap  ${row.daily_spend_limit_usd === null ? 'from the environment' : `${Number(row.daily_spend_limit_usd).toFixed(2)}`}\n` +
+      `  month cap  ${row.monthly_spend_limit_usd === null ? 'from the environment' : `${Number(row.monthly_spend_limit_usd).toFixed(2)}`}\n` +
+      `  spent today ${Number(spend.today).toFixed(3)} over ${spend.calls_today} call${Number(spend.calls_today) === 1 ? '' : 's'}\n` +
+      `  this month  ${Number(spend.month).toFixed(3)}\n` +
+      `  in flight   ${live.n}`,
   );
 }
 

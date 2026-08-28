@@ -58,6 +58,42 @@ export const REQUIREMENTS = [
     requiredInProduction: false,
     why: 'Connections per container. Several instances share one database ceiling.',
   },
+  {
+    name: 'AI_KILL_SWITCH',
+    secret: false,
+    requiredInProduction: false,
+    why: 'Set to "true" to refuse every strategist request. The deterministic engine is unaffected.',
+  },
+  {
+    name: 'AI_DAILY_SPEND_LIMIT_USD',
+    secret: false,
+    requiredInProduction: false,
+    why: 'Estimated dollars the whole deployment may spend in a UTC day. Lowers the built-in default; never raises it.',
+  },
+  {
+    name: 'AI_MONTHLY_SPEND_LIMIT_USD',
+    secret: false,
+    requiredInProduction: false,
+    why: 'Estimated dollars the whole deployment may spend in a UTC month. Lowers the built-in default; never raises it.',
+  },
+  {
+    name: 'AI_MAX_DRAFT_SPEND_USD',
+    secret: false,
+    requiredInProduction: false,
+    why: 'Estimated dollars one draft may spend. Lowers the built-in default; never raises it.',
+  },
+  {
+    name: 'AI_MAX_CALLS_PER_DRAFT',
+    secret: false,
+    requiredInProduction: false,
+    why: 'Strategist calls allowed in one draft. Lowers the built-in default; never raises it.',
+  },
+  {
+    name: 'AI_MAX_REPAIRS_PER_DRAFT',
+    secret: false,
+    requiredInProduction: false,
+    why: 'Repair attempts allowed in one draft. Lowers the built-in default; never raises it.',
+  },
 ];
 
 /** Minimum length for a signing secret worth having. */
@@ -126,6 +162,17 @@ export function inspectEnvironment(env = process.env, options = { production: fa
   if (production && database && !localDatabase && !value('DATABASE_CA_CERT')) {
     warnings.push(
       'DATABASE_CA_CERT is not set. The connection will be verified against the system trust store, which a managed provider may not be in.',
+    );
+  }
+
+  /*
+   * Not a problem - it is a deliberate switch, and the deploy should succeed
+   * with it on. It is said out loud because "the AI stopped working" and "we
+   * turned the AI off" look identical from a draft room.
+   */
+  if (value('AI_KILL_SWITCH') === 'true') {
+    warnings.push(
+      'AI_KILL_SWITCH is set. Every strategist request will be refused; the deterministic engine is unaffected.',
     );
   }
 

@@ -12,6 +12,7 @@
  * under a row lock, and reports whether it was the one that spent it.
  */
 import { query, queryOne, transaction } from '../db/client';
+import { AI_CONTROL_DEFAULT, type AiControl, type GlobalSpend, type SelectionSpend } from './ai-limits';
 import type { CreditBalance, Entitlement, Plan } from './entitlements';
 
 export interface UserProfile {
@@ -429,4 +430,191 @@ function toDraftSession(row: DraftSessionRow): DraftSession {
     aiEnabled: row.ai_enabled,
     aiCreditConsumed: row.ai_credit_consumed,
   };
+}
+
+/* ------------------------------------------------- spend ceilings and leases */
+
+/**
+ * The deployment-wide switch, read fresh on every request.
+ *
+ * Deliberately not cached. The point of a row rather than an environment
+ * variable is that an operator can stop all spending mid-draft, and a cache
+ * would put a stale "enabled" between them and that.
+ *
+ * A missing row - which the migration makes, so this should not happen - is
+ * treated as enabled with no extra limits, because the environment defaults
+ * already bound spending and failing closed on a read error would take the
+ * strategist away from everybody for a reason nobody could see.
+ */
+export async function readAiControl(): Promise<AiControl> {
+  const row = await queryOne<{
+    enabled: boolean;
+    disabled_reason: string | null;
+    daily_spend_limit_usd: string | null;
+    monthly_spend_limit_usd: string | null;
+  }>(
+    `select enabled, disabled_reason, daily_spend_limit_usd, monthly_spend_limit_usd
+       from ai_control where id = true`,
+  );
+  if (!row) return AI_CONTROL_DEFAULT;
+  return {
+    enabled: row.enabled,
+    disabledReason: row.disabled_reason,
+    dailySpendLimitUsd:
+      row.daily_spend_limit_usd === null ? null : Number(row.daily_spend_limit_usd),
+    monthlySpendLimitUsd:
+      row.monthly_spend_limit_usd === null ? null : Number(row.monthly_spend_limit_usd),
+  };
+}
+
+export async function setAiControl({
+  enabled,
+  disabledReason = null,
+  dailySpendLimitUsd,
+  monthlySpendLimitUsd,
+}: {
+  enabled?: boolean;
+  disabledReason?: string | null;
+  dailySpendLimitUsd?: number | null;
+  monthlySpendLimitUsd?: number | null;
+}): Promise<AiControl> {
+  await query(
+    `insert into ai_control (id) values (true) on conflict (id) do nothing`,
+  );
+  await query(
+    `update ai_control
+        set enabled                 = coalesce($1, enabled),
+            disabled_reason         = case when $1 is null then disabled_reason
+                                           when $1 then null
+                                           else $2 end,
+            daily_spend_limit_usd   = case when $3::boolean then $4::numeric
+                                           else daily_spend_limit_usd end,
+            monthly_spend_limit_usd = case when $5::boolean then $6::numeric
+                                           else monthly_spend_limit_usd end,
+            updated_at              = now()
+      where id = true`,
+    [
+      enabled ?? null,
+      disabledReason,
+      dailySpendLimitUsd !== undefined,
+      dailySpendLimitUsd ?? null,
+      monthlySpendLimitUsd !== undefined,
+      monthlySpendLimitUsd ?? null,
+    ],
+  );
+  return readAiControl();
+}
+
+/**
+ * What the whole deployment has spent, in the two windows that are capped.
+ *
+ * UTC boundaries, stated in the query rather than computed in Node, so that a
+ * container running in another timezone and an operator reading the same
+ * numbers by hand cannot disagree about when "today" started.
+ */
+export async function globalSpend(): Promise<GlobalSpend> {
+  const row = await queryOne<{ today: string; month: string }>(
+    `select
+       coalesce(sum(estimated_cost_usd)
+         filter (where created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'),
+         0) as today,
+       coalesce(sum(estimated_cost_usd), 0) as month
+     from ai_usage
+     where created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'`,
+  );
+  return { todayUsd: Number(row?.today ?? 0), monthUsd: Number(row?.month ?? 0) };
+}
+
+/**
+ * How often this pick has been asked about, and whether one of them answered.
+ *
+ * Counted from the lease rows rather than from `ai_usage`, because a request
+ * that never reached Anthropic still has to count against the retry allowance -
+ * otherwise a client that fails before the call could ask forever.
+ */
+export async function selectionSpend(
+  draftSessionId: string,
+  selectionKey: string,
+): Promise<SelectionSpend> {
+  const row = await queryOne<{ requests: string; answered: string }>(
+    `select count(*) as requests,
+            count(*) filter (where outcome = 'answered') as answered
+       from ai_request_lease
+      where draft_session_id = $1 and selection_key = $2`,
+    [draftSessionId, selectionKey],
+  );
+  return {
+    requests: Number(row?.requests ?? 0),
+    answered: Number(row?.answered ?? 0) > 0,
+  };
+}
+
+export interface LeaseGrant {
+  granted: boolean;
+  leaseId: string | null;
+}
+
+/**
+ * Takes the one slot this user - and this draft - is allowed to hold.
+ *
+ * The mutual exclusion is the two partial unique indexes, not this function. A
+ * read followed by an insert would let two requests both see nothing and both
+ * proceed, which is precisely the race a concurrency limit exists to lose. So
+ * the insert is attempted and the database is the one that says no.
+ *
+ * Dead leases are reaped first. A container killed mid-call leaves a row that
+ * would otherwise lock its owner out of their own draft permanently, and the
+ * lease is deliberately far longer than any real call so reaping can never
+ * steal a slot from a request that is still running.
+ */
+export async function acquireRequestLease({
+  userId,
+  draftSessionId,
+  selectionKey,
+  leaseSeconds,
+}: {
+  userId: string;
+  draftSessionId: string;
+  selectionKey: string;
+  leaseSeconds: number;
+}): Promise<LeaseGrant> {
+  return transaction(async (client) => {
+    await client.query(
+      `update ai_request_lease
+          set released_at = now(), outcome = coalesce(outcome, 'abandoned')
+        where released_at is null and expires_at <= now()`,
+    );
+    /*
+     * No conflict target: either unique index may be the one that fires, and
+     * naming one of them would silently stop enforcing the other.
+     */
+    const inserted = await client.query<{ id: string }>(
+      `insert into ai_request_lease (user_id, draft_session_id, selection_key, expires_at)
+       values ($1, $2, $3, now() + make_interval(secs => $4))
+       on conflict do nothing
+       returning id`,
+      [userId, draftSessionId, selectionKey, leaseSeconds],
+    );
+    if (inserted.rowCount === 0) return { granted: false, leaseId: null };
+    return { granted: true, leaseId: inserted.rows[0].id };
+  });
+}
+
+/**
+ * Gives the slot back.
+ *
+ * Called on every path out of a request, success or failure, because a lease
+ * that is only released on success would lock a user out for two minutes every
+ * time Anthropic had a bad moment.
+ */
+export async function releaseRequestLease(
+  leaseId: string,
+  outcome: 'answered' | 'failed' | 'abandoned',
+): Promise<void> {
+  await query(
+    `update ai_request_lease
+        set released_at = now(), outcome = $2
+      where id = $1 and released_at is null`,
+    [leaseId, outcome],
+  );
 }

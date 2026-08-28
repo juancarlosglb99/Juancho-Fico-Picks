@@ -15,6 +15,14 @@ import { currentUser, type SessionUser } from '../auth/server';
 import { inspectRuntime } from '../config/runtime';
 import { databaseConfigured } from '../db/client';
 import {
+  decideAiLimits,
+  effectiveLimits,
+  killSwitchEngaged,
+  reservedCallCostUsd,
+  AI_CONTROL_DEFAULT,
+  type AiLimits,
+} from './ai-limits';
+import {
   decideAiAccess,
   REFUSAL_MESSAGE,
   resolveAccess,
@@ -24,11 +32,16 @@ import {
   type Plan,
 } from './entitlements';
 import {
+  acquireRequestLease,
   consumeDraftCredit,
   draftUsageTotals,
   ensureAccount,
   findDraftSession,
+  globalSpend,
+  readAiControl,
   recordAiUsage,
+  releaseRequestLease,
+  selectionSpend,
   startDraftSession,
   type DraftSession,
   type DraftUsageTotals,
@@ -44,6 +57,17 @@ export interface AiDecision {
   session: DraftSession | null;
   /** The running total for this draft, from the database. */
   usage: DraftUsageTotals | null;
+  /**
+   * The slot this request is holding, which the route MUST give back.
+   *
+   * Null on every refusal and on the unmetered local path. Non-null means a row
+   * exists that is blocking this user's next request until it is released or it
+   * expires, so the route releases it in a `finally` rather than on the happy
+   * path.
+   */
+  leaseId: string | null;
+  /** The ceilings that were applied, for the health and admin views. */
+  limits: AiLimits | null;
 }
 
 /**
@@ -73,9 +97,28 @@ function unmeteredLocalAccess(): boolean {
   );
 }
 
+/**
+ * May this request reach Anthropic, and what does granting it commit us to?
+ *
+ * Three gates in a fixed order, and the order is the security property.
+ *
+ *   1. IS SPENDING ON AT ALL - the kill switch, checked before anything about
+ *      the caller, because a switch that some plans could ignore is not one.
+ *   2. IS THIS PERSON ALLOWED - plan, activation, credits. Basic never passes
+ *      this gate, so a Basic account cannot reach Anthropic by any route.
+ *   3. HAS ENOUGH BEEN SPENT - the per-draft, per-selection and deployment
+ *      ceilings, counted from our own `ai_usage` and lease rows.
+ *
+ * Only then is the one concurrent slot taken, and only then is the credit
+ * spent. Every refusal returns `allowed: false` and nothing else happens: no
+ * lease, no credit, no call. The deterministic engine is already on screen and
+ * stays there, which is what makes these limits safe to set as low as they are.
+ */
 export async function resolveAiAccess({
   request,
   sleeperDraftId,
+  selectionKey,
+  model,
   leagueId = null,
   isMock = false,
   strategistConfigured,
@@ -83,26 +126,53 @@ export async function resolveAiAccess({
 }: {
   request: Request;
   sleeperDraftId: string;
+  /**
+   * Which selection of ours this is - the overall pick number.
+   *
+   * Client-supplied, and it is the ONLY input here that is. A caller that lies
+   * about it defeats the per-selection dedupe and nothing else; the per-draft
+   * call, repair and spend ceilings are counted from our own rows.
+   */
+  selectionKey: string;
+  /** The model that would be called, so worst-case cost can be reserved. */
+  model: string;
   leagueId?: string | null;
   isMock?: boolean;
   strategistConfigured: boolean;
   now?: Date;
 }): Promise<AiDecision> {
+  const killSwitch = killSwitchEngaged();
+
   if (!accountsEnabled()) {
-    const allowed = unmeteredLocalAccess() && strategistConfigured;
+    /*
+     * No database, so no plan, no balance and nowhere to count what has been
+     * spent. The local override is the only way through, and the kill switch
+     * still closes it - the switch is a property of the deployment, not of the
+     * accounting.
+     */
+    const allowed = !killSwitch && unmeteredLocalAccess() && strategistConfigured;
+    const reason: AiRefusal | null = allowed
+      ? null
+      : killSwitch
+        ? 'ai_disabled'
+        : strategistConfigured
+          ? 'not_signed_in'
+          : 'strategist_not_configured';
     return {
       allowed,
-      reason: allowed ? null : strategistConfigured ? 'not_signed_in' : 'strategist_not_configured',
+      reason,
       message: allowed
         ? null
-        : strategistConfigured
+        : reason === 'not_signed_in'
           ? 'Accounts are not configured on this server.'
-          : REFUSAL_MESSAGE.strategist_not_configured,
+          : REFUSAL_MESSAGE[reason as AiRefusal],
       plan: allowed ? 'admin' : 'basic',
       creditsRemaining: null,
       user: null,
       session: null,
       usage: null,
+      leaseId: null,
+      limits: null,
     };
   }
 
@@ -140,6 +210,75 @@ export async function resolveAiAccess({
       user,
       session,
       usage,
+      leaseId: null,
+      limits: null,
+    };
+  }
+
+  /*
+   * The ceilings. Deliberately AFTER the entitlement check and BEFORE anything
+   * that costs money or takes a lock, so a refusal here leaves the database in
+   * exactly the state it was in.
+   *
+   * An admin is exempt from paying, not from the ceilings: a runaway loop on a
+   * support account spends real money in exactly the same way.
+   */
+  const control = await readAiControl().catch(() => AI_CONTROL_DEFAULT);
+  const limits = effectiveLimits(process.env, control);
+  const reservedUsd = reservedCallCostUsd(model);
+  const [global, selection] = await Promise.all([
+    globalSpend(),
+    selectionSpend(session.id, selectionKey),
+  ]);
+
+  const limitRefusal = decideAiLimits({
+    control,
+    killSwitch,
+    global,
+    draft: usage,
+    selection,
+    reservedUsd,
+    limits,
+  });
+  if (limitRefusal) {
+    return {
+      allowed: false,
+      reason: limitRefusal,
+      message: REFUSAL_MESSAGE[limitRefusal],
+      plan: access.plan,
+      creditsRemaining: access.creditsRemaining,
+      user,
+      session,
+      usage,
+      leaseId: null,
+      limits,
+    };
+  }
+
+  /*
+   * One request at a time, per user and per draft.
+   *
+   * The database decides this, not the code above it: two requests arriving
+   * together both read an empty lease table, and only one of them can insert.
+   */
+  const lease = await acquireRequestLease({
+    userId: user.id,
+    draftSessionId: session.id,
+    selectionKey,
+    leaseSeconds: limits.leaseSeconds,
+  });
+  if (!lease.granted || lease.leaseId === null) {
+    return {
+      allowed: false,
+      reason: 'request_in_flight',
+      message: REFUSAL_MESSAGE.request_in_flight,
+      plan: access.plan,
+      creditsRemaining: access.creditsRemaining,
+      user,
+      session,
+      usage,
+      leaseId: null,
+      limits,
     };
   }
 
@@ -153,8 +292,14 @@ export async function resolveAiAccess({
       userId: user.id,
       sessionId: session.id,
       unmetered: false,
+    }).catch(async (error) => {
+      // The slot goes back before the error does, or a failed charge would
+      // block this user's next attempt for the whole lease window.
+      await releaseRequestLease(lease.leaseId as string, 'failed').catch(() => {});
+      throw error;
     });
     if (!spend.consumed) {
+      await releaseRequestLease(lease.leaseId, 'abandoned').catch(() => {});
       return {
         allowed: false,
         reason: 'no_credits_remaining',
@@ -164,6 +309,8 @@ export async function resolveAiAccess({
         user,
         session,
         usage,
+        leaseId: null,
+        limits,
       };
     }
     return {
@@ -175,6 +322,8 @@ export async function resolveAiAccess({
       user,
       session: { ...session, aiEnabled: true, aiCreditConsumed: true },
       usage,
+      leaseId: lease.leaseId,
+      limits,
     };
   }
 
@@ -189,7 +338,26 @@ export async function resolveAiAccess({
     user,
     session: { ...session, aiEnabled: true },
     usage,
+    leaseId: lease.leaseId,
+    limits,
   };
+}
+
+/**
+ * Gives back the one concurrent slot this request was holding.
+ *
+ * Safe to call with a decision that never took one, and safe to call twice, so
+ * the route can put it in a `finally` without reasoning about which path it
+ * arrived by. Never throws: failing to release a lease costs the user a two
+ * minute wait, and turning that into a 500 would cost them the answer they
+ * already paid for.
+ */
+export async function releaseAiRequest(
+  decision: AiDecision,
+  outcome: 'answered' | 'failed' | 'abandoned',
+): Promise<void> {
+  if (!decision.leaseId) return;
+  await releaseRequestLease(decision.leaseId, outcome).catch(() => {});
 }
 
 /** Records what a call cost, and returns the draft's new running total. */
@@ -308,6 +476,8 @@ function refusal(
     user: null,
     session,
     usage,
+    leaseId: null,
+    limits: null,
   };
 }
 
