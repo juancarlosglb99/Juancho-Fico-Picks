@@ -62,6 +62,8 @@ export function Dashboard() {
   const account = useAccount();
   const [username, setUsername] = useState('');
   const [attachInput, setAttachInput] = useState('');
+  /** Set only when somebody asks to browse leagues instead. */
+  const [preferLeagueBrowse, setPreferLeagueBrowse] = useState(false);
   const [entered, setEntered] = useState(false);
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
@@ -489,13 +491,21 @@ export function Dashboard() {
     );
   }
 
+  /*
+   * Connect, then pick a draft. There is no "choose a league" step any more:
+   * `attachToDraft` resolves the league behind whichever draft is chosen, so
+   * asking for one first was a decision the product did not need.
+   *
+   * The league route still exists, reachable from the draft list when Sleeper
+   * did not return a draft for a league the user is in.
+   */
   const step: PreDraftStep = !session.user
     ? 'connect'
     : session.attachment
       ? 'verify'
-      : session.workspace
-        ? 'draft'
-        : 'league';
+      : preferLeagueBrowse && !session.workspace
+        ? 'league'
+        : 'draft';
 
   if (!entered || !workspace || !context || !status || !myTeam || !boardModel) {
     return (
@@ -522,6 +532,8 @@ export function Dashboard() {
         discovered={session.discoveredDrafts}
         discoveryBusy={session.discoveryBusy}
         onSelectDraft={(draftId) => void session.attachToDraft(draftId, session.workspace)}
+        onBrowseLeagues={() => setPreferLeagueBrowse(true)}
+        userId={session.user?.user_id ?? null}
         attachValue={attachInput}
         onAttachValueChange={setAttachInput}
         onAttach={attachFromInput}

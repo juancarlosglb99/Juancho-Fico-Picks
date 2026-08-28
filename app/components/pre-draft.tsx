@@ -16,13 +16,18 @@ import type { DraftReadiness } from '@/packages/ui/readiness';
 import type { SleeperDraft, SleeperLeague } from '@/packages/sleeper/types';
 import { Brand, ErrorBanner, LoadingMark, Panel, PanelTitle } from './primitives';
 import { VerifyStep } from './pre-draft-verify';
+import { buildDraftChoices, needsLeagueFallback } from '@/packages/ui/draft-picker';
 
 export type PreDraftStep = 'connect' | 'league' | 'draft' | 'verify';
 
+/*
+ * Three steps, not four. Choosing a league was Sleeper's data model showing
+ * through: a drafter is thinking "the Escorpiones draft is tonight", not
+ * "which league contains it". The league is resolved behind the draft.
+ */
 const STEPS: { id: PreDraftStep; label: string }[] = [
   { id: 'connect', label: 'Connect Sleeper' },
-  { id: 'league', label: 'Choose league' },
-  { id: 'draft', label: 'Choose draft' },
+  { id: 'draft', label: 'Select a draft' },
   { id: 'verify', label: 'Verify' },
 ];
 
@@ -42,6 +47,9 @@ export function PreDraft(props: {
   discovered: SleeperDraft[];
   discoveryBusy: boolean;
   onSelectDraft: (draftId: string) => void;
+  /** The fallback, for a league whose drafts Sleeper did not return. */
+  onBrowseLeagues: () => void;
+  userId: string | null;
   attachValue: string;
   onAttachValueChange: (value: string) => void;
   onAttach: () => void;
@@ -280,47 +288,94 @@ function DraftStep({
   onAttachValueChange,
   onAttach,
   attachError,
+  onBrowseLeagues,
+  userId,
+  leagues,
 }: {
   drafts: SleeperDraft[];
   discovered: SleeperDraft[];
   discoveryBusy: boolean;
   onSelectDraft: (draftId: string) => void;
+  onBrowseLeagues: () => void;
+  userId: string | null;
+  leagues: SleeperLeague[];
   busy: boolean;
   attachValue: string;
   onAttachValueChange: (value: string) => void;
   onAttach: () => void;
   attachError: string | null;
 }) {
-  const seen = new Set(drafts.map((draft) => draft.draft_id));
-  const mocks = discovered.filter((draft) => !seen.has(draft.draft_id));
+  /*
+   * One list. `discovered` is `/user/{id}/drafts`, which already returns league
+   * drafts AND mocks - the two panels this replaces were splitting one answer
+   * in half because the old flow had arrived from a league.
+   */
+  const seen = new Set<string>();
+  const all = [...discovered, ...drafts].filter((draft) => {
+    if (seen.has(draft.draft_id)) return false;
+    seen.add(draft.draft_id);
+    return true;
+  });
+  const choices = buildDraftChoices({ drafts: all, leagues, userId });
+  const showLeagueFallback = needsLeagueFallback({ choices, leagues });
 
   return (
     <div className="flex flex-col gap-4">
       <Panel>
-        <PanelTitle>League drafts</PanelTitle>
-        {drafts.length === 0 ? (
-          <p className="py-2 text-[12.5px] text-[#8fa0aa]">
-            Sleeper does not expose a draft for this league.
-          </p>
-        ) : (
-          <DraftList drafts={drafts} busy={busy} onSelect={onSelectDraft} />
-        )}
-      </Panel>
-
-      <Panel>
         <PanelTitle
           action={discoveryBusy ? <LoadingMark className="h-3 w-3 text-[#5f7280]" /> : undefined}
         >
-          Other drafts on this account
+          Your drafts
         </PanelTitle>
-        {mocks.length === 0 ? (
+        {choices.length === 0 ? (
           <p className="py-2 text-[12.5px] leading-6 text-[#8fa0aa]">
             {discoveryBusy
-              ? 'Looking for mock drafts on this account…'
-              : 'Sleeper only lists drafts you have joined. Start a mock in Sleeper, then paste its link below.'}
+              ? 'Looking for your drafts…'
+              : 'Sleeper only lists drafts you have joined. Start one in Sleeper, then paste its link below.'}
           </p>
         ) : (
-          <DraftList drafts={mocks} busy={busy} onSelect={onSelectDraft} />
+          <ul className="flex flex-col gap-2">
+            {choices.map((choice) => (
+              <li key={choice.draftId}>
+                <button
+                  onClick={() => onSelectDraft(choice.draftId)}
+                  disabled={busy}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-[#22333e] bg-[#0a141c] px-3.5 py-3 text-left transition hover:border-[#3c5261] disabled:opacity-50"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-[14px] font-black tracking-[-0.02em] text-[#f7f8f2]">
+                      {choice.title}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[12px] font-semibold text-[#8fa0aa]">
+                      {choice.subtitle || choice.kindLabel}
+                    </span>
+                    {/* The kind is words, never a colour on its own. */}
+                    <span className="mt-1 block text-[10px] font-black uppercase tracking-[0.11em] text-[#5f7280]">
+                      {choice.kindLabel}
+                      {choice.leagueHasSiblings ? ' · this league has more than one' : ''}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-lg bg-[#132030] px-3 py-2 text-[11.5px] font-black text-[#c3d1d9]">
+                    {choice.cta}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {showLeagueFallback && (
+          <p className="mt-3 text-[12px] leading-6 text-[#8fa0aa]">
+            Missing one?{' '}
+            <button
+              type="button"
+              onClick={onBrowseLeagues}
+              className="font-bold text-[#b9ff38] underline-offset-2 hover:underline"
+            >
+              Browse by league
+            </button>{' '}
+            - Sleeper does not always list a league&apos;s draft here.
+          </p>
         )}
       </Panel>
 
@@ -332,38 +387,6 @@ function DraftStep({
         busy={busy}
       />
     </div>
-  );
-}
-
-function DraftList({
-  drafts,
-  busy,
-  onSelect,
-}: {
-  drafts: SleeperDraft[];
-  busy: boolean;
-  onSelect: (draftId: string) => void;
-}) {
-  return (
-    <ul className="grid gap-2 sm:grid-cols-2">
-      {drafts.map((draft) => (
-        <li key={draft.draft_id}>
-          <button
-            disabled={busy}
-            onClick={() => onSelect(draft.draft_id)}
-            className="w-full rounded-xl border border-[#22333e] px-3 py-3 text-left transition hover:border-[#3d525f] disabled:opacity-50"
-          >
-            <span className="block truncate text-[13px] font-black text-[#e2e8eb]">
-              {draft.metadata.name?.trim() || (draft.league_id ? 'League draft' : 'Mock draft')}
-            </span>
-            <span className="mt-0.5 block text-[11px] font-bold text-[#5f7280]">
-              {draft.league_id ? 'League' : 'Mock'} · {draft.settings.teams ?? '?'} teams ·{' '}
-              {draft.type} · {draft.status.replace('_', ' ')}
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
   );
 }
 
