@@ -12,9 +12,10 @@
 #   scripts/preflight.mjs         refuses to start if the environment is unsafe
 #   scripts/migrate.mjs           applies migrations, forward-only, lock-guarded
 #   packages/config/requirements.mjs   the one definition of required config
+#   packages/db/ssl.mjs           the one rule about when the database needs TLS
 #   packages/db/migrations/*.sql  the migrations themselves
 #
-# The relative paths between those four are preserved, because the scripts
+# The relative paths between those five are preserved, because the scripts
 # import each other by relative path and this is not the place to discover that.
 
 # ---------------------------------------------------------------- build
@@ -46,6 +47,9 @@ WORKDIR /app
 COPY --from=build /src/dist/standalone/ ./
 COPY --from=build /src/packages/db/migrations/ ./packages/db/migrations/
 COPY --from=build /src/packages/config/requirements.mjs ./packages/config/requirements.mjs
+# The one TLS rule, imported by the pool, the migration script and the
+# preflight. Without it the preflight and the migration both fail to import.
+COPY --from=build /src/packages/db/ssl.mjs ./packages/db/ssl.mjs
 COPY --from=build /src/scripts/preflight.mjs ./scripts/preflight.mjs
 COPY --from=build /src/scripts/migrate.mjs ./scripts/migrate.mjs
 COPY --from=build /src/scripts/account.mjs ./scripts/account.mjs

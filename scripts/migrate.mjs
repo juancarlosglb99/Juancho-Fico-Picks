@@ -13,6 +13,7 @@
  * half-built schema.
  */
 import { readdirSync, readFileSync } from 'node:fs';
+import { databaseTls } from '../packages/db/ssl.mjs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
@@ -33,16 +34,11 @@ if (!url) {
   process.exit(1);
 }
 
-function tls() {
-  const ca = process.env.DATABASE_CA_CERT?.trim();
-  if (ca) return { ca, rejectUnauthorized: true };
-  if (process.env.DATABASE_SSL_INSECURE === 'true') return { rejectUnauthorized: false };
-  return /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(url)
-    ? undefined
-    : { rejectUnauthorized: true };
-}
+// Shared with the pool and the preflight, so all three agree about when a
+// connection needs TLS and when it is already on a private network.
+const tls = databaseTls(url);
 
-const client = new pg.Client({ connectionString: url, ssl: tls() });
+const client = new pg.Client({ connectionString: url, ssl: tls.ssl });
 
 async function main() {
   await client.connect();

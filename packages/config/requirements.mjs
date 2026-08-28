@@ -12,6 +12,13 @@
  * and must never appear in a log line, a response body, or a client bundle.
  */
 
+import {
+  databaseHost,
+  databaseSslMode,
+  inspectDatabaseTls,
+  isPrivateHost,
+} from '../db/ssl.mjs';
+
 /** @typedef {{ name: string, secret: boolean, requiredInProduction: boolean, why: string }} Requirement */
 
 /** @type {Requirement[]} */
@@ -96,6 +103,15 @@ export const REQUIREMENTS = [
   },
 ];
 
+/** What we know about the database URL, without ever reading its credentials. */
+function describeDatabase(url) {
+  return {
+    host: databaseHost(url),
+    isPrivateHost: isPrivateHost(databaseHost(url)),
+    sslMode: databaseSslMode(url),
+  };
+}
+
 /** Minimum length for a signing secret worth having. */
 export const MIN_SECRET_LENGTH = 32;
 
@@ -158,10 +174,27 @@ export function inspectEnvironment(env = process.env, options = { production: fa
   }
 
   const database = value('DATABASE_URL');
-  const localDatabase = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(database);
-  if (production && database && !localDatabase && !value('DATABASE_CA_CERT')) {
+  /*
+   * Whether the database is somewhere only this machine can reach. The rule is
+   * in `packages/db/ssl.mjs` because the pool and the migration script apply
+   * exactly the same one, and a preflight that disagreed with them would either
+   * pass a deploy that cannot connect or stop one that can.
+   */
+  const { host, isPrivateHost, sslMode } = describeDatabase(database);
+  const privateDatabase = isPrivateHost;
+
+  // TLS switched off to something that is NOT on a private network. The only
+  // database problem worth stopping a deploy for.
+  problems.push(...inspectDatabaseTls(database).problems);
+
+  if (production && database && !privateDatabase && sslMode !== 'disable' && !value('DATABASE_CA_CERT')) {
     warnings.push(
       'DATABASE_CA_CERT is not set. The connection will be verified against the system trust store, which a managed provider may not be in.',
+    );
+  }
+  if (production && privateDatabase && host !== 'localhost' && host !== '127.0.0.1') {
+    warnings.push(
+      `DATABASE_URL points at "${host}", a container network alias, so the connection is not encrypted. That is correct for a database with no published port on the same host, and wrong for anything else.`,
     );
   }
 

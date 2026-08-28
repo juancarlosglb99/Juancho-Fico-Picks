@@ -16,8 +16,11 @@
  * found in tutorials is `rejectUnauthorized: false`, which turns the encryption
  * into decoration. So the CA is read from configuration when supplied and
  * verification stays ON, and the unverified mode has to be asked for by name.
+ * The whole decision - including when TLS is not needed at all - is in
+ * `ssl.mjs`, shared with the migration script and the preflight.
  */
 import { Pool, type PoolClient, type PoolConfig } from 'pg';
+import { databaseTls } from './ssl.mjs';
 
 /** Comfortably under the 22 a DigitalOcean dev database allows, per instance. */
 const MAX_CONNECTIONS = Number(process.env.DATABASE_POOL_MAX ?? 8);
@@ -36,23 +39,13 @@ export function databaseConfigured(): boolean {
   return databaseUrl() !== null;
 }
 
+/**
+ * The rule itself lives in `ssl.mjs`, which the migration script and the
+ * production preflight also import - so a container that refuses to start and
+ * a pool that will not connect can never disagree about why.
+ */
 function tlsOptions(): PoolConfig['ssl'] {
-  const ca = process.env.DATABASE_CA_CERT?.trim();
-  if (ca) return { ca, rejectUnauthorized: true };
-
-  /*
-   * Opt-in, and named so it cannot be arrived at by accident. Managed providers
-   * hand out a CA certificate; using this instead means the connection is
-   * encrypted against nobody in particular.
-   */
-  if (process.env.DATABASE_SSL_INSECURE === 'true') {
-    return { rejectUnauthorized: false };
-  }
-
-  const url = databaseUrl() ?? '';
-  // A local database over a loopback socket does not need TLS at all.
-  const local = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(url);
-  return local ? undefined : { rejectUnauthorized: true };
+  return databaseTls(databaseUrl() ?? '').ssl as PoolConfig['ssl'];
 }
 
 export function getPool(): Pool {
