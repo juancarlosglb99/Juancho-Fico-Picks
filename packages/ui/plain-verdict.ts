@@ -47,13 +47,18 @@ export function plainVerdict({
     engine.components.marginalStartingValue > 0.5 &&
     insight.startersFilled < insight.startersRequired;
 
+  /*
+   * What the pick DOES, gated on the only number that answers it. An earlier
+   * version asked the saturation label instead, and a roster with three backs
+   * against two starting slots came back "medium" - so a pick that improved the
+   * lineup by nothing was described as the strongest value on the board rather
+   * than as the bench pick it was.
+   */
   const base = fillsStarter
     ? `He fills your open ${position} spot`
     : engine.components.marginalStartingValue > 0.5
       ? `He improves your starting lineup more than anything else available`
-      : insight.saturation === 'complete' || insight.saturation === 'high'
-        ? `Every starting spot he could fill is already taken, so this is about the best value left for your bench`
-        : `He is the strongest value left on the board`;
+      : `Your starting spots are already full, so this is about the best value left for your bench`;
 
   const depth = describeTierDepth({
     position,
@@ -71,7 +76,7 @@ export function plainVerdict({
    */
   const urgent = engine.components.opportunityCost > 1.5;
   const timing = urgent
-    ? ', and players of similar quality are less likely to remain later'
+    ? ', and waiting a turn for him is likely to cost you'
     : insight.exceptionalReason
       ? ''
       : engine.playersRemainingInTier <= 2

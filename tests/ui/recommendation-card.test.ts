@@ -108,6 +108,31 @@ describe('the plain-English answer', () => {
     expect(text).not.toMatch(/\d+\.\d{3,}/);
   });
 
+  it('says plainly when a pick does nothing for the starting lineup', () => {
+    /*
+     * The Woody Marks case: every startable spot is taken, so the pick is about
+     * the bench. Saying "strongest value left on the board" there hides the one
+     * thing the drafter needs to know.
+     */
+    const benchOnly = {
+      ...result.recommendations[0],
+      components: { ...result.recommendations[0].components, marginalStartingValue: 0 },
+      insight: { ...result.recommendations[0].insight, saturation: 'medium' },
+    };
+    const model = resolveRecommendationCard({
+      result: { ...result, recommendations: [benchOnly, ...result.recommendations.slice(1)] },
+      strategist: null,
+      currentFingerprint: brief.state.boardFingerprint,
+      nameOf,
+      survivalOf,
+    });
+    expect(model.plain?.why).toContain('starting spots are already full');
+    expect(model.plain?.why).toContain('bench');
+    expect(model.evidence.find((item) => item.label === 'Improves your starting lineup')?.value).toBe(
+      'Bench only',
+    );
+  });
+
   it('describes the position in words, with the advice a drafter acts on', () => {
     const position = card(null).plain!.position!;
     expect(position.supply).toMatch(/remain|left/);
