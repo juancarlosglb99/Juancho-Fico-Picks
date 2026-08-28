@@ -5,6 +5,13 @@
 #   scp scripts/deploy/bootstrap-droplet.sh root@<ip>:/tmp/
 #   ssh root@<ip> 'bash /tmp/bootstrap-droplet.sh'
 #
+# Long apt steps are safer run detached from the SSH session, so a dropped
+# connection cannot leave dpkg half-applied:
+#
+#   ssh root@<ip> 'systemd-run --unit=juancho-bootstrap --collect \
+#       bash /tmp/bootstrap-droplet.sh'
+#   ssh root@<ip> 'journalctl -u juancho-bootstrap -f'
+#
 # IDEMPOTENT on purpose. A half-applied server is worse than an unconfigured
 # one, and the realistic failure here is a dropped connection partway through -
 # so every step checks before it acts and running it twice changes nothing.
@@ -55,12 +62,21 @@ else
 	# DigitalOcean images ship drop-ins that re-enable passwords and win by
 	# being read last. Editing only sshd_config leaves passwords on.
 	if [ -d /etc/ssh/sshd_config.d ]; then
+		# `|| true` because grep exits 1 when it finds nothing - which is
+		# exactly what happens on the SECOND run, once the drop-ins are already
+		# fixed. Under `set -o pipefail` that failure propagates and kills the
+		# script, so the "idempotent" script was idempotent only until it had
+		# actually done its job. It cost a debugging round to notice.
 		grep -rl 'PasswordAuthentication yes' /etc/ssh/sshd_config.d/ 2>/dev/null \
-			| xargs -r sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/'
+			| xargs -r sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' || true
 	fi
-	# Validate before restarting: a syntax error here ends the deployment.
+	# Validate before applying: a syntax error here ends the deployment.
 	sshd -t
-	systemctl restart ssh
+	# RELOAD, not restart. `systemctl restart ssh` tears down the cgroup that
+	# the calling SSH session lives in - which kills this script mid-run, and
+	# did. A reload makes sshd re-read its configuration and leaves established
+	# sessions alone.
+	systemctl reload ssh
 	skip "password and keyboard-interactive login disabled"
 fi
 
