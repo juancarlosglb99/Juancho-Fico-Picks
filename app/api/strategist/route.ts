@@ -46,7 +46,10 @@ import {
   releaseAiRequest,
   resolveAiAccess,
 } from '../../../packages/accounts/service';
-import { killSwitchEngaged } from '../../../packages/accounts/ai-limits';
+import {
+  estimateContextTokens,
+  killSwitchEngaged,
+} from '../../../packages/accounts/ai-limits';
 import { readAiControl } from '../../../packages/accounts/repository';
 import { databaseConfigured } from '../../../packages/db/client';
 
@@ -123,6 +126,9 @@ export async function POST(request: Request): Promise<Response> {
       sleeperDraftId: body.state.draftId,
       selectionKey,
       model,
+      // Measured from the payload we are about to send, so the spend cap
+      // reserves what THIS call could cost rather than what a typical one does.
+      promptTokens: estimateContextTokens(body.context),
       leagueId: body.leagueId ?? null,
       isMock: Boolean(body.isMock),
       strategistConfigured,

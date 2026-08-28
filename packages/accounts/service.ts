@@ -119,6 +119,7 @@ export async function resolveAiAccess({
   sleeperDraftId,
   selectionKey,
   model,
+  promptTokens = 0,
   leagueId = null,
   isMock = false,
   strategistConfigured,
@@ -136,6 +137,13 @@ export async function resolveAiAccess({
   selectionKey: string;
   /** The model that would be called, so worst-case cost can be reserved. */
   model: string;
+  /**
+   * Roughly how large this particular prompt is.
+   *
+   * Only ever raises the reservation, never lowers it, so a caller that gets
+   * it wrong or omits it cannot weaken the spend cap.
+   */
+  promptTokens?: number;
   leagueId?: string | null;
   isMock?: boolean;
   strategistConfigured: boolean;
@@ -225,7 +233,7 @@ export async function resolveAiAccess({
    */
   const control = await readAiControl().catch(() => AI_CONTROL_DEFAULT);
   const limits = effectiveLimits(process.env, control);
-  const reservedUsd = reservedCallCostUsd(model);
+  const reservedUsd = reservedCallCostUsd(model, { inputTokens: promptTokens });
   const [global, selection] = await Promise.all([
     globalSpend(),
     selectionSpend(session.id, selectionKey),

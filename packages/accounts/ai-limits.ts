@@ -103,13 +103,36 @@ export const WORST_CASE_INPUT_TOKENS = 40_000;
  */
 export function reservedCallCostUsd(
   model: string,
-  { maxOutputTokens = 4096, maxAttempts = 2 } = {},
+  { inputTokens = 0, maxOutputTokens = 4096, maxAttempts = 2 } = {},
 ): number {
   const perAttempt = estimateCost(model, {
-    inputTokens: WORST_CASE_INPUT_TOKENS,
+    /*
+     * The larger of "no prompt has ever been bigger than this" and "this
+     * prompt is bigger than that". The floor keeps the reservation honest for
+     * a caller that cannot measure; the max keeps the cap hard on the day a
+     * league produces a context nothing in the corpus predicted.
+     */
+    inputTokens: Math.max(WORST_CASE_INPUT_TOKENS, inputTokens),
     outputTokens: maxOutputTokens,
   });
   return perAttempt * maxAttempts;
+}
+
+/**
+ * Roughly how many input tokens a payload will become.
+ *
+ * Three characters per token, against a real ratio nearer four. Deliberately
+ * an over-estimate: this feeds a reservation, and a reservation that guesses
+ * low is a cap that leaks. It is never used to report what anything cost -
+ * `estimateCost` over the provider's own usage numbers does that.
+ */
+export function estimateContextTokens(payload: unknown): number {
+  try {
+    return Math.ceil(JSON.stringify(payload).length / 3);
+  } catch {
+    // Unserialisable: fall back to the floor rather than to zero.
+    return WORST_CASE_INPUT_TOKENS;
+  }
 }
 
 /* --------------------------------------------------------- the global switch */

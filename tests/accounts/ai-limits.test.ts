@@ -12,6 +12,7 @@ import {
   AI_CONTROL_DEFAULT,
   DEFAULT_AI_LIMITS,
   WORST_CASE_INPUT_TOKENS,
+  estimateContextTokens,
   decideAiLimits,
   decideDraftLimits,
   decideGlobalLimits,
@@ -201,6 +202,38 @@ describe('the reservation', () => {
 
   it('follows the model, so a cheaper model buys more calls', () => {
     expect(reservedCallCostUsd('claude-haiku-4-5')).toBeLessThan(reservedCallCostUsd(MODEL));
+  });
+
+  it('grows with a prompt bigger than anything on record', () => {
+    const huge = reservedCallCostUsd(MODEL, { inputTokens: 120_000 });
+    expect(huge).toBeGreaterThan(reservedCallCostUsd(MODEL));
+    // And it prices that prompt, not the floor.
+    expect(huge).toBeCloseTo(
+      estimateCost(MODEL, { inputTokens: 120_000, outputTokens: 4096 }) * 2,
+      10,
+    );
+  });
+
+  it('can only be raised by the measurement, never lowered', () => {
+    for (const understated of [0, 1, 100, WORST_CASE_INPUT_TOKENS - 1]) {
+      expect(reservedCallCostUsd(MODEL, { inputTokens: understated })).toBe(
+        reservedCallCostUsd(MODEL),
+      );
+    }
+  });
+
+  it('over-estimates the size of a payload rather than under-estimating it', () => {
+    // Roughly four characters per token in practice; this counts three, so the
+    // reservation errs upward.
+    const payload = { text: 'x'.repeat(4000) };
+    const characters = JSON.stringify(payload).length;
+    expect(estimateContextTokens(payload)).toBeGreaterThan(characters / 4);
+  });
+
+  it('falls back to the floor rather than to zero on an unserialisable payload', () => {
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    expect(estimateContextTokens(cyclic)).toBe(WORST_CASE_INPUT_TOKENS);
   });
 });
 
