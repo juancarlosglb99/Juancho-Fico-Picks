@@ -23,16 +23,17 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.121.0",
+    "better-auth": "^1.7.2",
     "next": "^16.3.3",
+    "pg": "^8.23.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.53.1",
-    "@cloudflare/workers-types": "^5.20260825.1",
     "@openai/sites-vite-plugin": "^0.1.0 || ^0.2.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
+    "@types/pg": "^8.23.1",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
@@ -44,8 +45,7 @@
     "typescript": "5.9.3",
     "vinext": "^1.0.0-beta.8",
     "vite": "^8.2.2",
-    "vitest": "^4.1.11",
-    "wrangler": "^4.125.0"
+    "vitest": "^4.1.11"
   },
   "type": "module"
 }

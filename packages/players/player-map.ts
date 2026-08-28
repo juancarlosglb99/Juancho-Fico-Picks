@@ -1,4 +1,5 @@
 import type { SleeperPlayerRaw, SleeperPlayersResponse } from '../sleeper/types';
+import { CURRENT_ELIGIBILITY_POLICY, type EligibilityPolicy } from './eligibility';
 import type { CanonicalPlayer, CanonicalPlayerMap, Position } from './types';
 
 const POSITIONS = new Set<Position>([
@@ -32,34 +33,10 @@ export function normalizePosition(position?: string | null): Position {
   return POSITIONS.has(upper as Position) ? (upper as Position) : 'UNKNOWN';
 }
 
-/**
- * Whether Sleeper currently places this player on an NFL team.
- *
- * This is the eligibility rule, and it is `team`, for reasons that are worth
- * writing down because the two obvious candidates are both traps.
- *
- * `active` is useless: it is `true` on all 9,418 entries Sleeper returns,
- * including players who retired a decade ago.
- *
- * `status` is worse than useless, because it is wrong in BOTH directions. Tom
- * Brady, Rob Gronkowski, Cam Newton and Antonio Brown are all `"Active"`. Adam
- * Vinatieri, retired since 2019, is `"Injured Reserve"` - a status that is also
- * perfectly legitimate for a player on a current roster, so excluding it would
- * drop real players while keeping the retired ones.
- *
- * `team` is the field Sleeper actually maintains. Every retired player above
- * carries `team: null`; every current one carries an abbreviation, team
- * defenses included. It costs us genuinely unsigned free agents, which is the
- * right trade: nobody projects them, no ranking source lists them, and a
- * fantasy draft cannot use them.
- */
-export function isCurrentNflPlayer(raw: SleeperPlayerRaw): boolean {
-  return typeof raw.team === 'string' && raw.team.trim().length > 0;
-}
-
 function canonicalizeSleeperPlayer(
   sleeperId: string,
   raw: SleeperPlayerRaw,
+  eligibility: EligibilityPolicy,
 ): CanonicalPlayer | null {
   const name =
     raw.full_name?.trim() ||
@@ -79,7 +56,7 @@ function canonicalizeSleeperPlayer(
     position,
     team: raw.team ?? null,
     status: raw.status ?? null,
-    draftEligible: isCurrentNflPlayer(raw),
+    draftEligible: eligibility.isDraftEligible(raw),
     age: raw.age ?? null,
     yearsExperience: raw.years_exp ?? null,
     externalIds,
@@ -96,9 +73,15 @@ function addToIndex(
 
 export function buildCanonicalPlayerMap(
   response: SleeperPlayersResponse,
+  /**
+   * Which players may be SELECTED. Everyone is still mapped and nameable - a
+   * draft board has to render whoever another team took - so this decides
+   * `draftEligible` rather than membership.
+   */
+  eligibility: EligibilityPolicy = CURRENT_ELIGIBILITY_POLICY,
 ): CanonicalPlayerMap {
   const players = Object.entries(response)
-    .map(([sleeperId, raw]) => canonicalizeSleeperPlayer(sleeperId, raw))
+    .map(([sleeperId, raw]) => canonicalizeSleeperPlayer(sleeperId, raw, eligibility))
     .filter((player): player is CanonicalPlayer => player !== null)
     .sort((a, b) => a.name.localeCompare(b.name));
 

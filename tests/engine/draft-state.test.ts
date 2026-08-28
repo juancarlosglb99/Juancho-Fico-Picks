@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { deriveDraftBoardState } from '../../packages/engine/draft/state';
 import { buildCanonicalPlayerMap } from '../../packages/players/player-map';
+import {
+  ANY_KNOWN_PLAYER,
+  SLEEPER_TEAM_ASSIGNMENT,
+} from '../../packages/players/eligibility';
 import type {
   SleeperDraft,
   SleeperDraftPick,
@@ -94,6 +98,26 @@ describe('draft board state', () => {
     expect(withRetired.bySleeperId.get('901')?.name).toBe('Retired Kicker');
     expect(withRetired.bySleeperId.get('901')?.draftEligible).toBe(false);
     expect(withRetired.bySleeperId.get('902')?.draftEligible).toBe(true);
+  });
+
+  /**
+   * The rule is a policy, not a definition: Sleeper can change how it maintains
+   * any of these fields, so swapping it must be a one-line act rather than a
+   * search through mapping code.
+   */
+  it('takes the eligibility rule as an argument, so it can be replaced', () => {
+    const raw = {
+      '100': { player_id: '100', full_name: 'Current Starter', position: 'WR', team: 'TST' },
+      '901': { player_id: '901', full_name: 'Retired Kicker', position: 'K', team: null },
+    };
+    expect(SLEEPER_TEAM_ASSIGNMENT.id).toBe('sleeper-team-assignment-2026.1');
+
+    const today = buildCanonicalPlayerMap(raw, SLEEPER_TEAM_ASSIGNMENT);
+    expect(deriveDraftBoardState(draft, [], [], today).availablePlayers).toHaveLength(1);
+
+    // Replaying a board captured under an older rule must not depend on today's.
+    const historical = buildCanonicalPlayerMap(raw, ANY_KNOWN_PLAYER);
+    expect(deriveDraftBoardState(draft, [], [], historical).availablePlayers).toHaveLength(2);
   });
 
   it('keeps a drafted but ineligible player resolvable, so the board can name him', () => {
