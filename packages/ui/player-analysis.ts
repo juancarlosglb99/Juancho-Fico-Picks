@@ -72,6 +72,7 @@ export function buildPlayerAnalysis({
     team: player.team ?? null,
     age: player.age ?? null,
     yearsExperience: player.yearsExperience ?? null,
+    status: notableStatus(player.status),
     firstSeedRank: internals.firstSeedOf(playerId)?.rank ?? null,
     firstSeedProjection: internals.sourceProjectionOf(playerId)?.projection ?? null,
     leagueProjection: projection?.projection ?? null,
@@ -102,6 +103,12 @@ export function buildPlayerAnalysis({
     opponentPressure: buildOpponentPressure(player.position, result, brief, teamNameFor),
     plan: buildPlan(playerId, player.name, result, brief),
   };
+}
+
+/** `Active` is every player's status and says nothing. Anything else does. */
+function notableStatus(status: string | null | undefined): string | null {
+  if (!status) return null;
+  return status.trim().toLowerCase() === 'active' ? null : status;
 }
 
 /* ---------------------------------------------------------------- A. peers */

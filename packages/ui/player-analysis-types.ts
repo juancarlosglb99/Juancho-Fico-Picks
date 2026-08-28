@@ -22,6 +22,14 @@ export interface AnalysisHeader {
   team: string | null;
   age: number | null;
   yearsExperience: number | null;
+  /**
+   * Sleeper's roster status, and only when it is not `Active`.
+   *
+   * The one thing worth saying about a player that is not a number: a name
+   * sitting near the top of a projection board while on injured reserve is a
+   * trap, and the projection itself will not mention it.
+   */
+  status: string | null;
   firstSeedRank: number | null;
   /** First Seed's own published projection, before this league's scoring. */
   firstSeedProjection: number | null;

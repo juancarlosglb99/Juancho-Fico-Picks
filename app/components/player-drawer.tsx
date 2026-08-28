@@ -85,6 +85,7 @@ export function PlayerDrawer({
             ) : header.engineRank !== null && header.engineRank <= 3 ? (
               <Pill tone="accent">Engine #{header.engineRank}</Pill>
             ) : null}
+            {header.status && <Pill tone="warn">{header.status}</Pill>}
           </div>
           <p className="mt-1 truncate text-[11px] font-bold text-[#7f919c]">
             {header.team || 'FA'}

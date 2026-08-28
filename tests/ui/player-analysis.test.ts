@@ -37,6 +37,8 @@ describe('player analysis drawer', () => {
     expect(analysis.header.tier).not.toBeNull();
     expect(analysis.header.drafted).toBe(false);
     expect(analysis.header.engineRank).toBe(1);
+    // `Active` is every player's status and would be noise on every header.
+    expect(analysis.header.status).toBeNull();
   });
 
   it('returns nothing at all for a player the engine cannot describe', () => {
