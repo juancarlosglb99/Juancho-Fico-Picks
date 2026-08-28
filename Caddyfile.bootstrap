@@ -18,9 +18,27 @@
 # obtains a real certificate on its own.
 
 {
-	# No ACME account is needed for a local CA, and asking for one on a box
-	# with no domain only produces confusing log lines.
-	auto_https off
+	# `disable_redirects`, NOT `off`.
+	#
+	# `auto_https off` disables all of automatic HTTPS - including certificate
+	# MANAGEMENT - so `tls internal` below has nothing to issue and the
+	# handshake fails with an internal error while port 443 sits there
+	# listening. That is exactly how it failed on the first deploy.
+	#
+	# What we actually want to switch off is the automatic HTTP->HTTPS
+	# redirect, because the `:80` block at the bottom is our own.
+	auto_https disable_redirects
+
+	# A client connecting to a bare IP sends NO SNI - the TLS extension is
+	# defined to carry a host name, and an IP literal is not one. With a single
+	# site keyed on {$DOMAIN}, Caddy then has no way to choose a certificate and
+	# aborts the handshake with an internal error, which is what a browser
+	# pointed at https://<ip> would have got.
+	#
+	# This is the whole reason the IP phase needs a line the domain phase does
+	# not: naming the default makes a no-SNI connection use that site's
+	# certificate.
+	default_sni {$DOMAIN}
 }
 
 https://{$DOMAIN} {

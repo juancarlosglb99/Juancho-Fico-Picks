@@ -272,6 +272,26 @@ describe('composing the environment and the control row', () => {
     expect(fromRow.dailySpendLimitUsd).toBe(20);
   });
 
+  it('treats an EMPTY variable as unset, not as zero', () => {
+    /*
+     * `docker compose` renders an unset `${AI_MAX_CALLS_PER_DRAFT:-}` as an
+     * empty string rather than omitting it, and `Number('')` is 0. The first
+     * production container came up with every ceiling at zero because of this.
+     */
+    const blank = effectiveLimits({
+      AI_MAX_CALLS_PER_DRAFT: '',
+      AI_MAX_REPAIRS_PER_DRAFT: '',
+      AI_MAX_DRAFT_SPEND_USD: '',
+      AI_DAILY_SPEND_LIMIT_USD: '   ',
+      AI_MONTHLY_SPEND_LIMIT_USD: '',
+    });
+    expect(blank).toEqual(DEFAULT_AI_LIMITS);
+  });
+
+  it('still lets zero mean zero when somebody types it', () => {
+    expect(effectiveLimits({ AI_MAX_DRAFT_SPEND_USD: '0' }).maxDraftSpendUsd).toBe(0);
+  });
+
   it('ignores a value that is not a number rather than treating it as zero', () => {
     expect(effectiveLimits({ AI_MAX_DRAFT_SPEND_USD: 'five dollars' }).maxDraftSpendUsd).toBe(5);
     expect(effectiveLimits({ AI_MAX_CALLS_PER_DRAFT: '-3' }).maxPrimaryCallsPerDraft).toBe(18);

@@ -164,9 +164,24 @@ export const AI_CONTROL_DEFAULT: AiControl = {
 
 export type Environment = Record<string, string | undefined>;
 
+/**
+ * A limit from a string, or null when there isn't one.
+ *
+ * The blank check is not defensive tidiness. `docker compose` renders an
+ * unset `${AI_MAX_CALLS_PER_DRAFT:-}` as an EMPTY STRING rather than leaving
+ * the variable out, `Number('')` is 0, and 0 is a perfectly valid limit - so
+ * the first production container came up with every ceiling set to zero and
+ * the strategist silently switched off. It failed in the safe direction, and
+ * it was still wrong.
+ *
+ * Zero itself is kept meaningful: `AI_MAX_DRAFT_SPEND_USD=0` is a legitimate
+ * way to say "spend nothing", and it is different from saying nothing.
+ */
 function positiveNumber(raw: string | undefined): number | null {
   if (raw === undefined) return null;
-  const value = Number(raw.trim());
+  const trimmed = raw.trim();
+  if (trimmed === '') return null;
+  const value = Number(trimmed);
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
