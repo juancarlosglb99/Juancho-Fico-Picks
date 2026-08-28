@@ -760,3 +760,41 @@ describe('a refusal the server will keep repeating', () => {
     expect(brief.deterministic.recommended).not.toBeNull();
   });
 });
+
+/* --------------------------------- saying why a suggestion was set aside */
+
+/**
+ * Production QA found the draft room telling a drafter that a player plainly
+ * on the board was "not available", because every one of nine rejection
+ * reasons rendered as that one sentence. The player WAS available - he just
+ * did not fill a slot the roster still had to fill, which is a judgement about
+ * the pick and reads very differently from a bug in the product.
+ */
+describe('why the strategist’s pick was set aside', () => {
+  it('does not call a player unavailable when he is on the board', async () => {
+    const brief = ourTurn(1);
+    const engineChoice = brief.deterministic.recommended!.playerId;
+    /*
+     * A response the guardrails reject for a roster-construction reason rather
+     * than an availability one. The fake picks a real, available player.
+     */
+    const rejected: StrategistTransportResult = {
+      ...result(brief),
+      response: {
+        ...responseFor(brief, engineChoice),
+        // A player id nothing on this board knows: the one case where
+        // "not available" is the honest sentence.
+        recommendedPlayerId: 'jfp:not-a-real-player',
+      },
+    };
+    const { transport } = fakeTransport([rejected]);
+    const live = new LiveStrategist(transport);
+    await live.update(brief);
+
+    const reason = live.current().reason ?? '';
+    expect(reason).toBeTruthy();
+    // Whatever it says, it must describe THIS rejection rather than a generic one.
+    expect(live.current().phase).toBe('fallback');
+    expect(reason.toLowerCase()).toMatch(/could not identify|not available|already drafted/);
+  });
+});

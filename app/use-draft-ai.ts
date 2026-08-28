@@ -106,17 +106,14 @@ export function useDraftAi({
     /*
      * Ask the server what it already knows, so re-entering a draft that was
      * switched on comes back switched on - and, more importantly, already paid
-     * for. `enabled: isAdmin` is the current value rather than a change: for a
-     * Pro drafter this writes false, which is already the default and never
-     * clears a credit that has been spent.
+     * for.
      */
     let cancelled = false;
-    void fetch('/api/draft/ai', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify({ sleeperDraftId, leagueId, isMock, enabled: isAdmin }),
-    })
+    const params = new URLSearchParams({ draftId: sleeperDraftId, isMock: String(isMock) });
+    if (leagueId) params.set('leagueId', leagueId);
+    // A GET. Asking must never change the answer - posting the value we assumed
+    // here is what used to switch AI back off on re-entry.
+    void fetch(`/api/draft/ai?${params.toString()}`, { credentials: 'same-origin' })
       .then((response) => (response.ok ? response.json() : null))
       .then((body: { aiRequested?: boolean; creditConsumed?: boolean } | null) => {
         if (cancelled || !body) return;

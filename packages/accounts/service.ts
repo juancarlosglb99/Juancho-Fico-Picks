@@ -705,6 +705,55 @@ export async function setDraftAi(
   };
 }
 
+/**
+ * What is already true about this draft. Changes nothing.
+ *
+ * The screen has to know, on entry, whether the strategist is on and whether
+ * this draft has been paid for. It used to ask by calling `setDraftAi` with
+ * the value it assumed - which WROTE that assumption, so re-entering a draft
+ * you had switched AI on for switched it back off and asked you again. The
+ * credit survived, so nothing was lost but the mode; it was still wrong, and a
+ * read that writes is the kind of thing that is only wrong until it is
+ * expensive.
+ */
+export async function readDraftAi(
+  request: Request,
+  { sleeperDraftId, leagueId = null, isMock = false }: {
+    sleeperDraftId: string;
+    leagueId?: string | null;
+    isMock?: boolean;
+  },
+): Promise<DraftAiState> {
+  const blank: DraftAiState = {
+    ok: false,
+    aiRequested: false,
+    creditConsumed: false,
+    creditsRemaining: null,
+    plan: 'basic',
+  };
+  if (!accountsEnabled() || !sleeperDraftId) return blank;
+
+  const user = await currentUser(request);
+  if (!user) return blank;
+
+  const account = await ensureAccount({ userId: user.id, displayName: user.name });
+  const access = resolveAccess(account.entitlement, new Date());
+  if (access.state !== 'active' || access.plan === 'basic') {
+    return { ...blank, plan: access.plan };
+  }
+
+  const session = await startDraftSession({ userId: user.id, sleeperDraftId, leagueId, isMock });
+  return {
+    ok: true,
+    // Admin is always on; there is no switch and nothing to spend.
+    aiRequested: access.plan === 'admin' || session.aiRequested,
+    creditConsumed: session.aiCreditConsumed,
+    creditsRemaining:
+      access.plan === 'admin' ? null : creditsRemaining(account.credits, new Date()),
+    plan: access.plan,
+  };
+}
+
 /* --------------------------------------------------------- the admin guard */
 
 /**

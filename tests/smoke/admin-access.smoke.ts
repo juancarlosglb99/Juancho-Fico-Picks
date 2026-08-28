@@ -140,6 +140,22 @@ suite('who can reach the admin routes', () => {
     await setEntitlement({ userId: ADMIN.id, plan: 'admin' });
   });
 
+  it('refuses an id that is not an account, cleanly', async () => {
+    /*
+     * Found in production QA: a malformed user id reached Postgres as a
+     * foreign key violation and came back as a 500 with a stack trace in the
+     * log. An operator acting on a row that has since been deleted deserves a
+     * sentence.
+     */
+    caller = ADMIN;
+    const response = await users.POST(
+      request({ userId: 'no-such-user-at-all', action: 'activate_basic' }),
+    );
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error?: string };
+    expect(body.error).toMatch(/No such account/i);
+  });
+
   it('never returns a secret', async () => {
     caller = ADMIN;
     const body = await (await ai.GET(new Request('https://example.test/api/admin/ai'))).text();

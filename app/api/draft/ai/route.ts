@@ -16,7 +16,29 @@
  * somebody else's draft creates an empty one of your own rather than touching
  * theirs.
  */
-import { setDraftAi } from '../../../../packages/accounts/service';
+import { readDraftAi, setDraftAi } from '../../../../packages/accounts/service';
+
+/**
+ * What is already true about this draft, without changing any of it.
+ *
+ * A GET, because the screen asks this on entry and a read that writes turned
+ * "reopen the draft you switched AI on for" into "switched back to Standard
+ * Mode and asked again".
+ */
+export async function GET(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const sleeperDraftId = url.searchParams.get('draftId') ?? '';
+  if (!sleeperDraftId) {
+    return Response.json({ error: 'A draft is required.' }, { status: 400 });
+  }
+  return Response.json(
+    await readDraftAi(request, {
+      sleeperDraftId,
+      leagueId: url.searchParams.get('leagueId'),
+      isMock: url.searchParams.get('isMock') === 'true',
+    }),
+  );
+}
 
 interface Body {
   sleeperDraftId?: string;

@@ -20,6 +20,7 @@
 import type { StrategistResponse } from './anthropic/schema';
 import { estimateCost } from './anthropic/pricing';
 import { resolveStrategistDecision, type StrategistDecision } from './audit';
+import type { GuardrailViolationCode } from './guardrails';
 import type { ResponseValidationProblem } from './audit';
 import { buildStrategistPromptContext, type StrategistPromptContext } from './prompt-context';
 import { stalenessOf } from './state-version';
@@ -626,13 +627,41 @@ function entitlementOf(
   };
 }
 
+/**
+ * Why a rejected suggestion was rejected, in the drafter's own terms.
+ *
+ * Every rejection used to read "suggested a selection that is not available",
+ * which is true of exactly two of the nine reasons. Production QA caught it
+ * saying so about a player who was plainly on the board and merely did not
+ * fill the slot the roster still has to fill - which reads as a bug in the
+ * product rather than a judgement about the pick.
+ */
+const REJECTION_NOTE: Record<GuardrailViolationCode, string> = {
+  unknown_player: 'The strategist suggested a player we could not identify.',
+  already_drafted: 'The strategist suggested someone who is already drafted.',
+  not_in_candidate_pool: 'The strategist suggested a selection that is not available.',
+  unusable_player_data: 'The strategist suggested a player we have no usable data for.',
+  illegal_position: 'The strategist suggested a player who cannot fill any open slot.',
+  no_roster_spots_remaining: 'The strategist suggested a player with nowhere left to go on your roster.',
+  impossible_roster_construction:
+    'Taking the strategist’s pick would leave a roster that cannot be filled legally.',
+  must_fill_required_slot:
+    'There are only enough picks left to fill your required slots, so the strategist’s pick was set aside.',
+  meaningless_stack: 'The strategist suggested a stack that does not help this roster.',
+};
+
 /** A short, non-alarming note for the screen. Never an error banner. */
 function describeOutcome(decision: StrategistDecision): string {
   switch (decision.outcome) {
     case 'ai_malformed':
       return 'The strategist did not answer in the required form.';
-    case 'ai_rejected':
-      return 'The strategist suggested a selection that is not available.';
+    case 'ai_rejected': {
+      const violation: GuardrailViolationCode | undefined =
+        decision.audit.guardrail?.violations[0]?.code;
+      return violation
+        ? REJECTION_NOTE[violation]
+        : 'The strategist suggested a selection that is not available.';
+    }
     case 'ai_stale':
       return 'The board moved before the strategist answered.';
     case 'ai_unavailable':

@@ -21,6 +21,7 @@ import {
   setEntitlement,
 } from '../../../../packages/accounts/repository';
 import { requireAdmin } from '../../../../packages/accounts/service';
+import { query } from '../../../../packages/db/client';
 import { PRO_OFFER } from '../../../../packages/ui/plans';
 
 const NOT_FOUND = () => Response.json({ error: 'Not found.' }, { status: 404 });
@@ -55,6 +56,32 @@ export async function POST(request: Request): Promise<Response> {
 
   const note = `set by ${admin.email} from the admin page`;
 
+  /*
+   * A user id that does not exist reaches Postgres as a foreign key violation,
+   * which without this became a 500 and a stack trace in the log. Production
+   * QA found it by sending a malformed id. An operator acting on a row that
+   * has since been deleted deserves a sentence, not an outage.
+   */
+  const exists = await query<{ id: string }>(`select id from "user" where id = $1`, [userId]);
+  if (exists.length === 0) {
+    return Response.json({ error: 'No such account. Reload the list.' }, { status: 400 });
+  }
+
+  try {
+    return await applyAction(body, userId, note);
+  } catch (error) {
+    // Anything the database refuses is reported as a refusal, not as a crash.
+    return Response.json(
+      {
+        error: 'That action was not applied.',
+        detail: error instanceof Error ? error.message : undefined,
+      },
+      { status: 400 },
+    );
+  }
+}
+
+async function applyAction(body: ActionBody, userId: string, note: string): Promise<Response> {
   switch (body.action) {
     case 'activate_basic':
       await setEntitlement({ userId, plan: 'basic', note });

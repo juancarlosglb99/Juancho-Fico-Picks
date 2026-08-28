@@ -193,6 +193,34 @@ describe('which mode the draft room is in', () => {
   });
 });
 
+describe('the badge on a phone', () => {
+  /*
+   * Mobile QA found the full labels pushing "YOUR PICK / ROUND 5/15" out of the
+   * top bar - the mode indicator crowding out whose pick it is. The short form
+   * has to stay short AND still answer the only question the badge is for.
+   */
+  const modes = [
+    resolveDraftMode({ plan: 'basic', aiEnabledForDraft: false, creditsRemaining: 0, aiConfigured: true }),
+    resolveDraftMode({ plan: 'pro', aiEnabledForDraft: false, creditsRemaining: 3, aiConfigured: true }),
+    resolveDraftMode({ plan: 'pro', aiEnabledForDraft: true, creditsRemaining: 2, aiConfigured: true }),
+    resolveDraftMode({ plan: 'admin', aiEnabledForDraft: true, creditsRemaining: null, aiConfigured: true }),
+  ];
+
+  it('fits: no short label is longer than the full one', () => {
+    for (const mode of modes) {
+      expect(mode.shortLabel.length, mode.kind).toBeLessThanOrEqual(mode.label.length);
+      expect(mode.shortLabel.length, mode.kind).toBeLessThanOrEqual(12);
+    }
+  });
+
+  it('still answers "am I getting AI right now?" on its own', () => {
+    for (const mode of modes) {
+      const saysAi = /ai/i.test(mode.shortLabel);
+      expect(saysAi, `${mode.kind}: "${mode.shortLabel}"`).toBe(mode.aiActive);
+    }
+  });
+});
+
 describe('the question asked before a credit is spent', () => {
   it('says what a credit buys, so "a draft" is not left to interpretation', () => {
     const prompt = creditPrompt(3);

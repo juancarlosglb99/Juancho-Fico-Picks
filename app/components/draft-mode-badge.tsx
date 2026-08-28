@@ -39,13 +39,24 @@ export function DraftModeBadge({ mode }: { mode: DraftMode }) {
         style={{ backgroundColor: tone.dot }}
       />
       <div className="min-w-0 leading-tight">
+        {/*
+          Two labels, one meaning. The short one runs on a phone, where mobile
+          QA found the full text pushing "YOUR PICK / ROUND 5/15" out of the
+          bar - the mode crowding out whose pick it is, which matters more.
+          Both answer the only question this badge exists for.
+        */}
         <p
-          className="truncate text-[10px] font-black uppercase tracking-[0.1em]"
+          className="truncate text-[10px] font-black uppercase tracking-[0.1em] sm:hidden"
+          style={{ color: tone.text }}
+        >
+          {mode.shortLabel}
+        </p>
+        <p
+          className="hidden truncate text-[10px] font-black uppercase tracking-[0.1em] sm:block"
           style={{ color: tone.text }}
         >
           {mode.label}
         </p>
-        {/* Hidden on the narrowest phones, where the label alone has to carry it. */}
         <p className="hidden truncate text-[10px] font-semibold text-[#7f919c] sm:block">
           {mode.credits ?? mode.detail}
         </p>

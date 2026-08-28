@@ -38,6 +38,15 @@ export interface DraftMode {
   kind: DraftModeKind;
   /** The badge. Short, and never the only thing said. */
   label: string;
+  /**
+   * The badge on a phone, where horizontal space is contested.
+   *
+   * Mobile QA found the full labels pushing "YOUR PICK / ROUND 5/15" out of
+   * the bar - the mode indicator crowding out whose pick it is, which is the
+   * one thing that matters more. These are shorter and still answer the only
+   * question the badge exists for: am I getting AI right now?
+   */
+  shortLabel: string;
   /** What that means, in the customer's words. */
   detail: string;
   /** A third line when there is something true to put there. */
@@ -73,6 +82,7 @@ export function resolveDraftMode({
       return {
         kind: 'standard',
         label: 'Standard draft',
+        shortLabel: 'Standard',
         detail: 'Juancho + First Seed',
         credits: 'AI Strategist unavailable right now',
         aiActive: false,
@@ -82,6 +92,7 @@ export function resolveDraftMode({
     return {
       kind: 'ai_admin',
       label: 'AI draft · Admin',
+      shortLabel: 'AI · admin',
       detail: 'Claude Strategist active',
       credits: null,
       aiActive: true,
@@ -93,6 +104,7 @@ export function resolveDraftMode({
     return {
       kind: 'standard',
       label: 'Standard draft',
+      shortLabel: 'Standard',
       detail: 'Juancho + First Seed',
       credits: null,
       aiActive: false,
@@ -107,6 +119,7 @@ export function resolveDraftMode({
     return {
       kind: 'ai',
       label: 'AI draft',
+      shortLabel: 'AI draft',
       detail: 'Claude Strategist active',
       /*
        * The balance the server reports is already net of this draft's credit -
@@ -123,6 +136,7 @@ export function resolveDraftMode({
   return {
     kind: 'pro_standard',
     label: 'Pro · Standard mode',
+    shortLabel: 'Standard',
     detail: !aiConfigured
       ? 'AI Strategist unavailable right now'
       : outOfCredits

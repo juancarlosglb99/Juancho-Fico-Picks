@@ -399,6 +399,34 @@ suite('the route, with the SDK replaced by a counter', () => {
     expect(await creditsConsumed()).toBe(afterFirst + 1);
   });
 
+  it('does not switch AI back OFF when the draft is reopened', async () => {
+    /*
+     * Found by visually re-entering a draft during the production QA pass: the
+     * screen asked the server what it already knew by POSTing the value it had
+     * assumed, which WROTE that assumption. Reopening a draft you had switched
+     * AI on for switched it back off and asked you again. The credit survived,
+     * so nothing was lost but the mode - and a read that writes is only ever
+     * wrong until it is expensive.
+     */
+    const draft = await enableAi(nextDraft());
+    await post(1, draft);
+
+    const { readDraftAi } = await import('../../packages/accounts/service');
+    const state = await readDraftAi(new Request('https://example.test/'), {
+      sleeperDraftId: draft,
+      isMock: true,
+    });
+    expect(state.aiRequested).toBe(true);
+    expect(state.creditConsumed).toBe(true);
+
+    // And the read left the row exactly as it found it.
+    const rows = await query<{ ai_requested: boolean }>(
+      `select ai_requested from draft_session where sleeper_draft_id = $1`,
+      [draft],
+    );
+    expect(rows[0].ai_requested).toBe(true);
+  });
+
   it('spends nothing for an admin, on any number of drafts', async () => {
     await setEntitlement({ userId: USER.id, plan: 'admin' });
     const before = await creditsConsumed();
