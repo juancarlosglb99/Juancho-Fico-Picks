@@ -9,9 +9,9 @@
  * team ahead of us is a list rather than a warning.
  */
 import type { NextUpModel } from '@/packages/ui/next-up';
+import { describeTierDepth } from '@/packages/ui/plain-language';
 import {
   SURVIVAL_COLOR,
-  formatPoints,
   formatSlots,
   formatSurvival,
   survivalTone,
@@ -37,7 +37,7 @@ export function NextUpRail({
             ) : undefined
           }
         >
-          Gone by your next pick
+          Likely gone before your next pick
         </PanelTitle>
 
         {model.backToBack ? (
@@ -47,8 +47,8 @@ export function NextUpRail({
           </EmptyNote>
         ) : model.atRisk.length === 0 ? (
           <EmptyNote>
-            None of the players in contention is likely to be taken before your
-            next selection.
+            Nobody you are considering is likely to be gone before your next
+            pick.
           </EmptyNote>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -85,7 +85,7 @@ export function NextUpRail({
 
         {model.likelyToReturn.length > 0 && !model.backToBack && (
           <p className="mt-3 border-t border-[#16242d] pt-2.5 text-[11px] leading-5 text-[#7f919c]">
-            <span className="font-black text-[#b9ff38]">Will keep:</span>{' '}
+            <span className="font-black text-[#b9ff38]">Should still be there:</span>{' '}
             {model.likelyToReturn
               .map((row) => `${row.name} ${Math.round(row.survival)}%`)
               .join(' · ')}
@@ -94,53 +94,69 @@ export function NextUpRail({
       </Panel>
 
       <Panel>
-        <PanelTitle>Tier cliffs</PanelTitle>
+        <PanelTitle>Position drop-offs</PanelTitle>
         {model.cliffs.length === 0 ? (
-          <EmptyNote>No tier is close enough to breaking to change a decision.</EmptyNote>
+          <EmptyNote>
+            No position is thin enough right now to change what you do.
+          </EmptyNote>
         ) : (
           <ul className="flex flex-col gap-2">
-            {model.cliffs.map((cliff) => (
-              <li
-                key={`${cliff.position}-${cliff.tier}`}
-                className={`rounded-lg border px-2.5 py-2 ${
-                  cliff.weNeedIt ? 'border-[#2a3c49] bg-[#111f28]' : 'border-transparent bg-[#0a141c]'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <PositionTag position={cliff.position} size="sm" />
-                  <span className="text-[11px] font-bold text-[#c3d1d9]">
-                    Tier {cliff.tier} · {cliff.playersRemainingInTier} left
-                  </span>
-                  {cliff.weNeedIt && (
-                    <span className="ml-auto text-[9px] font-black uppercase tracking-[0.08em] text-[#b9ff38]">
-                      You need it
+            {model.cliffs.map((cliff) => {
+              const described = describeTierDepth({
+                position: cliff.position,
+                playersRemaining: cliff.playersRemainingInTier,
+                gapAfterTier: cliff.gapAfterTier,
+                weStartOne: cliff.weNeedIt,
+                chanceOneRemains: cliff.tierSurvives,
+              });
+              return (
+                <li
+                  key={`${cliff.position}-${cliff.tier}`}
+                  className={`rounded-lg border px-2.5 py-2 ${
+                    cliff.weNeedIt
+                      ? 'border-[#2a3c49] bg-[#111f28]'
+                      : 'border-transparent bg-[#0a141c]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <PositionTag position={cliff.position} size="sm" />
+                    <span className="text-[11px] font-bold text-[#c3d1d9]">
+                      {described.supply}
                     </span>
-                  )}
-                </div>
-                <p className="mt-1 text-[10.5px] leading-5 text-[#7f919c]">
-                  {formatPoints(cliff.gapAfterTier)} points fall away after this tier
-                  {cliff.tierSurvives !== null && (
-                    <>
-                      {' · '}
-                      <span
-                        style={{ color: SURVIVAL_COLOR[survivalTone(cliff.tierSurvives)] }}
-                        className="font-bold"
-                      >
-                        {Math.round(cliff.tierSurvives)}% chance it still holds someone
+                    {cliff.weNeedIt && (
+                      <span className="ml-auto text-[9px] font-black uppercase tracking-[0.08em] text-[#b9ff38]">
+                        You need one
                       </span>
-                    </>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[10.5px] leading-5 text-[#7f919c]">
+                    {described.dropOff}
+                    {cliff.tierSurvives !== null && (
+                      <>
+                        {' · '}
+                        <span
+                          style={{ color: SURVIVAL_COLOR[survivalTone(cliff.tierSurvives)] }}
+                          className="font-bold"
+                        >
+                          {Math.round(cliff.tierSurvives)}% chance one is still there
+                        </span>
+                      </>
+                    )}
+                  </p>
+                  <p className="mt-1 text-[10.5px] font-black uppercase tracking-[0.08em] text-[#6d8290]">
+                    {described.advice}
+                  </p>
+                  {cliff.bestRemaining && (
+                    <button
+                      onClick={() => onOpenPlayer(cliff.bestRemaining!.playerId)}
+                      className="mt-1 truncate text-[11px] font-bold text-[#8fa0aa] hover:text-[#e2e8eb]"
+                    >
+                      Best left: {cliff.bestRemaining.name}
+                    </button>
                   )}
-                </p>
-                {cliff.bestRemaining && (
-                  <button
-                    onClick={() => onOpenPlayer(cliff.bestRemaining!.playerId)}
-                    className="mt-1 truncate text-[11px] font-bold text-[#8fa0aa] hover:text-[#e2e8eb]"
-                  >
-                    Best left: {cliff.bestRemaining.name}
-                  </button>
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </Panel>
@@ -190,7 +206,9 @@ export function NextUpRail({
           <PanelTitle
             action={
               model.runs !== null ? (
-                <span className="text-[9px] font-bold text-[#3f4f5a]">{model.runs} runs</span>
+                <span className="text-[9px] font-bold text-[#3f4f5a]">
+                  {model.runs} simulated drafts
+                </span>
               ) : undefined
             }
           >

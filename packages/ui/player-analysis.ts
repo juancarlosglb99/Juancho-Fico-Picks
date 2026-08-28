@@ -233,7 +233,7 @@ function buildSurvival(
   const internals = result.internals;
   if (!internals) return null;
   const estimate = internals.survivalOf(playerId);
-  if (estimate.value === null) return null;
+  if (estimate.value === null || !estimate.modeled) return null;
 
   return {
     probability: estimate.value,

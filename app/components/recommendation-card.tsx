@@ -82,15 +82,13 @@ export function RecommendationCardView({
             className="group min-w-0 text-left"
           >
             <h2 className="truncate text-3xl font-black tracking-[-0.045em] text-white group-hover:underline sm:text-[2.6rem] sm:leading-[1.05]">
-              {player.name}
+              {card.plain ? card.plain.headline : player.name}
             </h2>
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
               <PositionTag position={player.position} />
               <span className="text-[12px] font-bold text-[#8fa0aa]">
-                {player.team || 'FA'} · Tier {player.tier}
-                {player.playersRemainingInTier > 0 &&
-                  ` · ${player.playersRemainingInTier} left in tier`}
-                {player.firstSeedRank !== null && ` · First Seed #${player.firstSeedRank}`}
+                {player.team || 'FA'}
+                {player.firstSeedRank !== null && ` · Expert rank #${player.firstSeedRank}`}
               </span>
             </div>
           </button>
@@ -105,17 +103,40 @@ export function RecommendationCardView({
                 {player.score.toFixed(0)}
               </p>
               <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#60727d]">
-                Draft score
+                Fit score
               </p>
             </div>
           )}
         </div>
 
+        {card.plain && (
+          <div className="mt-3.5 flex flex-col gap-2">
+            <p className="text-[14px] leading-6 text-[#dbe4e9]">{card.plain.why}</p>
+            <p className="text-[13px] font-bold text-[#c3d1d9]">{card.plain.ifYouWait}</p>
+            {card.plain.position && (
+              <p className="text-[12.5px] leading-5 text-[#8fa0aa]">
+                {card.plain.position.supply} · {card.plain.position.dropOff}
+                <span
+                  className={`ml-2 font-black uppercase tracking-[0.08em] ${
+                    card.plain.position.urgency === 'last_chance'
+                      ? 'text-[#ff9a80]'
+                      : card.plain.position.urgency === 'consider_now'
+                        ? 'text-[#e5bd70]'
+                        : 'text-[#6d8290]'
+                  }`}
+                >
+                  {card.plain.position.advice}
+                </span>
+              </p>
+            )}
+          </div>
+        )}
+
         {player.survival !== null && (
           <div className="mt-4">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-[11px] font-bold text-[#8fa0aa]">
-                Survives to your next selection
+                Chance he&apos;s still available
               </p>
               <p
                 className="text-sm font-black tabular-nums"
@@ -129,10 +150,6 @@ export function RecommendationCardView({
               <Meter percent={player.survival} color={SURVIVAL_COLOR[tone]} />
             </div>
           </div>
-        )}
-
-        {card.strategy && (
-          <p className="mt-4 text-[13px] leading-6 text-[#dbe4e9]">{card.strategy}</p>
         )}
 
         {card.reasons.length > 0 && (
@@ -211,8 +228,8 @@ export function RecommendationCardView({
 
         {card.alternatives.length > 0 && (
           <div className="mt-4 border-t border-[#ffffff0f] pt-3.5">
-            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-[#5f7280]">
-              If not him
+            <p className="mb-2 text-[11px] font-bold text-[#8fa0aa]">
+              {card.plain?.alternative ?? 'If not him'}
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
               {card.alternatives.map((alternative) => (

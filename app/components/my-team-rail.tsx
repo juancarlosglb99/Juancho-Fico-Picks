@@ -105,7 +105,7 @@ export function MyTeamRail({
       </Panel>
 
       <Panel>
-        <PanelTitle>Positional need</PanelTitle>
+        <PanelTitle>Roster need</PanelTitle>
         <ul className="grid grid-cols-2 gap-1.5">
           {team.needs.map((need) => {
             const palette = positionPalette(need.position);

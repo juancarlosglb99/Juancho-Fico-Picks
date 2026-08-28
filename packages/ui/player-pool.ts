@@ -33,6 +33,14 @@ export interface PoolRow {
   team: string | null;
   /** First Seed's published rank for this exact format, when it ranks him. */
   firstSeedRank: number | null;
+  /**
+   * What a screen shows in the rank column.
+   *
+   * `#12` from First Seed's overall board, `K4` from the supplemental
+   * positional board, or `Unranked` where a kicker exists in Sleeper and on no
+   * expert board at all. The two are different units and are never mixed.
+   */
+  expertRank: { label: string; source: string } | null;
   /** First Seed's projection recalculated for this league's scoring. */
   projectedPoints: number;
   tier: number | null;
@@ -94,10 +102,12 @@ export function buildPlayerPool(result: DraftRecommendationResult): PoolRow[] {
       position: candidate.position,
       team: player.team ?? null,
       firstSeedRank: internals.firstSeedOf(candidate.playerId)?.rank ?? null,
+      expertRank: describeExpertRank(internals, candidate.playerId, candidate.position),
       projectedPoints: candidate.projection,
       tier: internals.tierOf(candidate.playerId)?.tier ?? null,
       playersRemainingInTier: internals.playersRemainingInTier(candidate.playerId),
-      survival: survival.value,
+      // Only ever a figure that was actually estimated. See `SurvivalEstimate`.
+      survival: survival.modeled ? survival.value : null,
       survivalConfidence: survival.confidence,
       juanchoRank: internals.juanchoBoardRankOf(candidate.playerId) ?? null,
       engineRank: engineRankById.get(candidate.playerId) ?? null,
@@ -110,6 +120,25 @@ export function buildPlayerPool(result: DraftRecommendationResult): PoolRow[] {
     });
   }
   return rows;
+}
+
+function describeExpertRank(
+  internals: NonNullable<DraftRecommendationResult['internals']>,
+  playerId: string,
+  position: Position,
+): PoolRow['expertRank'] {
+  const firstSeed = internals.firstSeedOf(playerId)?.rank ?? null;
+  if (firstSeed !== null) return { label: `${firstSeed}`, source: 'First Seed' };
+
+  const supplemental = internals.supplementalRankOf(playerId);
+  if (supplemental) {
+    const label = position === 'DEF' ? 'DST' : position;
+    return { label: `${label}${supplemental.positionRank}`, source: 'FantasyPros' };
+  }
+  if (position === 'K' || position === 'DEF') {
+    return { label: 'Unranked', source: 'no expert board covers this player' };
+  }
+  return null;
 }
 
 export function filterPool(rows: PoolRow[], query: PoolQuery): PoolRow[] {

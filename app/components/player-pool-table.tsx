@@ -25,10 +25,10 @@ import { EmptyNote, PositionTag, Segmented } from './primitives';
 const FILTERS: PoolFilter[] = ['ALL', 'QB', 'RB', 'WR', 'TE', 'FLEX', 'K', 'DEF'];
 
 const SORTS: { value: PoolSort; label: string }[] = [
-  { value: 'engine', label: 'Engine' },
-  { value: 'first_seed', label: 'First Seed' },
+  { value: 'engine', label: 'Best for you' },
+  { value: 'first_seed', label: 'Expert rank' },
   { value: 'projection', label: 'Points' },
-  { value: 'survival', label: 'At risk' },
+  { value: 'survival', label: 'Most at risk' },
   { value: 'name', label: 'Name' },
 ];
 
@@ -102,11 +102,22 @@ export function PlayerPoolTable({
       <div className="overflow-hidden rounded-xl border border-[#1e2f3a]">
         <div className="grid grid-cols-[minmax(0,1fr)_46px_50px_54px_56px] items-center gap-2 border-b border-[#1e2f3a] bg-[#0a141c] px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-[#5f7280] sm:grid-cols-[minmax(0,1fr)_52px_56px_60px_64px_72px_86px]">
           <span>Player</span>
-          <span className="text-right">FS</span>
-          <span className="text-right">Proj</span>
-          <span className="hidden text-right sm:block">Tier</span>
-          <span className="text-right">Alive</span>
-          <span className="hidden text-right sm:block">Fit</span>
+          <span className="text-right" title="Expert consensus rank">
+            Rank
+          </span>
+          <span className="text-right" title="Projected points for your league's scoring">
+            Points
+          </span>
+          <span
+            className="hidden text-right sm:block"
+            title="How many similarly rated players remain at this position"
+          >
+            Similar left
+          </span>
+          <span className="text-right" title="Chance he is still available at your next pick">
+            Available
+          </span>
+          <span className="hidden text-right sm:block">Your need</span>
           <span className="hidden text-right sm:block">Compare</span>
         </div>
 
@@ -162,12 +173,20 @@ function PoolRowView({
       }`}
     >
       <button onClick={() => onOpen(row.playerId)} className="flex min-w-0 items-center gap-2 text-left">
-        {row.engineRank !== null && row.engineRank <= 3 && (
+        {row.engineRank === 1 && (
           <span
-            className="shrink-0 rounded bg-[#b9ff38]/15 px-1 text-[9px] font-black text-[#b9ff38]"
-            title={`Engine recommendation #${row.engineRank}`}
+            className="shrink-0 rounded bg-[#b9ff38]/15 px-1 text-[9px] font-black uppercase tracking-[0.06em] text-[#b9ff38]"
+            title="This is the recommended pick"
           >
-            #{row.engineRank}
+            Pick
+          </span>
+        )}
+        {row.engineRank !== null && row.engineRank > 1 && row.engineRank <= 3 && (
+          <span
+            className="shrink-0 rounded bg-[#8fa0aa]/12 px-1 text-[9px] font-black uppercase tracking-[0.06em] text-[#9fb0ba]"
+            title="One of the alternatives on the recommendation card"
+          >
+            Alt
           </span>
         )}
         <PositionTag position={row.position} size="sm" />
@@ -187,30 +206,47 @@ function PoolRowView({
         </span>
       </button>
 
-      <span className="text-right text-[12px] font-bold tabular-nums text-[#8fa0aa]">
-        {row.firstSeedRank ?? '—'}
+      <span
+        className="truncate text-right text-[12px] font-bold tabular-nums text-[#8fa0aa]"
+        title={row.expertRank ? `${row.expertRank.source}` : undefined}
+      >
+        {row.expertRank?.label ?? '—'}
       </span>
       <span className="text-right text-[12px] font-bold tabular-nums text-[#c3d1d9]">
         {formatPoints(row.projectedPoints)}
       </span>
-      <span className="hidden text-right text-[12px] font-bold tabular-nums text-[#8fa0aa] sm:block">
-        {row.tier ?? '—'}
+      <span
+        className="hidden text-right text-[12px] font-bold tabular-nums text-[#8fa0aa] sm:block"
+        title={
+          row.playersRemainingInTier === 1
+            ? `The last ${row.position} of this quality on the board`
+            : `${row.playersRemainingInTier} similarly rated ${row.position}s remain`
+        }
+      >
+        {row.playersRemainingInTier || '—'}
       </span>
       <span
         className="text-right text-[12px] font-black tabular-nums"
         style={{ color: SURVIVAL_COLOR[tone] }}
-        title={`${row.survivalConfidence} confidence`}
+        title={
+          row.survival === null
+            ? 'Not enough simulation data for this player'
+            : `Chance he is still available at your next pick · ${row.survivalConfidence} confidence`
+        }
       >
         {formatSurvival(row.survival, row.survivalConfidence)}
       </span>
       <span className="hidden text-right sm:block">
         {needsIt ? (
-          <span className="rounded bg-[#b9ff38]/12 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#b9ff38]">
-            Need
+          <span
+            className="rounded bg-[#b9ff38]/12 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#b9ff38]"
+            title="You still have a starting spot open here"
+          >
+            Starter
           </span>
         ) : (
           <span className="text-[10px] font-bold text-[#42535e]">
-            {row.fit.drafted > 0 ? `${row.fit.drafted} held` : '—'}
+            {row.fit.drafted > 0 ? `${row.fit.drafted} held` : 'Depth'}
           </span>
         )}
       </span>

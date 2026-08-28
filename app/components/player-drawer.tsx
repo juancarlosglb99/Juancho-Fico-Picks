@@ -15,7 +15,8 @@
 import { useMemo, useState } from 'react';
 import type { PlayerAnalysis } from '@/packages/ui/player-analysis';
 import type { CandidateSimulationResult } from '@/packages/engine/mock/types';
-import { displayEnum, formatPoints, formatSlots } from '@/packages/ui/theme';
+import { formatPoints } from '@/packages/ui/theme';
+import { describeNeed } from '@/packages/ui/plain-language';
 import { PeerChart, ReplacementChart, TierChart } from './charts';
 import {
   JointChart,
@@ -59,7 +60,7 @@ export function PlayerDrawer({
     const options: { value: Tab; label: string }[] = [{ value: 'overview', label: 'Overview' }];
     if (analysis.replacement || analysis.tierCliff) options.push({ value: 'value', label: 'Draft value' });
     if (analysis.survival || analysis.joint || analysis.opponentPressure) {
-      options.push({ value: 'survival', label: 'Survival' });
+      options.push({ value: 'survival', label: 'Availability' });
     }
     if (!analysis.header.drafted) options.push({ value: 'simulation', label: 'Simulation' });
     return options;
@@ -82,14 +83,16 @@ export function PlayerDrawer({
             </h2>
             {header.drafted ? (
               <Pill tone="quiet">Drafted</Pill>
+            ) : header.engineRank === 1 ? (
+              <Pill tone="accent">Recommended pick</Pill>
             ) : header.engineRank !== null && header.engineRank <= 3 ? (
-              <Pill tone="accent">Engine #{header.engineRank}</Pill>
+              <Pill tone="neutral">Alternative</Pill>
             ) : null}
             {header.status && <Pill tone="warn">{header.status}</Pill>}
           </div>
           <p className="mt-1 truncate text-[11px] font-bold text-[#7f919c]">
             {header.team || 'FA'}
-            {header.firstSeedRank !== null && ` · First Seed #${header.firstSeedRank}`}
+            {header.firstSeedRank !== null && ` · Expert rank #${header.firstSeedRank}`}
             {header.tier !== null && ` · Tier ${header.tier}`}
             {header.leagueProjection !== null && ` · ${formatPoints(header.leagueProjection)} pts`}
             {header.age !== null && ` · age ${header.age}`}
@@ -113,7 +116,7 @@ export function PlayerDrawer({
           {analysis.engineReasons.length > 0 && (
             <section className="rounded-xl border border-[#1e2f3a] bg-[#0a141c] p-3.5">
               <h3 className="text-[10px] font-black uppercase tracking-[0.13em] text-[#71838e]">
-                Why the engine rates him
+                Why he is rated this highly
               </h3>
               <ul className="mt-2.5 flex flex-col gap-1.5">
                 {analysis.engineReasons.map((reason) => (
@@ -125,12 +128,9 @@ export function PlayerDrawer({
               </ul>
               {analysis.need && (
                 <p className="mt-3 border-t border-[#16242d] pt-2.5 text-[11px] text-[#7f919c]">
-                  Your roster: {analysis.need.drafted} at this position,{' '}
-                  {formatSlots(analysis.need.openStartingSlots)} starting{' '}
-                  {Math.round(analysis.need.openStartingSlots) === 1 ? 'slot' : 'slots'} open ·
-                  need{' '}
+                  You hold {analysis.need.drafted} at this position.{' '}
                   <span className="font-bold text-[#c3d1d9]">
-                    {displayEnum(analysis.need.level)}
+                    {describeNeed(analysis.need.level, analysis.need.openStartingSlots)}
                   </span>
                 </p>
               )}

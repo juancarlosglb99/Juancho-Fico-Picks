@@ -170,6 +170,8 @@ describe('player analysis drawer', () => {
     const target = plan.steps.find((step) => step.kind === 'target');
     expect(target).toBeTruthy();
     expect(target!.overallPick).toBe(brief.draft.nextOurPick);
+    // Never a raw slot count: `2.9 starting slots` is a flex-sharing artefact.
+    for (const step of plan.steps) expect(step.detail).not.toMatch(/\d\.\d/);
     // The names come from counted futures, so each has a frequency.
     for (const expected of target!.expected) {
       expect(expected.frequency).toBeGreaterThan(0);

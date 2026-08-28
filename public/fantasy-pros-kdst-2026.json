@@ -1,0 +1,519 @@
+{
+  "season": "2026",
+  "provenance": {
+    "sourceId": "fantasy-pros-draft-rankings",
+    "sourceLabel": "FantasyPros expert consensus",
+    "season": "2026",
+    "fetchedAt": "2026-08-28T00:44:01.597Z",
+    "sourceUpdatedAt": null,
+    "sourceConfidence": "medium",
+    "attributionLabel": "FantasyPros",
+    "attributionUrl": "https://www.fantasypros.com/nfl/rankings/"
+  },
+  "rows": [
+    {
+      "sourceName": "Houston Texans",
+      "team": "HOU",
+      "position": "DEF",
+      "positionRank": 1,
+      "overallRank": 188
+    },
+    {
+      "sourceName": "Brandon Aubrey",
+      "team": "DAL",
+      "position": "K",
+      "positionRank": 1,
+      "overallRank": 206
+    },
+    {
+      "sourceName": "Denver Broncos",
+      "team": "DEN",
+      "position": "DEF",
+      "positionRank": 2,
+      "overallRank": 192
+    },
+    {
+      "sourceName": "Cameron Dicker",
+      "team": "LAC",
+      "position": "K",
+      "positionRank": 2,
+      "overallRank": 210
+    },
+    {
+      "sourceName": "Seattle Seahawks",
+      "team": "SEA",
+      "position": "DEF",
+      "positionRank": 3,
+      "overallRank": 194
+    },
+    {
+      "sourceName": "Ka'imi Fairbairn",
+      "team": "HOU",
+      "position": "K",
+      "positionRank": 3,
+      "overallRank": 212
+    },
+    {
+      "sourceName": "Los Angeles Rams",
+      "team": "LAR",
+      "position": "DEF",
+      "positionRank": 4,
+      "overallRank": 195
+    },
+    {
+      "sourceName": "Cam Little",
+      "team": "JAC",
+      "position": "K",
+      "positionRank": 4,
+      "overallRank": 216
+    },
+    {
+      "sourceName": "Jacksonville Jaguars",
+      "team": "JAC",
+      "position": "DEF",
+      "positionRank": 5,
+      "overallRank": 198
+    },
+    {
+      "sourceName": "Jason Myers",
+      "team": "SEA",
+      "position": "K",
+      "positionRank": 5,
+      "overallRank": 221
+    },
+    {
+      "sourceName": "Philadelphia Eagles",
+      "team": "PHI",
+      "position": "DEF",
+      "positionRank": 6,
+      "overallRank": 200
+    },
+    {
+      "sourceName": "Tyler Loop",
+      "team": "BAL",
+      "position": "K",
+      "positionRank": 6,
+      "overallRank": 222
+    },
+    {
+      "sourceName": "New England Patriots",
+      "team": "NE",
+      "position": "DEF",
+      "positionRank": 7,
+      "overallRank": 202
+    },
+    {
+      "sourceName": "Jake Bates",
+      "team": "DET",
+      "position": "K",
+      "positionRank": 7,
+      "overallRank": 225
+    },
+    {
+      "sourceName": "Pittsburgh Steelers",
+      "team": "PIT",
+      "position": "DEF",
+      "positionRank": 8,
+      "overallRank": 203
+    },
+    {
+      "sourceName": "Eddy Pineiro",
+      "team": "SF",
+      "position": "K",
+      "positionRank": 8,
+      "overallRank": 226
+    },
+    {
+      "sourceName": "Los Angeles Chargers",
+      "team": "LAC",
+      "position": "DEF",
+      "positionRank": 9,
+      "overallRank": 207
+    },
+    {
+      "sourceName": "Harrison Mevis",
+      "team": "LAR",
+      "position": "K",
+      "positionRank": 9,
+      "overallRank": 231
+    },
+    {
+      "sourceName": "Minnesota Vikings",
+      "team": "MIN",
+      "position": "DEF",
+      "positionRank": 10,
+      "overallRank": 209
+    },
+    {
+      "sourceName": "Cairo Santos",
+      "team": "CHI",
+      "position": "K",
+      "positionRank": 10,
+      "overallRank": 235
+    },
+    {
+      "sourceName": "Kansas City Chiefs",
+      "team": "KC",
+      "position": "DEF",
+      "positionRank": 11,
+      "overallRank": 219
+    },
+    {
+      "sourceName": "Chase McLaughlin",
+      "team": "TB",
+      "position": "K",
+      "positionRank": 11,
+      "overallRank": 241
+    },
+    {
+      "sourceName": "Baltimore Ravens",
+      "team": "BAL",
+      "position": "DEF",
+      "positionRank": 12,
+      "overallRank": 220
+    },
+    {
+      "sourceName": "Evan McPherson",
+      "team": "CIN",
+      "position": "K",
+      "positionRank": 12,
+      "overallRank": 242
+    },
+    {
+      "sourceName": "Green Bay Packers",
+      "team": "GB",
+      "position": "DEF",
+      "positionRank": 13,
+      "overallRank": 223
+    },
+    {
+      "sourceName": "Andy Borregales",
+      "team": "NE",
+      "position": "K",
+      "positionRank": 13,
+      "overallRank": 243
+    },
+    {
+      "sourceName": "Detroit Lions",
+      "team": "DET",
+      "position": "DEF",
+      "positionRank": 14,
+      "overallRank": 230
+    },
+    {
+      "sourceName": "Harrison Butker",
+      "team": "KC",
+      "position": "K",
+      "positionRank": 14,
+      "overallRank": 258
+    },
+    {
+      "sourceName": "Buffalo Bills",
+      "team": "BUF",
+      "position": "DEF",
+      "positionRank": 15,
+      "overallRank": 234
+    },
+    {
+      "sourceName": "Chris Boswell",
+      "team": "PIT",
+      "position": "K",
+      "positionRank": 15,
+      "overallRank": 265
+    },
+    {
+      "sourceName": "Cleveland Browns",
+      "team": "CLE",
+      "position": "DEF",
+      "positionRank": 16,
+      "overallRank": 247
+    },
+    {
+      "sourceName": "Wil Lutz",
+      "team": "DEN",
+      "position": "K",
+      "positionRank": 16,
+      "overallRank": 270
+    },
+    {
+      "sourceName": "Will Reichard",
+      "team": "MIN",
+      "position": "K",
+      "positionRank": 17,
+      "overallRank": 279
+    },
+    {
+      "sourceName": "San Francisco 49ers",
+      "team": "SF",
+      "position": "DEF",
+      "positionRank": 17,
+      "overallRank": 285
+    },
+    {
+      "sourceName": "Atlanta Falcons",
+      "team": "ATL",
+      "position": "DEF",
+      "positionRank": 18,
+      "overallRank": 290
+    },
+    {
+      "sourceName": "Charlie Smyth",
+      "team": "NO",
+      "position": "K",
+      "positionRank": 18,
+      "overallRank": 311
+    },
+    {
+      "sourceName": "New Orleans Saints",
+      "team": "NO",
+      "position": "DEF",
+      "positionRank": 19,
+      "overallRank": 299
+    },
+    {
+      "sourceName": "Jake Elliott",
+      "team": "PHI",
+      "position": "K",
+      "positionRank": 19,
+      "overallRank": 357
+    },
+    {
+      "sourceName": "Indianapolis Colts",
+      "team": "IND",
+      "position": "DEF",
+      "positionRank": 20,
+      "overallRank": 312
+    },
+    {
+      "sourceName": "Tyler Bass",
+      "team": "BUF",
+      "position": "K",
+      "positionRank": 20,
+      "overallRank": 364
+    },
+    {
+      "sourceName": "Chicago Bears",
+      "team": "CHI",
+      "position": "DEF",
+      "positionRank": 21,
+      "overallRank": 315
+    },
+    {
+      "sourceName": "Trey Smack",
+      "team": "GB",
+      "position": "K",
+      "positionRank": 21,
+      "overallRank": 377
+    },
+    {
+      "sourceName": "Dallas Cowboys",
+      "team": "DAL",
+      "position": "DEF",
+      "positionRank": 22,
+      "overallRank": 334
+    },
+    {
+      "sourceName": "Zane Gonzalez",
+      "team": "FA",
+      "position": "K",
+      "positionRank": 22,
+      "overallRank": 387
+    },
+    {
+      "sourceName": "Carolina Panthers",
+      "team": "CAR",
+      "position": "DEF",
+      "positionRank": 23,
+      "overallRank": 360
+    },
+    {
+      "sourceName": "Nick Folk",
+      "team": "ATL",
+      "position": "K",
+      "positionRank": 23,
+      "overallRank": 402
+    },
+    {
+      "sourceName": "New York Giants",
+      "team": "NYG",
+      "position": "DEF",
+      "positionRank": 24,
+      "overallRank": 369
+    },
+    {
+      "sourceName": "Daniel Carlson",
+      "team": "NO",
+      "position": "K",
+      "positionRank": 24,
+      "overallRank": 423
+    },
+    {
+      "sourceName": "Tampa Bay Buccaneers",
+      "team": "TB",
+      "position": "DEF",
+      "positionRank": 25,
+      "overallRank": 373
+    },
+    {
+      "sourceName": "Blake Grupe",
+      "team": "IND",
+      "position": "K",
+      "positionRank": 25,
+      "overallRank": 428
+    },
+    {
+      "sourceName": "Tennessee Titans",
+      "team": "TEN",
+      "position": "DEF",
+      "positionRank": 26,
+      "overallRank": 385
+    },
+    {
+      "sourceName": "Chad Ryland",
+      "team": "ARI",
+      "position": "K",
+      "positionRank": 26,
+      "overallRank": 431
+    },
+    {
+      "sourceName": "Cincinnati Bengals",
+      "team": "CIN",
+      "position": "DEF",
+      "positionRank": 27,
+      "overallRank": 386
+    },
+    {
+      "sourceName": "Joey Slye",
+      "team": "TEN",
+      "position": "K",
+      "positionRank": 27,
+      "overallRank": 432
+    },
+    {
+      "sourceName": "Miami Dolphins",
+      "team": "MIA",
+      "position": "DEF",
+      "positionRank": 28,
+      "overallRank": 405
+    },
+    {
+      "sourceName": "Ryan Fitzgerald",
+      "team": "CAR",
+      "position": "K",
+      "positionRank": 28,
+      "overallRank": 434
+    },
+    {
+      "sourceName": "Las Vegas Raiders",
+      "team": "LV",
+      "position": "DEF",
+      "positionRank": 29,
+      "overallRank": 420
+    },
+    {
+      "sourceName": "Brandon McManus",
+      "team": "FA",
+      "position": "K",
+      "positionRank": 29,
+      "overallRank": 436
+    },
+    {
+      "sourceName": "Washington Commanders",
+      "team": "WAS",
+      "position": "DEF",
+      "positionRank": 30,
+      "overallRank": 437
+    },
+    {
+      "sourceName": "Ben Sauls",
+      "team": "NYG",
+      "position": "K",
+      "positionRank": 30,
+      "overallRank": 445
+    },
+    {
+      "sourceName": "New York Jets",
+      "team": "NYJ",
+      "position": "DEF",
+      "positionRank": 31,
+      "overallRank": 439
+    },
+    {
+      "sourceName": "Spencer Shrader",
+      "team": "IND",
+      "position": "K",
+      "positionRank": 31,
+      "overallRank": 449
+    },
+    {
+      "sourceName": "Arizona Cardinals",
+      "team": "ARI",
+      "position": "DEF",
+      "positionRank": 32,
+      "overallRank": 440
+    },
+    {
+      "sourceName": "Drew Stevens",
+      "team": "WAS",
+      "position": "K",
+      "positionRank": 32,
+      "overallRank": 452
+    },
+    {
+      "sourceName": "Jake Moody",
+      "team": "FA",
+      "position": "K",
+      "positionRank": 33,
+      "overallRank": 471
+    },
+    {
+      "sourceName": "Jason Sanders",
+      "team": "NYJ",
+      "position": "K",
+      "positionRank": 34,
+      "overallRank": 472
+    },
+    {
+      "sourceName": "Andre Szmyt",
+      "team": "CLE",
+      "position": "K",
+      "positionRank": 35,
+      "overallRank": 601
+    },
+    {
+      "sourceName": "Dominic Zvada",
+      "team": "NYG",
+      "position": "K",
+      "positionRank": 36,
+      "overallRank": 613
+    },
+    {
+      "sourceName": "Riley Patterson",
+      "team": "MIA",
+      "position": "K",
+      "positionRank": 37,
+      "overallRank": 671
+    },
+    {
+      "sourceName": "Kansei Matsuzawa",
+      "team": "LV",
+      "position": "K",
+      "positionRank": 38,
+      "overallRank": 673
+    },
+    {
+      "sourceName": "Tanner Brown",
+      "team": "NO",
+      "position": "K",
+      "positionRank": 39,
+      "overallRank": 678
+    },
+    {
+      "sourceName": "B.T. Potter",
+      "team": "TB",
+      "position": "K",
+      "positionRank": 40,
+      "overallRank": 697
+    }
+  ]
+}

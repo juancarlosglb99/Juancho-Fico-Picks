@@ -32,6 +32,8 @@ import { detectDataWarnings } from './data-anomaly';
 import { getRosterPositionCounts } from './roster-fit';
 import { buildProjectionTiers } from './tiers';
 import { buildFillerCandidates } from './late-round-fillers';
+import { supplementalRankIndex } from '../../fantasy-pros/mapping';
+import type { SupplementalRankingSnapshot } from '../../fantasy-pros/types';
 import {
   DRAFT_NOW_THRESHOLD,
   DRAFT_SCORE_SHAPE,
@@ -47,7 +49,11 @@ import {
   type RecommendationAction,
   type RecommendationInsight,
 } from './types';
-import type { DraftDecisionInternals, PlannedCandidate } from './internals';
+import type {
+  DraftDecisionInternals,
+  PlannedCandidate,
+  SurvivalEstimate,
+} from './internals';
 
 /** How many overall candidates get a full roster plan computed. */
 const SHORTLIST_OVERALL = 34;
@@ -81,6 +87,14 @@ interface RecommendationInput {
   players: CanonicalPlayerMap;
   projections: MappedProjection[];
   roomRankings?: DraftRoomRankingSnapshot | null;
+  /**
+   * A board for the positions First Seed does not publish.
+   *
+   * Read in exactly one place - the ordering of the kicker and defense
+   * shortlist - and deliberately not merged into anything else. Two boards
+   * averaged together is a third board nobody validated.
+   */
+  supplementalRankings?: SupplementalRankingSnapshot | null;
   /** Defaults to the simulation; the old model is available for comparison. */
   survivalModel?: SurvivalModel;
 }
@@ -338,15 +352,15 @@ function buildStrategicReasons({
   } else if (playersRemainingInTier <= 2) {
     reasons.push(
       playersRemainingInTier === 1
-        ? `Last player left in this tier`
-        : `Only ${playersRemainingInTier} left in this tier`,
+        ? `The last ${position} of this quality on the board`
+        : `Only ${playersRemainingInTier} similarly rated ${position}s left`,
     );
   }
 
   if (probability !== null) {
     reasons.push(
       components.opportunityCost > DRAFT_NOW_THRESHOLD
-        ? `Waiting costs about ${components.opportunityCost.toFixed(1)} pts of final roster`
+        ? `Waiting is likely to cost you - players of similar quality may not last`
         : probability >= 99.5
           ? `You pick again right away, so he is not going anywhere`
           : `About ${Math.round(probability)}% likely to still be there next turn`,
@@ -358,7 +372,9 @@ function buildStrategicReasons({
   if (reasons.length < 4 && rosterState.strategicPriority.length > 0) {
     const priority = rosterState.strategicPriority[0];
     if (priority && priority !== position) {
-      reasons.push(`Roster still needs ${rosterState.strategicPriority.slice(0, 2).join(' and ')}`);
+      reasons.push(
+        `Your roster still needs ${rosterState.strategicPriority.slice(0, 2).join(' and ')}`,
+      );
     }
   }
 
@@ -396,6 +412,7 @@ export function generateDraftRecommendations({
   players,
   projections: inputProjections,
   roomRankings = null,
+  supplementalRankings = null,
   survivalModel,
 }: RecommendationInput): DraftRecommendationResult {
   const survivalModelUsed = resolveSurvivalModel(survivalModel);
@@ -467,11 +484,18 @@ export function generateDraftRecommendations({
           players,
           context.draftState.value.slotToRosterId,
         );
+  /*
+   * The supplemental board orders the positions First Seed does not cover. It
+   * is consulted here and nowhere else: nothing it says reaches the scoring of
+   * a quarterback, a back, a receiver or a tight end.
+   */
+  const supplementalByPlayer = supplementalRankIndex(supplementalRankings ?? null);
   const fillerProjections = buildFillerCandidates({
     board,
     slots: lineupSlotsFor(context.roster.value),
     heldPositions,
     alreadyProjected: new Set(valued.map((item) => item.scored.playerId)),
+    expertRankOf: (playerId) => supplementalByPlayer.get(playerId)?.positionRank ?? null,
   });
   const fillerValued: ValuedProjection[] = fillerProjections.map((projection) => ({
     source: projection,
@@ -903,7 +927,7 @@ export function generateDraftRecommendations({
         })
       : null;
 
-  const probabilityFor = (candidate: PlannablePlayer): { value: number | null; confidence: Confidence; teamsWithNeed: number; demand: number } => {
+  const probabilityFor = (candidate: PlannablePlayer): SurvivalEstimate => {
     const nextUserPick = context.draftState.value.nextUserPick;
     // Still reported, because the screen and the strategist both use it to
     // explain WHY a player is at risk - it no longer drives the estimate.
@@ -914,13 +938,13 @@ export function generateDraftRecommendations({
       runs: roomBehavior.runs,
     });
     if (nextUserPick === null) {
-      return { value: null, confidence: 'low', teamsWithNeed, demand };
+      return { value: null, modeled: false, confidence: 'low', teamsWithNeed, demand };
     }
     // Back-to-back selections at the turn: nobody picks in between, so everyone
     // on the board is available, exactly and with certainty. Estimating this is
     // both unnecessary and misleading.
     if (interveningTeams.length === 0) {
-      return { value: 100, confidence: 'high', teamsWithNeed, demand };
+      return { value: 100, modeled: true, confidence: 'high', teamsWithNeed, demand };
     }
 
     const room = roomByPlayerId.get(candidate.playerId);
@@ -941,8 +965,27 @@ export function generateDraftRecommendations({
        * the result toward 50% afterwards would reintroduce exactly the kind of
        * unconstrained adjustment this model was built to remove.
        */
-      const value = roomSimulation.survival.get(candidate.playerId) ?? 100;
-      return { value, confidence, teamsWithNeed, demand };
+      /*
+       * The simulation is given the WHOLE projected pool, not the forty players
+       * in contention - `CANDIDATE_DEPTH` limits who a simulated team will
+       * take, not who is tracked - so every candidate that reaches this line
+       * has a counted figure, and a 100% here means nobody took him in three
+       * hundred runs.
+       *
+       * The fallback below is therefore unreachable today. It is kept, and
+       * flagged, because it is the one way this could silently start lying: if
+       * the pool and the simulation's input ever diverge, an untracked player
+       * would report a confident 100% he had never earned. `modeled` makes that
+       * impossible to publish rather than merely unlikely.
+       */
+      const simulated = roomSimulation.survival.get(candidate.playerId);
+      return {
+        value: simulated ?? 100,
+        modeled: simulated !== undefined,
+        confidence,
+        teamsWithNeed,
+        demand,
+      };
     }
 
     const raw = probabilityAvailableAtNextPick({
@@ -958,7 +1001,7 @@ export function generateDraftRecommendations({
     // toward even odds rather than being reported as a confident 3% or 97%.
     const reliability = confidenceWeight(confidence);
     const value = round(clamp(50 + (raw - 50) * reliability, 0, 100), 1);
-    return { value, confidence, teamsWithNeed, demand };
+    return { value, modeled: true, confidence, teamsWithNeed, demand };
   };
 
   /**
@@ -1152,7 +1195,8 @@ export function generateDraftRecommendations({
     );
     const depthValue = round(withHim.benchValue - currentRosterValue.benchValue, 1);
 
-    const { value: probability, confidence, teamsWithNeed } = probabilityOf(candidate);
+    const { value: probability, modeled: survivalModeled, confidence, teamsWithNeed } =
+      probabilityOf(candidate);
     const decision = decisions.get(candidate.playerId);
     const opportunityCost = decision?.edge ?? round(entry.decisionValue - bestPlanValue, 1);
     const backToBack = context.draftState.value.picksBeforeNextSelection === 0;
@@ -1255,7 +1299,14 @@ export function generateDraftRecommendations({
       firstSeedValueDelta: roomByPlayerId.get(candidate.playerId)?.firstSeedValueDelta ?? null,
       marketEdge: null,
       action,
-      availableNextPickProbability: probability,
+      /*
+       * Null when the simulation never estimated him. "Not modelled" and "certain
+       * to survive" are different claims and this is the field a screen reads,
+       * so it may only ever carry a figure that was actually computed. The
+       * components below keep using the internal default, which is what leaves
+       * the ranking arithmetic untouched.
+       */
+      availableNextPickProbability: survivalModeled ? probability : null,
       nextPickConfidence: confidence,
       nextUserPick: context.draftState.value.nextUserPick,
       picksUntilNextUserPick: context.draftState.value.picksBeforeNextSelection,
@@ -1366,12 +1417,13 @@ export function generateDraftRecommendations({
     survivalOf: (playerId) => {
       const candidate = plannableById.get(playerId);
       if (!candidate) {
-        return { value: null, confidence: 'low', teamsWithNeed: 0, demand: 0 };
+        return { value: null, modeled: false, confidence: 'low', teamsWithNeed: 0, demand: 0 };
       }
       return probabilityOf(candidate);
     },
     playerOf: (playerId) => players.byId.get(playerId),
     dataWarningOf: (playerId) => dataWarnings.get(playerId),
+    supplementalRankOf: (playerId) => supplementalByPlayer.get(playerId),
   };
 
   return {

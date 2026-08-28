@@ -27,11 +27,11 @@ export function SurvivalChart({ view }: { view: SurvivalView }) {
   const tone = survivalTone(view.probability);
   return (
     <ChartFrame
-      title="Chance he is still there at your next selection"
+      title="Chance he's still available at your next pick"
       caption={
         view.runs
-          ? `Counted over ${view.runs} simulated continuations of this exact room.`
-          : 'Estimated from draft-room rank and positional demand.'
+          ? `Counted over ${view.runs} simulated versions of the rest of this draft.`
+          : 'Estimated from expert rank and how many teams ahead of you need the position.'
       }
     >
       <div className="flex items-end justify-between gap-4">
@@ -40,8 +40,8 @@ export function SurvivalChart({ view }: { view: SurvivalView }) {
           {Math.round(view.probability)}%
         </p>
         <dl className="grid grid-cols-3 gap-3 text-right">
-          <Stat label="Picks between" value={String(view.interveningSelections)} />
-          <Stat label="Teams needing" value={String(view.teamsWithNeed)} />
+          <Stat label="Picks before yours" value={String(view.interveningSelections)} />
+          <Stat label="Teams who need one" value={String(view.teamsWithNeed)} />
           <Stat label="Confidence" value={displayEnum(view.confidence)} />
         </dl>
       </div>
@@ -87,9 +87,9 @@ export function JointChart({ view, subjectName }: { view: JointView; subjectName
                 </span>
                 <span className="shrink-0 text-[10px] font-bold text-[#5f7280]">
                   {row.reason === 'engine_pick'
-                    ? 'engine pick'
+                    ? 'recommended pick'
                     : row.reason === 'same_tier'
-                      ? 'same tier'
+                      ? 'similar quality'
                       : 'alternative'}
                 </span>
               </div>

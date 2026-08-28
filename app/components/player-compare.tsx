@@ -11,15 +11,10 @@
  */
 import type { JointOutcome } from '@/packages/engine/draft/joint-availability';
 import type { PlayerAnalysis } from '@/packages/ui/player-analysis';
+import { buildCompareVerdict } from '@/packages/ui/compare-verdict';
 import { stackSegments } from '@/packages/ui/charts';
-import {
-  SURVIVAL_COLOR,
-  displayEnum,
-  formatPoints,
-  formatSlots,
-  formatSurvival,
-  survivalTone,
-} from '@/packages/ui/theme';
+import { SURVIVAL_COLOR, formatPoints, formatSurvival, survivalTone } from '@/packages/ui/theme';
+import { describeNeed } from '@/packages/ui/plain-language';
 import { Drawer, EmptyNote, PositionTag } from './primitives';
 
 const JOINT_COLORS = { both: '#b9ff38', one: '#54a9f0', neither: '#ff7a59' };
@@ -41,21 +36,25 @@ export function PlayerCompare({
   jointFor: (a: string, b: string) => JointOutcome | null;
 }) {
   if (analyses.length === 0) return null;
-  const pair = analyses.length === 2 ? jointFor(analyses[0].header.playerId, analyses[1].header.playerId) : null;
+  const pair =
+    analyses.length === 2
+      ? jointFor(analyses[0].header.playerId, analyses[1].header.playerId)
+      : null;
+  const verdict = buildCompareVerdict(analyses);
 
   const rows: { label: string; value: (analysis: PlayerAnalysis) => string; tone?: boolean }[] = [
-    { label: 'First Seed rank', value: (a) => (a.header.firstSeedRank === null ? '—' : `#${a.header.firstSeedRank}`) },
+    {
+      label: 'Expert rank',
+      value: (a) => (a.header.firstSeedRank === null ? 'Unranked' : `#${a.header.firstSeedRank}`),
+    },
     { label: 'League projection', value: (a) => formatPoints(a.header.leagueProjection) },
     {
-      label: 'Tier',
+      label: 'Others like him left',
       value: (a) =>
-        a.header.tier === null
-          ? '—'
-          : `${a.header.tier} · ${a.header.playersRemainingInTier} left`,
+        a.header.playersRemainingInTier > 0 ? String(a.header.playersRemainingInTier) : 'None',
     },
-    { label: 'Engine rank', value: (a) => (a.header.engineRank === null ? 'Not shortlisted' : `#${a.header.engineRank}`) },
     {
-      label: 'Survives to your turn',
+      label: "Chance he's still available",
       value: (a) =>
         a.survival === null ? '—' : formatSurvival(a.survival.probability, a.survival.confidence),
       tone: true,
@@ -68,11 +67,11 @@ export function PlayerCompare({
           : `${formatPoints(a.replacement.subject.rosterGain)} pts`,
     },
     {
-      label: 'Positional need',
+      label: 'Roster need',
       value: (a) =>
         a.need === null
           ? '—'
-          : `${displayEnum(a.need.level)} · ${formatSlots(a.need.openStartingSlots)} open`,
+          : describeNeed(a.need.level, a.need.openStartingSlots),
     },
   ];
 
@@ -89,7 +88,13 @@ export function PlayerCompare({
         </div>
       }
     >
-      <div className="overflow-x-auto">
+      {verdict && <Verdict verdict={verdict} onOpenPlayer={onOpenPlayer} />}
+
+      <details className="mt-4 rounded-xl border border-[#1e2f3a] bg-[#0a141c] p-3">
+        <summary className="cursor-pointer text-[10px] font-black uppercase tracking-[0.13em] text-[#71838e]">
+          View detailed comparison
+        </summary>
+        <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[26rem] border-separate border-spacing-0">
           <thead>
             <tr>
@@ -146,9 +151,9 @@ export function PlayerCompare({
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
 
-      <section className="mt-4 rounded-xl border border-[#1e2f3a] bg-[#0a141c] p-3.5">
+      <section className="mt-4 border-t border-[#16242d] pt-3.5">
         <h3 className="text-[10px] font-black uppercase tracking-[0.13em] text-[#71838e]">
           Can you get both?
         </h3>
@@ -197,7 +202,77 @@ export function PlayerCompare({
           </>
         )}
       </section>
+      </details>
     </Drawer>
+  );
+}
+
+const EDGE_LABEL = {
+  slight: { text: 'Slight edge', tone: '#8fa0aa' },
+  moderate: { text: 'Moderate edge', tone: '#e0a13c' },
+  strong: { text: 'Strong edge', tone: '#b9ff38' },
+} as const;
+
+/**
+ * The answer, in the first five seconds.
+ *
+ * Which player, why, and the honest conditions under which the other one is
+ * right. Everything numeric is one disclosure away, which is the correct order:
+ * a drafter who disagrees with the verdict will open it, and one who does not
+ * should never have to.
+ */
+function Verdict({
+  verdict,
+  onOpenPlayer,
+}: {
+  verdict: NonNullable<ReturnType<typeof buildCompareVerdict>>;
+  onOpenPlayer: (playerId: string) => void;
+}) {
+  const edge = EDGE_LABEL[verdict.edge];
+  return (
+    <section className="rounded-xl border border-[#b9ff38]/25 bg-[#101d0d] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.13em] text-[#b9ff38]">
+          Juancho&apos;s take
+        </h3>
+        <span
+          className="text-[10px] font-black uppercase tracking-[0.1em]"
+          style={{ color: edge.tone }}
+        >
+          {edge.text}
+        </span>
+      </div>
+
+      <button
+        onClick={() => onOpenPlayer(verdict.winnerId)}
+        className="mt-2 text-left text-[17px] font-black leading-6 tracking-[-0.02em] text-white hover:underline"
+      >
+        {verdict.summary}
+      </button>
+
+      {verdict.caveat && (
+        <p className="mt-2 text-[11.5px] leading-5 text-[#e5bd70]">{verdict.caveat}</p>
+      )}
+
+      <ul className="mt-2.5 flex flex-col gap-1.5">
+        {verdict.reasons.map((reason) => (
+          <li key={reason} className="text-[12.5px] leading-6 text-[#c3d1d9]">
+            {reason}
+          </li>
+        ))}
+      </ul>
+
+      <dl className="mt-3.5 grid gap-2 border-t border-[#ffffff14] pt-3 sm:grid-cols-2">
+        {verdict.cases.map((option) => (
+          <div key={option.playerId}>
+            <dt className="text-[11px] font-black text-[#e2e8eb]">
+              Take {option.name} if…
+            </dt>
+            <dd className="mt-0.5 text-[11.5px] leading-5 text-[#8fa0aa]">{option.when}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 

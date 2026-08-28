@@ -14,6 +14,16 @@
  * put one of each on the roster. The nominal values below exist only so the
  * lineup solver can fill the slot; they are not a projection and are labelled
  * as such wherever they surface.
+ *
+ * WHICH kickers get offered is a separate question, and it used to have an
+ * embarrassing answer. With every candidate worth the same nominal number, the
+ * only thing separating them was the order they arrived in - and the player map
+ * is sorted by name, so the shortlist was the first six alphabetically. Every
+ * draft, in every league, forever: Adam Vinatieri, Aldrick Rosas, Alex Hale.
+ *
+ * A supplemental ranking source fixes the ORDER without touching the value. The
+ * nominal points stay exactly what they were, because a rank is an ordering and
+ * turning one into points would be inventing a projection.
  */
 import type { Position } from '../../players/types';
 import type { MappedProjection } from '../../projections/types';
@@ -36,6 +46,9 @@ export const FILLER_SOURCE_LABEL = 'Nominal streaming value (no provider project
  */
 export const FILLER_ROUND_WINDOW = 2;
 
+/** How many of each position to put in front of the ranking engine. */
+export const FILLER_SHORTLIST = 6;
+
 export function shouldOfferFillers(board: DraftBoardState): boolean {
   return board.currentRound >= Math.max(1, board.rounds - FILLER_ROUND_WINDOW);
 }
@@ -52,6 +65,7 @@ export function buildFillerCandidates({
   slots,
   heldPositions,
   alreadyProjected,
+  expertRankOf,
 }: {
   board: DraftBoardState;
   slots: LineupSlots;
@@ -59,6 +73,12 @@ export function buildFillerCandidates({
   heldPositions: Partial<Record<Position, number>>;
   /** Player ids that already have a real projection, so we never duplicate one. */
   alreadyProjected: Set<string>;
+  /**
+   * Positional rank from a supplemental source, or null where it has none.
+   *
+   * Ordering only. Nothing derived from this reaches the value of the pick.
+   */
+  expertRankOf?: (playerId: string) => number | null;
 }): MappedProjection[] {
   if (!shouldOfferFillers(board)) return [];
 
@@ -70,11 +90,20 @@ export function buildFillerCandidates({
   const fillers: MappedProjection[] = [];
   for (const position of wanted) {
     const projection = NOMINAL_PROJECTION[position] ?? 100;
+    const rankOf = (playerId: string) =>
+      expertRankOf?.(playerId) ?? Number.MAX_SAFE_INTEGER;
     const candidates = board.availablePlayers
       .filter((player) => player.position === position && !alreadyProjected.has(player.id))
-      // Sleeper lists these in no useful order, and there is no data to sort
-      // them by, so the ordering is stable rather than meaningful.
-      .slice(0, 6);
+      /*
+       * Best first by the supplemental board, unranked last, ties broken by
+       * name so the same board always yields the same shortlist. Without a
+       * source this degrades to exactly what it was: stable, and admittedly
+       * arbitrary.
+       */
+      .sort(
+        (a, b) => rankOf(a.id) - rankOf(b.id) || a.name.localeCompare(b.name),
+      )
+      .slice(0, FILLER_SHORTLIST);
     for (const player of candidates) {
       fillers.push({
         sourceRow: -1,

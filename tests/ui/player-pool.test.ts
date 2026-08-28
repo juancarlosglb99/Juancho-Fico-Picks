@@ -94,6 +94,25 @@ describe('available player pool', () => {
     expect(counts.QB).toBeGreaterThan(0);
   });
 
+  it('shows an overall rank and a positional rank as different things', () => {
+    const ranked = rows.find((row) => row.firstSeedRank !== null)!;
+    // First Seed publishes an overall board.
+    expect(ranked.expertRank).toEqual({
+      label: String(ranked.firstSeedRank),
+      source: 'First Seed',
+    });
+    /*
+     * A kicker's "K4" must never render as "#4". The supplemental board is
+     * positional, and a positional rank shown as an overall one would place a
+     * kicker four picks from the top of the draft.
+     */
+    for (const row of rows) {
+      if (row.position !== 'K' && row.position !== 'DEF') continue;
+      expect(row.expertRank).not.toBeNull();
+      expect(row.expertRank!.label).toMatch(/^(K|DST)\d+$|^Unranked$/);
+    }
+  });
+
   it('returns nothing rather than guessing when the engine kept no internals', () => {
     expect(buildPlayerPool({ ...state.result, internals: undefined })).toEqual([]);
   });

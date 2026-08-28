@@ -32,9 +32,20 @@ export function deriveDraftBoardState(
   const currentOverallPick = picksMade + 1;
   const currentRound = Math.min(rounds, Math.ceil(currentOverallPick / teams));
   const pickInRound = ((currentOverallPick - 1) % teams) + 1;
+  /*
+   * Eligibility is Sleeper's, not ours.
+   *
+   * The player map deliberately holds every player Sleeper has ever known, so
+   * that a pick somebody else made still resolves to a name on the board. Only
+   * players Sleeper currently places on an NFL team may be SELECTED - which is
+   * what keeps a kicker who retired in 2019 out of the available pool, out of
+   * the recommendation candidates, and out of the room simulation, all of which
+   * are derived from this list.
+   */
   const availablePlayers = playerMap.players.filter(
     (player) =>
       player.externalIds.sleeper &&
+      player.draftEligible &&
       !unavailableSleeperIds.has(player.externalIds.sleeper) &&
       DRAFTABLE_POSITIONS.has(player.position),
   );

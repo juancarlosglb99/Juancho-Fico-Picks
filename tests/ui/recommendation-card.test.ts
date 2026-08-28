@@ -82,6 +82,59 @@ function card(strategist: LiveStrategistState | null, fingerprint = brief.state.
   });
 }
 
+describe('the plain-English answer', () => {
+  it('answers the four questions a drafter is asking', () => {
+    const plain = card(null).plain!;
+    const pick = result.recommendations[0];
+
+    // 1. Who should I draft?
+    expect(plain.headline).toBe(`Draft ${pick.player.name}`);
+    // 2. Why? - a sentence, ending in a full stop, with no engine vocabulary.
+    expect(plain.why).toMatch(/\.$/);
+    expect(plain.why.length).toBeGreaterThan(25);
+    // 3. What happens if I wait?
+    expect(plain.ifYouWait).toMatch(/still available|pick again|last selection|Not enough/);
+    // 4. What is my best alternative?
+    expect(plain.alternative).toContain(result.recommendations[1].player.name);
+  });
+
+  it('never uses the engine\u2019s own vocabulary', () => {
+    const plain = card(null).plain!;
+    const text = [plain.headline, plain.why, plain.ifYouWait, plain.alternative].join(' ');
+    for (const jargon of ['tier', 'VORP', 'simGap', 'decisionValue', 'planValue', 'engine rank']) {
+      expect(text.toLowerCase()).not.toContain(jargon.toLowerCase());
+    }
+    // And no floating-point artefacts.
+    expect(text).not.toMatch(/\d+\.\d{3,}/);
+  });
+
+  it('describes the position in words, with the advice a drafter acts on', () => {
+    const position = card(null).plain!.position!;
+    expect(position.supply).toMatch(/remain|left/);
+    expect(position.dropOff).toMatch(/drop|unknown/i);
+    expect(['No need to rush', 'Consider taking one now', 'Last good chance at this position',
+      'Last of this quality on the board']).toContain(position.advice);
+  });
+
+  it('quotes the strategist rather than paraphrasing it', () => {
+    const enginePick = result.recommendations[0].player.id;
+    const model = card(liveState('ready', advise(enginePick)));
+    expect(model.plain?.why).toBe('Fill the flex before the tier empties.');
+    expect(model.plain?.headline).toBe(`Draft ${result.recommendations[0].player.name}`);
+  });
+
+  it('has no answer to give when the engine produced nothing', () => {
+    const empty = resolveRecommendationCard({
+      result: { ...result, recommendations: [] },
+      strategist: null,
+      currentFingerprint: brief.state.boardFingerprint,
+      nameOf,
+      survivalOf,
+    });
+    expect(empty.plain).toBeNull();
+  });
+});
+
 describe('the single recommendation card', () => {
   it('shows the engine pick immediately, with no strategist at all', () => {
     const model = card(null);

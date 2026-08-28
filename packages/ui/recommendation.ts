@@ -31,6 +31,10 @@ import type {
 } from '../engine/draft/types';
 import type { Confidence } from '../engine/context/types';
 import type { Position } from '../players/types';
+import { describeAvailability } from './plain-language';
+import { plainVerdict, type PlainVerdict } from './plain-verdict';
+
+export type { PlainVerdict } from './plain-verdict';
 
 export type RecommendationCardState =
   | 'unavailable'
@@ -73,6 +77,8 @@ export interface CardAlternative {
 
 export interface RecommendationCard {
   state: RecommendationCardState;
+  /** The plain-English answer. This is what the card leads with. */
+  plain: PlainVerdict | null;
   /** Null only in `unavailable`, when the engine produced nothing to show. */
   primary: CardPlayer | null;
   /** Which layer chose the primary player. */
@@ -104,6 +110,8 @@ export function resolveRecommendationCard({
   currentFingerprint,
   nameOf,
   survivalOf,
+  tierGapOf,
+  tierSurvivesOf,
 }: {
   result: DraftRecommendationResult | null;
   strategist: LiveStrategistState | null;
@@ -112,6 +120,15 @@ export function resolveRecommendationCard({
   /** Resolves a player id to a display name and position, for alternatives. */
   nameOf: (playerId: string) => { name: string; position: Position | null } | null;
   survivalOf: (playerId: string) => number | null;
+  /**
+   * Projected points between this player's quality group and the next one.
+   *
+   * The card never says "tier"; it says whether the board falls away after him,
+   * and this is the number that decides which.
+   */
+  tierGapOf?: (playerId: string) => number | null;
+  /** Chance somebody of the same quality is still available at our next turn. */
+  tierSurvivesOf?: (playerId: string) => number | null;
 }): RecommendationCard {
   const engine = result?.recommendations[0] ?? null;
   const usage = strategist?.usage ?? null;
@@ -119,6 +136,7 @@ export function resolveRecommendationCard({
   if (!engine || !result) {
     return {
       state: 'unavailable',
+      plain: null,
       primary: null,
       source: 'engine',
       urgency: null,
@@ -138,7 +156,7 @@ export function resolveRecommendationCard({
     };
   }
 
-  const base = engineCard(result, engine, usage);
+  const base = engineCard(result, engine, usage, tierGapOf, tierSurvivesOf);
 
   if (!strategist || strategist.phase === 'idle') return base;
 
@@ -177,23 +195,35 @@ function engineCard(
   result: DraftRecommendationResult,
   engine: DraftRecommendation,
   usage: UsageRecord | null,
+  tierGapOf?: (playerId: string) => number | null,
+  tierSurvivesOf?: (playerId: string) => number | null,
 ): RecommendationCard {
+  const alternatives = result.recommendations.slice(1, 3).map((alternative) => ({
+    playerId: alternative.player.id,
+    name: alternative.player.name,
+    position: alternative.player.position,
+    reason: alternative.reasons[0] ?? null,
+    survival: alternative.availableNextPickProbability,
+  }));
+
   return {
     state: 'engine',
+    plain: plainVerdict({
+      name: engine.player.name,
+      engine,
+      picksUntilTurn: result.picksUntilNextUserPick,
+      alternative: result.recommendations[1] ?? null,
+      tierGap: tierGapOf?.(engine.player.id) ?? null,
+      tierSurvives: tierSurvivesOf?.(engine.player.id) ?? null,
+    }),
     primary: toCardPlayer(engine),
     source: 'engine',
     urgency: engineUrgency(engine),
     // Two, not four. The rest are in the drawer; this is the line a drafter
     // reads while the clock runs.
     reasons: engine.reasons.slice(0, 2).map((text) => ({ code: null, text })),
-    evidence: engineEvidence(engine),
-    alternatives: result.recommendations.slice(1, 3).map((alternative) => ({
-      playerId: alternative.player.id,
-      name: alternative.player.name,
-      position: alternative.player.position,
-      reason: alternative.reasons[0] ?? null,
-      survival: alternative.availableNextPickProbability,
-    })),
+    evidence: engineEvidence(engine, result),
+    alternatives,
     enginePick: null,
     aiConfidence: null,
     counterargument: null,
@@ -255,9 +285,31 @@ function aiCard({
         }
       : base.primary;
 
+  const chosenName = primary?.name ?? decision.final?.name ?? advice.primary.playerId;
+  const firstAlternative = advice.alternatives[0];
+  const alternativeName = firstAlternative ? nameOf(firstAlternative.playerId)?.name : null;
+
   return {
     ...base,
     state: confirmed ? 'ai_confirmed' : 'ai_override',
+    /*
+     * The strategist writes plain English by contract - `strategy` is one short
+     * sentence naming the roster shape this pick serves - so the card quotes it
+     * rather than paraphrasing a model that was asked to be readable.
+     */
+    plain: {
+      headline: `Draft ${chosenName}`,
+      why: advice.strategy || advice.reasons?.[0]?.detail || base.plain?.why || '',
+      ifYouWait: describeAvailability({
+        probability: primary?.survival ?? null,
+        modeled: primary?.survival !== null && primary?.survival !== undefined,
+        picksUntilTurn: result.picksUntilNextUserPick,
+      }),
+      alternative: alternativeName
+        ? `Alternative: ${alternativeName}${firstAlternative.reasoning ? ` — ${firstAlternative.reasoning}` : ''}`
+        : base.plain?.alternative ?? null,
+      position: base.plain?.position ?? null,
+    },
     primary,
     source: 'ai',
     urgency: aiUrgency(advice) ?? base.urgency,
@@ -267,7 +319,7 @@ function aiCard({
     })),
     // Evidence stays the engine's: those are measurements, not opinions, and
     // they describe the player now on the card.
-    evidence: shortlisted ? engineEvidence(shortlisted) : base.evidence,
+    evidence: shortlisted ? engineEvidence(shortlisted, result) : base.evidence,
     alternatives: advice.alternatives.slice(0, 2).map((alternative) => {
       const resolved = nameOf(alternative.playerId);
       return {
@@ -342,52 +394,105 @@ function aiUrgency(advice: StrategistAdvice): RecommendationCard['urgency'] {
 /**
  * The handful of measurements worth putting on the card itself.
  *
- * Survival, the tier, and what the pick is actually worth against the player we
- * would otherwise end up with. Everything else the engine knows stays in the
- * drawer.
+ * Four, in the drafter's own words. "Tier 12 · 8 left" is a fact about our
+ * data structures; "8 similar players left" is a fact about his draft. The tier
+ * number itself is in the drawer for anyone who wants to check.
  */
-function engineEvidence(recommendation: DraftRecommendation): CardEvidence[] {
+function engineEvidence(
+  recommendation: DraftRecommendation,
+  result: DraftRecommendationResult,
+): CardEvidence[] {
   const evidence: CardEvidence[] = [];
+  const position = recommendation.player.position;
 
   if (recommendation.availableNextPickProbability !== null) {
     const confident = recommendation.nextPickConfidence === 'high';
     evidence.push({
-      label: 'Survives to your next pick',
+      label: "Chance he's still available",
       value: `${confident ? '' : '≈'}${Math.round(recommendation.availableNextPickProbability)}%`,
       detail:
         recommendation.picksUntilNextUserPick === 0
           ? 'You select again immediately.'
-          : `${recommendation.nextPickExplanation.picksBeforeNextSelection ?? '—'} selections in between, ${recommendation.insight.opponentTeamsNeedingPosition} of those teams needing ${recommendation.player.position}.`,
+          : `${recommendation.nextPickExplanation.picksBeforeNextSelection ?? '—'} teams pick before you do, ${recommendation.insight.opponentTeamsNeedingPosition} of them needing a ${position}.`,
     });
-  }
-
-  evidence.push({
-    label: 'Tier',
-    value: `${recommendation.tier} · ${recommendation.playersRemainingInTier} left`,
-    detail: `${recommendation.playersRemainingInTier} ${recommendation.player.position}${recommendation.playersRemainingInTier === 1 ? '' : 's'} remain in this tier.`,
-  });
-
-  evidence.push({
-    label: 'Adds to your lineup',
-    value: `${format(recommendation.components.marginalStartingValue)} pts`,
-    detail: `Against a replacement projected at ${format(recommendation.raw.replacementProjection)} points.`,
-  });
-
-  if (recommendation.draftRoomRank !== null && recommendation.insight.bestAvailableFirstSeedRank !== null) {
-    const gap = recommendation.insight.firstSeedRankGap ?? 0;
+  } else {
     evidence.push({
-      label: 'First Seed',
-      value: gap > 0 ? `#${recommendation.draftRoomRank} · +${gap}` : `#${recommendation.draftRoomRank}`,
-      detail:
-        gap > 0
-          ? `First Seed's best available is #${recommendation.insight.bestAvailableFirstSeedRank}, so this reaches ${gap} ${gap === 1 ? 'rank' : 'ranks'} past the board.`
-          : 'This is First Seed’s best available player.',
+      label: "Chance he's still available",
+      value: '—',
+      detail: 'Not enough simulation data for this player.',
     });
   }
+
+  const remaining = recommendation.playersRemainingInTier;
+  evidence.push({
+    label: 'Others like him left',
+    value: remaining <= 0 ? 'None' : String(remaining),
+    detail:
+      remaining <= 1
+        ? `He is the last ${position} of this quality on the board.`
+        : `${remaining} similarly rated ${position}s remain.`,
+  });
+
+  evidence.push({
+    label: 'Improves your starting lineup',
+    value:
+      recommendation.components.marginalStartingValue > 0.5
+        ? `+${Math.round(recommendation.components.marginalStartingValue)} pts`
+        : 'Bench only',
+    detail:
+      recommendation.components.marginalStartingValue > 0.5
+        ? `Over a season, against a replacement projected at ${Math.round(recommendation.raw.replacementProjection)} points.`
+        : 'Every starting spot he could fill is already taken.',
+  });
+
+  const expert = expertRank(recommendation, result);
+  if (expert) evidence.push(expert);
 
   return evidence;
 }
 
-function format(value: number): string {
-  return (Math.round(value * 10) / 10).toFixed(1);
+/**
+ * The expert rank, from whichever source is entitled to speak about him.
+ *
+ * First Seed publishes an OVERALL board and covers no kickers or defenses;
+ * FantasyPros supplies those, and publishes a POSITIONAL rank. They are
+ * different units, so a kicker reads "K4" rather than "#4" - showing a
+ * positional rank as an overall one would put a kicker four places from the top
+ * of the draft.
+ */
+function expertRank(
+  recommendation: DraftRecommendation,
+  result: DraftRecommendationResult,
+): CardEvidence | null {
+  const position = recommendation.player.position;
+  if (recommendation.draftRoomRank !== null) {
+    const gap = recommendation.insight.firstSeedRankGap ?? 0;
+    return {
+      label: 'Expert rank',
+      value: `#${recommendation.draftRoomRank}`,
+      detail:
+        gap > 0 && recommendation.insight.bestAvailableFirstSeedRank !== null
+          ? `First Seed. Their best available is #${recommendation.insight.bestAvailableFirstSeedRank}, so this reaches ${gap} ${gap === 1 ? 'place' : 'places'} past the board.`
+          : 'First Seed.',
+    };
+  }
+
+  const supplemental = result.internals?.supplementalRankOf(recommendation.player.id);
+  if (supplemental) {
+    const label = position === 'DEF' ? 'DST' : position;
+    return {
+      label: 'Expert rank',
+      value: `${label}${supplemental.positionRank}`,
+      detail: 'FantasyPros. First Seed does not rank this position.',
+    };
+  }
+
+  if (position === 'K' || position === 'DEF') {
+    return {
+      label: 'Expert rank',
+      value: 'Unranked',
+      detail: 'No expert board covers this player.',
+    };
+  }
+  return null;
 }

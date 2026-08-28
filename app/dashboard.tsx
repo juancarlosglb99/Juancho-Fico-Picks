@@ -21,6 +21,7 @@ import { buildDraftBoard } from '@/packages/ui/draft-board';
 import { deriveMyTeam } from '@/packages/ui/my-team';
 import { buildNextUp } from '@/packages/ui/next-up';
 import { buildPlayerAnalysis } from '@/packages/ui/player-analysis';
+import { tierSurvivalOf } from '@/packages/ui/player-analysis-outlook';
 import { buildPlayerPool } from '@/packages/ui/player-pool';
 import { buildDraftReadiness } from '@/packages/ui/readiness';
 import { resolveRecommendationCard } from '@/packages/ui/recommendation';
@@ -223,7 +224,13 @@ export function Dashboard() {
         strategist,
         currentFingerprint: brief?.state.boardFingerprint ?? null,
         nameOf,
-        survivalOf: (playerId) => result?.internals?.survivalOf(playerId).value ?? null,
+        survivalOf: (playerId) => {
+          const estimate = result?.internals?.survivalOf(playerId);
+          return estimate?.modeled ? estimate.value : null;
+        },
+        tierGapOf: (playerId) => result?.internals?.tierOf(playerId)?.gapAfterTier ?? null,
+        tierSurvivesOf: (playerId) =>
+          result?.internals ? tierSurvivalOf(result.internals, playerId) : null,
       }),
     [result, strategist, brief, nameOf],
   );

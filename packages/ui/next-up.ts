@@ -99,6 +99,7 @@ export function buildNextUp({
       playerId: recommendation.player.id,
       name: recommendation.player.name,
       position: recommendation.player.position,
+      // Null unless estimated, so an unmodelled player never reads as safe.
       survival: recommendation.availableNextPickProbability,
       confidence: recommendation.nextPickConfidence,
       engineRank: index + 1,

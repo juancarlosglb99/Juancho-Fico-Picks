@@ -47,11 +47,20 @@ import {
   mapFirstSeedProjectionSnapshot,
 } from '@/packages/first-seed/mapping';
 import { FIRST_SEED_REFRESH_INTERVAL_MS } from '@/packages/first-seed/providers';
+import { mapSupplementalRankings } from '@/packages/fantasy-pros/mapping';
+import type { SupplementalRankingSnapshot } from '@/packages/fantasy-pros/types';
 import type { CanonicalPlayerMap } from '@/packages/players/types';
 import { mapProjectionRecords } from '@/packages/projections/mapping';
 import { CsvProjectionProvider } from '@/packages/projections/providers/csv';
 
 const ADP_REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
+
+/** The shape of the committed K/DST asset, before it meets a player map. */
+interface SupplementalSource {
+  season: string;
+  provenance: Parameters<typeof mapSupplementalRankings>[0]['provenance'];
+  rows: Parameters<typeof mapSupplementalRankings>[0]['rows'];
+}
 
 export type ProjectionMode = 'automatic' | 'custom' | null;
 
@@ -66,6 +75,14 @@ export interface DraftSources {
   adp: AdpSnapshot | null;
   adpBusy: boolean;
   adpError: string | null;
+  /**
+   * A board for the two positions First Seed does not publish.
+   *
+   * A static seasonal file rather than a feed: it is a published expert
+   * ranking, it changes rarely, and it is used for nothing but the order of the
+   * kicker and defense shortlist.
+   */
+  supplemental: SupplementalRankingSnapshot | null;
   /** True while any source is still resolving for the first time. */
   loading: boolean;
   retryAll: () => void;
@@ -100,6 +117,11 @@ export function useDraftSources({
   const [adp, setAdp] = useState<AdpSnapshot | null>(null);
   const [adpBusy, setAdpBusy] = useState(false);
   const [adpError, setAdpError] = useState<string | null>(null);
+  const [supplementalRows, setSupplementalRows] = useState<{
+    season: string;
+    provenance: SupplementalSource['provenance'];
+    rows: SupplementalSource['rows'];
+  } | null>(null);
   const [nonce, setNonce] = useState(0);
 
   const adpPlan = useMemo(
@@ -284,6 +306,38 @@ export function useDraftSources({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adpPlan, players, nonce]);
 
+  /*
+   * The K/DST board. Fetched once, then mapped against the LIVE player
+   * universe rather than at build time, so a kicker who changed teams or left
+   * the league resolves - or fails to resolve - the same way everything else
+   * does.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    void fetch('/fantasy-pros-kdst-2026.json')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body) => {
+        if (!cancelled) setSupplementalRows(body as typeof supplementalRows);
+      })
+      .catch(() => {
+        // Optional. Without it the shortlist falls back to its old ordering.
+        if (!cancelled) setSupplementalRows(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const supplemental = useMemo(() => {
+    if (!supplementalRows || !players) return null;
+    return mapSupplementalRankings({
+      rows: supplementalRows.rows,
+      players,
+      provenance: supplementalRows.provenance,
+      season: supplementalRows.season,
+    });
+  }, [supplementalRows, players]);
+
   const importCsv = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -334,6 +388,7 @@ export function useDraftSources({
     adp,
     adpBusy,
     adpError,
+    supplemental,
     loading: projectionBusy || roomBusy || adpBusy,
     retryAll: useCallback(() => setNonce((current) => current + 1), []),
     importCsv,

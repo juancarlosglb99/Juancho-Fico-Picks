@@ -78,6 +78,29 @@ explicitly, and neither can reach the Anthropic API.
 | `?diagnostics=1` | Reveals the engine panel: source provenance and match rates, reaction-time percentiles, the model inspector, league context. Always on in development. |
 | `?ai=confirmed` \| `override` \| `analyzing` \| `fallback` | Answers with a **fake** strategist transport so every state of the recommendation card can be looked at without spending anything. The fake response still goes through the real validator, guardrails and staleness gate. |
 
+## Where the numbers come from
+
+| Source | Owns | Never used for |
+|---|---|---|
+| **Sleeper** | Who exists, who is on an NFL team, the draft itself | Anything about how good a player is |
+| **First Seed** | QB/RB/WR/TE projections and the draft-room board | Kickers and defenses, which it does not publish |
+| **FantasyPros** | The order of the K/DST shortlist | Everything else - it is never merged into scoring |
+| **Fantasy Football Calculator** | Market ADP, shown as context | Any decision |
+
+Eligibility is Sleeper's alone, and the field that decides it is `team`. Its
+player endpoint is an archive rather than a roster: `active` is `true` on all
+9,418 entries, and `status` says `"Active"` for players who retired years ago
+while saying `"Injured Reserve"` for both a retired kicker and a current starter
+with a hamstring. Only the team assignment tracks reality, so a player Sleeper
+places on no team cannot be selected - though he stays in the player map, because
+a draft board still has to render a name somebody else picked.
+
+Regenerate the supplemental board after dropping in a new export:
+
+```bash
+node scripts/build-supplemental-rankings.mjs
+```
+
 ## The draft room
 
 The live screen is three regions: the roster and its holes on the left, one

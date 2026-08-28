@@ -12,6 +12,7 @@ import type { NeedLevel } from '../engine/draft/roster-state';
 import type { DraftRecommendationResult } from '../engine/draft/types';
 import type { DraftBrief } from '../engine/strategist/types';
 import type { Position } from '../players/types';
+import { describeNeed } from './plain-language';
 import type {
   JointRow,
   JointView,
@@ -25,6 +26,44 @@ import type {
 
 /** How deep the tier chart goes before it stops being a chart. */
 const TIER_DEPTH = 14;
+
+/**
+ * The chance this player's quality group still holds somebody at our turn.
+ *
+ * Counted over the same simulated futures as everything else. Shared so the
+ * card and the right-hand rail cannot reach different conclusions about the
+ * same position on the same board.
+ */
+export function tierSurvivalOf(
+  internals: NonNullable<DraftRecommendationResult['internals']>,
+  playerId: string,
+): number | null {
+  const outcomes = internals.roomOutcomes;
+  if (!outcomes) return null;
+  const subject = internals.candidatePool.find(
+    (candidate) => candidate.playerId === playerId,
+  );
+  const tier = internals.tierOf(playerId)?.tier ?? null;
+  if (!subject || tier === null) return null;
+
+  const group = internals.candidatePool
+    .filter(
+      (candidate) =>
+        candidate.position === subject.position &&
+        (internals.tierOf(candidate.playerId)?.tier ?? null) === tier,
+    )
+    .map((candidate) => candidate.playerId);
+  return group.length === 0 ? null : groupSurvival(outcomes, group)?.atLeastOne ?? null;
+}
+
+/** A survival figure only where one was actually estimated. */
+function modeledSurvival(
+  internals: NonNullable<DraftRecommendationResult['internals']>,
+  playerId: string,
+): number | null {
+  const estimate = internals.survivalOf(playerId);
+  return estimate.modeled ? estimate.value : null;
+}
 
 /* ------------------------------------------------------------ D. tier cliff */
 
@@ -60,7 +99,7 @@ export function buildTierCliff(
       name: internals.playerOf(candidate.playerId)?.name ?? candidate.playerId,
       projectedPoints: candidate.projection,
       tier,
-      survival: internals.survivalOf(candidate.playerId).value,
+      survival: modeledSurvival(internals, candidate.playerId),
       isSubject: candidate.playerId === playerId,
       cliffAfter: tier !== null && nextTier !== null && nextTier !== tier,
     };
@@ -308,7 +347,7 @@ export function buildPlan(
     kind: 'target',
     label: target ? `Target ${target.position}` : 'Take the best available',
     detail: target
-      ? `${target.openStartingSlots} starting ${target.openStartingSlots === 1 ? 'slot' : 'slots'} still open at ${target.position}.`
+      ? `${describeNeed(target.depthNeed, target.openStartingSlots)} at ${target.position}.`
       : 'Every starting slot is filled, so the next pick is about depth.',
     overallPick: nextPick,
     position: target?.position ?? null,
@@ -319,7 +358,7 @@ export function buildPlan(
     steps.push({
       kind: 'target',
       label: `Fall back to ${fallback.position}`,
-      detail: `If ${target?.position ?? 'the target'} is gone, ${fallback.openStartingSlots} ${fallback.position} ${fallback.openStartingSlots === 1 ? 'slot is' : 'slots are'} still open.`,
+      detail: `If ${target?.position ?? 'the target'} is gone, ${describeNeed(fallback.depthNeed, fallback.openStartingSlots).toLowerCase()} at ${fallback.position}.`,
       overallPick: nextPick,
       position: fallback.position,
       expected: expectedAt(fallback.position),

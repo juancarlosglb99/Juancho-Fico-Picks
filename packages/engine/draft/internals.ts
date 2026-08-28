@@ -31,6 +31,7 @@ import type { PlannablePlayer } from './roster-plan';
 import type { DataWarning } from './data-anomaly';
 import type { RoomOutcomes } from './room-simulation';
 import type { ProjectionTier } from './tiers';
+import type { SupplementalRankingRecord } from '../../fantasy-pros/types';
 
 /** What the engine worked out about one candidate it fully planned. */
 export interface PlannedCandidate {
@@ -50,7 +51,26 @@ export interface PlannedCandidate {
 }
 
 export interface SurvivalEstimate {
+  /**
+   * The figure the ranking arithmetic uses. Present even when nothing was
+   * estimated, because the model needs a number to reason with.
+   */
   value: number | null;
+  /**
+   * Whether that number was actually estimated, or is a default standing in for
+   * one.
+   *
+   * True for every projected candidate today, because the simulation is handed
+   * the whole pool. It is false where there is genuinely nothing to estimate -
+   * no further selection of ours to survive to, or a player who is not a
+   * candidate at all - and it would be false if the pool and the simulation's
+   * input ever diverged.
+   *
+   * Nothing may show a survival figure to a person unless this is true. "The
+   * simulation did not check" and "the simulation says he is certain" are
+   * different claims, and only one of them is evidence.
+   */
+  modeled: boolean;
   confidence: Confidence;
   teamsWithNeed: number;
   demand: number;
@@ -107,4 +127,11 @@ export interface DraftDecisionInternals {
   playerOf(playerId: string): CanonicalPlayer | undefined;
   /** Set where First Seed's rank and projection contradict each other. */
   dataWarningOf(playerId: string): DataWarning | undefined;
+  /**
+   * A rank from the supplemental K/DST source, where one exists.
+   *
+   * Present so a screen can say "expert rank #3" for a position First Seed does
+   * not cover. It never reaches a projection or a score.
+   */
+  supplementalRankOf(playerId: string): SupplementalRankingRecord | undefined;
 }

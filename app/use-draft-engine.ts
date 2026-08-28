@@ -159,10 +159,11 @@ export function useDraftEngine({
         players: workspace.players,
         projections,
         roomRankings: sources.roomRankings,
+        supplementalRankings: sources.supplemental,
       }),
     );
     return { value, ms };
-  }, [workspace, projections, context, sources.roomRankings]);
+  }, [workspace, projections, context, sources.roomRankings, sources.supplemental]);
   const result = resultTimed?.value ?? null;
 
   /*
