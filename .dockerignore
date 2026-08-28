@@ -26,6 +26,12 @@ docs
 *.md
 !README.md
 
+# Deployment configuration. It lives on the Droplet beside the compose file,
+# never inside the image it starts.
+docker-compose*.yml
+Caddyfile
+.do
+
 # Editor and OS noise.
 .DS_Store
 *.log

@@ -1,0 +1,163 @@
+# Production, on one Droplet.
+#
+#   internet → caddy (:80, :443) → app (:8080) → db (:5432)
+#
+# Only Caddy publishes ports. The app and the database are reachable on the
+# private Docker network and from nowhere else - `db` has no `ports:` entry at
+# all, which is what keeps Postgres off the public internet rather than a
+# firewall rule that somebody might later relax.
+#
+# The image is BUILT ELSEWHERE and pulled. A 1 GB Droplet running Postgres and
+# the app has no business also running a Vite build, and a build that OOMs
+# halfway leaves a machine serving nothing.
+#
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Everything secret comes from `.env.production` beside this file, which is
+# never committed. See `.env.production.example`.
+
+name: juancho
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      # Caddy speaks HTTP/3 over UDP where the client supports it.
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates and ACME account keys. Losing this volume means
+      # re-issuing certificates, which Let's Encrypt rate-limits.
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env.production}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env.production}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - edge
+
+  app:
+    image: ${APP_IMAGE:?set APP_IMAGE in .env.production}
+    restart: unless-stopped
+    # No `ports:`. The only way in is through Caddy.
+    expose:
+      - "8080"
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      HOST: 0.0.0.0
+      # The abstraction the application actually reads. Pointing this at a
+      # DigitalOcean Managed Postgres later is a one-line change here and
+      # nothing at all in the application.
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      # Six is plenty for one instance against a local database, and leaves
+      # room under Postgres's own limit for the migration client and a shell.
+      DATABASE_POOL_MAX: "6"
+      # Caps V8 so a heavy render cannot grow the heap into the memory
+      # Postgres needs and get the wrong process OOM-killed. Measured idle
+      # footprint is ~70 MB and ~120 MB under load, so this is generous.
+      NODE_OPTIONS: --max-old-space-size=320
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env.production}
+      BETTER_AUTH_URL: https://${DOMAIN}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      JUANCHO_STRATEGIST_MODEL: ${JUANCHO_STRATEGIST_MODEL:-claude-opus-5}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # The same endpoint Caddy waits on and an operator curls. In production
+      # it fails unless the environment is complete, the database answers and
+      # the schema is current.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      # The container migrates before it serves; give it room to.
+      start_period: 60s
+      retries: 3
+    networks:
+      - edge
+      - internal
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # Deliberately no `ports:`. Reachable only from the internal network.
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env.production}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.production}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env.production}
+      # Marginally faster and safe here: the data is one `pg_dump` old at worst
+      # and the whole machine loses power together anyway.
+      POSTGRES_INITDB_ARGS: --data-checksums
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Tuned for a 1 GB machine that is also running Node and Caddy. Postgres's
+    # defaults assume it owns the box.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - effective_cache_size=256MB
+      - -c
+      - maintenance_work_mem=32MB
+      - -c
+      - work_mem=4MB
+      - -c
+      - max_connections=20
+      - -c
+      - wal_compression=on
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - internal
+
+  backup:
+    # The same Postgres image, so `pg_dump` is guaranteed to match the server
+    # version. A host-installed client would drift the first time either is
+    # upgraded.
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ./scripts/backup.sh:/usr/local/bin/backup.sh:ro
+      - backups:/backups
+    entrypoint: ["/bin/sh", "/usr/local/bin/backup.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+networks:
+  # Caddy and the app. The database is not on it.
+  edge:
+  # The app, the database and the backup job. Not routable from outside.
+  internal:
+    internal: true
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+  backups:

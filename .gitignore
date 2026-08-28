@@ -26,9 +26,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local environment
+# local environment. The *.example files are documentation, not configuration,
+# and are the only ones that belong in the repository.
 .env*
 !.env.example
+!.env.production.example
 
 # deployment and generated files
 .vercel

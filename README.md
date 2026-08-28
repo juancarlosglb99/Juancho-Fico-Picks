@@ -80,10 +80,14 @@ explicitly, and neither can reach the Anthropic API.
 
 ## Running it in production
 
-The whole production artefact is `dist/standalone/` - a Node server with its own
-`node_modules` beside it - wrapped in a container. Exact DigitalOcean App
-Platform settings, the environment-variable list, which of them must be
-encrypted, and the admin bootstrap are in [DEPLOYMENT.md](DEPLOYMENT.md).
+One DigitalOcean Droplet: Caddy, the app and PostgreSQL in Docker Compose on a
+$6/month machine. The image is built by GitHub Actions and the Droplet only
+pulls it - a 1 GB box running Postgres has no business also running a Vite
+build. Exact sizes, SSH hardening, DNS, environment variables, backups and the
+admin bootstrap are in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+App Platform and a managed database remain a supported scaling path; the spec is
+committed at [`.do/app.yaml`](.do/app.yaml).
 
 Production refuses to run unconfigured. With no `DATABASE_URL` this application
 happily serves a draft room with no accounts and no authorisation, which is
@@ -93,7 +97,8 @@ correct on a laptop and an unsecured public application on the internet - so
 
 Access during the private beta is a person rather than a payment: registering
 creates an account with no entitlement and a "waiting for activation" screen,
-and `npm run account -- plan <email> basic|pro` lets somebody in.
+and `npm run account -- plan <email> basic|pro` lets somebody in. On the Droplet
+that runs inside the app container, so the database never needs a public port.
 
 ## Where the numbers come from
 
