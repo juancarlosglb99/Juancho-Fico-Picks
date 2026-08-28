@@ -12,6 +12,11 @@ dist
 .claude
 .claude-flow
 .openai
+# ...except one file, which vinext's `sites` plugin stats during `npm run
+# build` and fails without. It holds a hosting project id and no credential,
+# and it is committed to the repository already. Excluding the directory and
+# then re-including it is deliberate: nothing else in there is wanted.
+!.openai/hosting.json
 
 # Secrets. `.env.example` is the only one that belongs anywhere near an image,
 # and even that is documentation rather than configuration.
