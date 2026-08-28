@@ -24,6 +24,21 @@
  * A supplemental ranking source fixes the ORDER without touching the value. The
  * nominal points stay exactly what they were, because a rank is an ordering and
  * turning one into points would be inventing a projection.
+ *
+ * WHAT THIS STILL DOES NOT FIX, and is deliberately deferred.
+ *
+ * Every candidate here is worth the same nominal number, so the shortlist is now
+ * made of real, current kickers - but their ORDER inside it is still decided by
+ * a tie-break the engine does not intend as a preference. On the saved corpus
+ * that surfaces as Cam Little (FantasyPros K4) ranked above Cameron Dicker (K2):
+ * both are worth 125, the decision value ties, and `consensusRank` breaks it.
+ *
+ * Making the engine genuinely prefer K1 to K7 means giving them different
+ * values, which is a change to the recommendation model rather than to a data
+ * source - so it is an intentional valuation change, to be made and measured on
+ * its own, not slipped in beside a source fix. Until then the expert rank is
+ * displayed next to each option so the arbitrariness is at least visible to the
+ * person making the pick.
  */
 import type { Position } from '../../players/types';
 import type { MappedProjection } from '../../projections/types';
