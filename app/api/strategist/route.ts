@@ -26,6 +26,21 @@ interface StrategistRequestBody {
   state: DraftStateVersion;
 }
 
+/**
+ * Whether a strategist is configured at all.
+ *
+ * The pre-draft check has to be able to say "AI available" or "not configured"
+ * before a draft starts, and the browser cannot know. This answers only that -
+ * a boolean and the model name, both of which are already visible in any advice
+ * the route returns. The key itself never leaves the server.
+ */
+export function GET(): Response {
+  return Response.json({
+    configured: Boolean(process.env.ANTHROPIC_API_KEY),
+    model: resolveStrategistModel(),
+  });
+}
+
 export async function POST(request: Request): Promise<Response> {
   let body: StrategistRequestBody;
   try {

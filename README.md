@@ -68,6 +68,28 @@ npm run lint
 npm run build
 ```
 
+### Development-only flags
+
+Both are ignored in a production build unless `?diagnostics=1` is passed
+explicitly, and neither can reach the Anthropic API.
+
+| Query | What it does |
+|---|---|
+| `?diagnostics=1` | Reveals the engine panel: source provenance and match rates, reaction-time percentiles, the model inspector, league context. Always on in development. |
+| `?ai=confirmed` \| `override` \| `analyzing` \| `fallback` | Answers with a **fake** strategist transport so every state of the recommendation card can be looked at without spending anything. The fake response still goes through the real validator, guardrails and staleness gate. |
+
+## The draft room
+
+The live screen is three regions: the roster and its holes on the left, one
+recommendation and the board in the middle, what survives to your next selection
+on the right. On a phone they become three tabs, with the recommendation pinned
+above them so opening the draft board never takes the pick off the screen.
+
+Everything the screen decides lives in `packages/ui` as pure functions - which
+card state to show, how the draft board snakes, what belongs in the player table,
+which charts have real data behind them - so it is all tested in `tests/ui`
+without a browser. The components under `app/components` only draw.
+
 ## Measuring whether it is any good
 
 Two things decide whether this is worth using: the team you end up with, and how
