@@ -1,0 +1,54 @@
+# Bootstrap: HTTPS on a bare IP, before a domain exists.
+#
+# `tls internal` makes Caddy issue the certificate from its own local CA. A
+# browser will warn, and that warning is correct - nobody has vouched for this
+# certificate. Everything else is genuinely HTTPS: the scheme is https, session
+# cookies are marked Secure, and the application's production preflight (which
+# refuses a non-https BETTER_AUTH_URL) is satisfied honestly rather than
+# bypassed.
+#
+# Why not a real certificate for the IP? Let's Encrypt does not issue for bare
+# IPs, and the usual trick - `<ip>.sslip.io` - is not on the Public Suffix List,
+# so Let's Encrypt counts all of sslip.io as ONE registered domain with a shared
+# 50-per-week ceiling. Spending somebody else's rate limit to avoid a warning on
+# a server with no users yet is a bad trade.
+#
+# When the domain arrives: point it at the Droplet, set DOMAIN in
+# .env.production, drop CADDYFILE back to ./Caddyfile, and restart Caddy. It
+# obtains a real certificate on its own.
+
+{
+	# No ACME account is needed for a local CA, and asking for one on a box
+	# with no domain only produces confusing log lines.
+	auto_https off
+}
+
+https://{$DOMAIN} {
+	tls internal
+
+	encode zstd gzip
+
+	reverse_proxy app:8080 {
+		health_uri /api/health
+		health_interval 30s
+		health_timeout 5s
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Anything arriving on plain HTTP goes to HTTPS, including a bare IP request
+# that does not match the host above.
+:80 {
+	redir https://{$DOMAIN}{uri} permanent
+}

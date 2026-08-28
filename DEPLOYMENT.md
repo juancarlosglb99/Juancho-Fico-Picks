@@ -68,7 +68,20 @@ container is being restarted by the OOM killer — not before.
 
 ## 2. First SSH setup
 
-Run these once, as `root`, from the console or `ssh root@<droplet-ip>`.
+There is a script for this. It is idempotent, because the realistic failure is
+a dropped connection partway through and a half-hardened server is worse than an
+unconfigured one:
+
+```bash
+scp scripts/deploy/bootstrap-droplet.sh root@<droplet-ip>:/tmp/
+ssh root@<droplet-ip> 'bash /tmp/bootstrap-droplet.sh'
+```
+
+It copies root's `authorized_keys` to the deploy user **before** disabling
+password login, and refuses to harden SSH at all if it cannot find them — the
+one way this step locks you out of your own server.
+
+What it does, if you would rather run it by hand:
 
 ```bash
 # --- a user that is not root ----------------------------------------------
@@ -220,6 +233,18 @@ nano .env.production     # paste those, set DOMAIN, ACME_EMAIL, APP_IMAGE, ANTHR
 
 ### 4.4 Start
 
+**Before a domain exists**, set `CADDYFILE=./Caddyfile.bootstrap` in
+`.env.production` and `DOMAIN` to the Droplet's IP. Caddy then issues the
+certificate from its own local CA: the browser warns, which is correct because
+nobody has vouched for it, but the scheme is genuinely https, cookies are
+genuinely `Secure`, and the production preflight is satisfied honestly rather
+than bypassed.
+
+Let's Encrypt does not issue for bare IPs, and the usual `<ip>.sslip.io` trick
+is not on the Public Suffix List — so all of `sslip.io` shares one 50-per-week
+certificate ceiling. Spending a shared community limit to avoid a warning on a
+server with no users is a bad trade.
+
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.production pull
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d
@@ -289,6 +314,20 @@ A credit buys a **draft**, not a request: a draft that has spent one keeps
 answering to the end even if the balance hits zero mid-way. **Admin** has full
 access and AI, consumes no credits, and is **still logged** — every call writes
 an `ai_usage` row with its cost.
+
+### 4.5b Switching to the real domain
+
+Once DNS points at the Droplet (§3):
+
+```bash
+# In .env.production: set DOMAIN to the real hostname and remove the
+# CADDYFILE line so it falls back to ./Caddyfile.
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d caddy
+docker compose -f docker-compose.prod.yml logs -f caddy   # watch it get a real certificate
+```
+
+`BETTER_AUTH_URL` follows `DOMAIN` automatically. Anyone signed in under the old
+origin is signed out, which at this stage is you.
 
 ### 4.6 Later deployments
 

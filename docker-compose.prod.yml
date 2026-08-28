@@ -29,7 +29,10 @@ services:
       # Caddy speaks HTTP/3 over UDP where the client supports it.
       - "443:443/udp"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # `./Caddyfile` gets a real Let's Encrypt certificate for a domain.
+      # `./Caddyfile.bootstrap` uses Caddy's own CA, for the phase before a
+      # domain exists - see that file for why an IP cannot have a real one.
+      - ${CADDYFILE:-./Caddyfile}:/etc/caddy/Caddyfile:ro
       # Certificates and ACME account keys. Losing this volume means
       # re-issuing certificates, which Let's Encrypt rate-limits.
       - caddy_data:/data
