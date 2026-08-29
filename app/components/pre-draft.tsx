@@ -354,9 +354,10 @@ function DraftStep({
   attachError: string | null;
 }) {
   /*
-   * One list. `discovered` is `/user/{id}/drafts`, which already returns league
-   * drafts AND mocks - the two panels this replaces were splitting one answer
-   * in half because the old flow had arrived from a league.
+   * One list. `discovered` is `/user/{id}/drafts`, which overlaps heavily with
+   * `drafts` - the two panels this replaces were splitting one answer in half
+   * because the old flow had arrived from a league. Neither source reliably
+   * lists mocks, which is why the paste field exists alongside them.
    */
   const seen = new Set<string>();
   const all = [...discovered, ...drafts].filter((draft) => {

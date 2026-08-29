@@ -10,11 +10,15 @@
  * The board is then DERIVED from both, which is what lets a pick arriving from
  * Sleeper re-derive the available pool in the same render.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildCanonicalPlayerMap } from '@/packages/players/player-map';
 import type { CanonicalPlayerMap } from '@/packages/players/types';
 import { SleeperApiError, sleeperClient } from '@/packages/sleeper/client';
-import { isMockDraft } from '@/packages/sleeper/attachment';
+import {
+  createAttachSequence,
+  formatAttachError,
+  resolveDraftAttachment,
+} from '@/packages/sleeper/attach';
 import { joinRostersWithOwners } from '@/packages/sleeper/normalization';
 import type {
   LeagueRosterView,
@@ -67,9 +71,11 @@ export function useSleeperSession() {
   const [discovery, setDiscovery] = useState<{ userId: string; drafts: SleeperDraft[] } | null>(
     null,
   );
+  const attachSequence = useRef(createAttachSequence()).current;
 
   const attachToDraft = useCallback(
     async (draftId: string, known?: LeagueWorkspace | null) => {
+      const isCurrent = attachSequence.begin();
       setBusy('draft');
       setError(null);
       setAttachError(null);
@@ -77,46 +83,35 @@ export function useSleeperSession() {
       setAttachment(null);
 
       try {
-        const [draft, picks, tradedPicks, rawPlayers] = await Promise.all([
-          sleeperClient.getDraft(draftId),
-          sleeperClient.getDraftPicks(draftId),
-          sleeperClient.getDraftTradedPicks(draftId),
-          sleeperClient.getActivePlayers(),
-        ]);
+        const resolved = await resolveDraftAttachment(sleeperClient, draftId, known);
 
-        // Only a real league draft has a league to load. A mock has none.
-        let league: SleeperLeague | null = null;
-        let rosters: SleeperRoster[] | null = null;
-        if (!isMockDraft(draft) && draft.league_id) {
-          if (known?.league.league_id === draft.league_id) {
-            league = known.league;
-            rosters = known.rosters;
-          } else {
-            [league, rosters] = await Promise.all([
-              sleeperClient.getLeague(draft.league_id),
-              sleeperClient.getRosters(draft.league_id),
-            ]);
-          }
-        }
+        // A slower attach started earlier must not land on top of this one.
+        if (!isCurrent()) return;
 
         setAttachment({
-          draftId: draft.draft_id,
-          league,
-          rosters,
-          players: buildCanonicalPlayerMap(rawPlayers),
-          initial: { draft, picks, tradedPicks, fetchedAt: Date.now() },
+          draftId: resolved.draftId,
+          league: resolved.league,
+          rosters: resolved.rosters,
+          players: buildCanonicalPlayerMap(resolved.players),
+          initial: {
+            draft: resolved.draft,
+            picks: resolved.picks,
+            tradedPicks: resolved.tradedPicks,
+            fetchedAt: Date.now(),
+          },
         });
-        setAttachedDraftId(draft.draft_id);
+        setAttachedDraftId(resolved.draftId);
       } catch (nextError) {
-        setError(formatSleeperError(nextError));
+        if (isCurrent()) setError(formatAttachError(nextError));
       } finally {
-        setBusy(null);
+        if (isCurrent()) setBusy(null);
       }
     },
-    [],
+    [attachSequence],
   );
 
   const loadLeague = useCallback(async (leagueId: string) => {
+    attachSequence.cancel();
     setBusy('league');
     setError(null);
     setAttachedDraftId(null);
@@ -140,12 +135,13 @@ export function useSleeperSession() {
     } finally {
       setBusy(null);
     }
-  }, []);
+  }, [attachSequence]);
 
   const connect = useCallback(async (rawUsername: string) => {
     const username = rawUsername.trim();
     if (!username) return;
 
+    attachSequence.cancel();
     setBusy('connecting');
     setError(null);
     setUser(null);
@@ -169,15 +165,20 @@ export function useSleeperSession() {
     } finally {
       setBusy(null);
     }
-  }, []);
+  }, [attachSequence]);
 
   const detach = useCallback(() => {
+    // The cancelled attach will not clear `busy` itself, so this owns it.
+    attachSequence.cancel();
+    setBusy(null);
     setAttachedDraftId(null);
     setAttachment(null);
     setAttachError(null);
-  }, []);
+  }, [attachSequence]);
 
   const reset = useCallback(() => {
+    attachSequence.cancel();
+    setBusy(null);
     setUser(null);
     setSeason(null);
     setLeagues([]);
@@ -186,7 +187,7 @@ export function useSleeperSession() {
     setAttachment(null);
     setError(null);
     setDiscovery(null);
-  }, []);
+  }, [attachSequence]);
 
   /*
    * Mock drafts have no league, so they never appear under /user/{id}/leagues.

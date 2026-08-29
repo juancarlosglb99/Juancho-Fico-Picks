@@ -97,11 +97,12 @@ export const sleeperClient = {
   },
 
   /**
-   * Every draft a user has taken part in this season, INCLUDING mock drafts.
+   * The drafts a user has taken part in this season.
    *
-   * Mock drafts have a null `league_id`, so they never show up under
-   * `/user/{id}/leagues`. This is the only public endpoint that surfaces them,
-   * which makes it the basis of mock discovery.
+   * Observed against the live API to return only league drafts: a known mock
+   * the user had drafted in was absent from the response. So discovery cannot
+   * be relied on to surface mocks, and pasting a draft link stays the way to
+   * reach one.
    */
   getUserDrafts(userId: string, season: string, signal?: AbortSignal) {
     return request<SleeperDraft[]>(
