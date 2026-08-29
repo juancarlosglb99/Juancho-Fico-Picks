@@ -150,7 +150,14 @@ describe('following recommendation #1 for an entire draft', () => {
         expect(roster.TE, `${format.label} slot ${userSlot} TE`).toBeGreaterThanOrEqual(1);
       }
     }
-  });
+    /*
+     * Nine complete autodrafts in a single test - three formats by three seats.
+     * That fits inside the default five seconds on a developer machine and took
+     * 6.6s on a shared CI runner, where it failed the suite without anything
+     * being wrong with it. The work is the point of the test, so give it room
+     * rather than shrink what it covers. 20s matches vitest.smoke.config.ts.
+     */
+  }, 20_000);
 });
 
 describe('finishing a roster it did not choose to start', () => {
