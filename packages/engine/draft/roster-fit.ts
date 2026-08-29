@@ -5,6 +5,7 @@ import type {
   SleeperRoster,
 } from '../../sleeper/types';
 import { clamp, round } from './math';
+import { resolvePickRosterId, type SlotToRosterId } from './pick-ownership';
 
 type PositionCounts = Partial<Record<Position, number>>;
 
@@ -42,10 +43,14 @@ export function getRosterPositionCounts(
   picks: SleeperDraftPick[],
   rosters: SleeperRoster[],
   players: CanonicalPlayerMap,
+  /** Needed for mock drafts, where picks carry a slot but no roster id. */
+  slotToRosterId?: SlotToRosterId,
 ): PositionCounts {
   const sleeperIds = new Set<string>();
   for (const pick of picks) {
-    if (Number(pick.roster_id) === rosterId) sleeperIds.add(pick.player_id);
+    if (resolvePickRosterId(pick, slotToRosterId) === rosterId) {
+      sleeperIds.add(pick.player_id);
+    }
   }
   const roster = rosters.find((candidate) => candidate.roster_id === rosterId);
   for (const sleeperId of roster?.players ?? []) sleeperIds.add(sleeperId);

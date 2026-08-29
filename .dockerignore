@@ -1,0 +1,43 @@
+# Everything the image does not need. The build stage copies the repository, so
+# what is excluded here is what never reaches the Docker daemon at all - which
+# is most of it: the regression corpus alone is larger than the running app.
+
+.git
+.github
+node_modules
+dist
+.next
+.vinext
+.wrangler
+.claude
+.claude-flow
+.openai
+# ...except one file, which vinext's `sites` plugin stats during `npm run
+# build` and fails without. It holds a hosting project id and no credential,
+# and it is committed to the repository already. Excluding the directory and
+# then re-including it is deliberate: nothing else in there is wanted.
+!.openai/hosting.json
+
+# Secrets. `.env.example` is the only one that belongs anywhere near an image,
+# and even that is documentation rather than configuration.
+.env
+.env.*
+!.env.example
+
+# Tests, fixtures and the captured mock corpus: build-time and CI only.
+tests
+data/regression
+docs
+*.md
+!README.md
+
+# Deployment configuration. It lives on the Droplet beside the compose file,
+# never inside the image it starts.
+docker-compose*.yml
+Caddyfile
+.do
+
+# Editor and OS noise.
+.DS_Store
+*.log
+tsconfig.tsbuildinfo

@@ -1,0 +1,275 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 51,
+      "currentOverallPick": 52,
+      "currentRound": 6,
+      "boardFingerprint": "1f-400a7bf0",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:6770",
+      "reasoning": "starter_need: QB is our only truly empty starting slot with 'high' need, and we currently have zero quarterbacks rostered. tier_cliff: QB tier 3 (Hurts, Daniels, Burrow) has only 3 players left with a steep 12.9-point gapAfter; Burrow's own survival to pick 69 is just 7.3%, meaning he is very unlikely to return. positional_scarcity: After this QB tier, the next tier (Dart, Herbert, etc.) projects roughly 20+ points lower (283.8 vs 300.3), a real cliff before it flattens into replaceable QBs. survives_to_next_turn: By contrast, Tyler Warren's TE tier still shows 76.3% chance at least one of Warren/Kraft survives, and Zay Flowers-tier WRs like Mike Evans (38% survival) or Terry McLaurin (15.7%) give us a fallback WR at 69, though thin. opportunity_cost: Taking Burrow now means passing on Zay Flowers (proj 144, WR8 tier) but Flowers only has 4% survival to pick 69 anyway, so the choice is really QB-now vs WR-now, not QB-now vs WR-later. first_seed_prior: First Seed ranks Burrow 56th overall, only 4 spots below the best available (Flowers at 52), a minimal reach for a 1QB starter slot we must fill.",
+      "reasonCodes": [
+        "starter_need",
+        "tier_cliff",
+        "positional_scarcity",
+        "survives_to_next_turn",
+        "opportunity_cost",
+        "first_seed_prior"
+      ],
+      "confidence": 0.68
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:12518",
+        "reasoning": "Tyler Warren is the top TE in a thin tier with only 10% survival, filling our empty TE slot with the best remaining option if we pivot off QB.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:9997",
+        "reasoning": "Zay Flowers is First Seed's top-ranked player left and adds a strong WR3/flex if we decide WR depth matters more than QB timing.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 1: Picks at 53 and 60, needs QB high and WR/RB medium; could take a QB or WR we're eyeing before our next turn. Roster 3: Picks at 58, needs QB/RB/TE high; hero_rb build may grab Rhamondre Stevenson or a QB from our target tier. Roster 7: Already has Lamar Jackson at QB but needs WR high; unlikely to compete for Burrow but could take Warren-tier TE alternatives.",
+    "confidence": 0.68,
+    "model": "claude-sonnet-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced build filling our empty QB slot with the clear QB1 of this tier (Joe Burrow, proj 300.3) while our next pick at 69 (16 selections away) is used to grab a TE from the Warren/Kraft tier or best remaining WR/RB depth.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternativePlayerId": "jfp:12518",
+    "strongestAlternativeWhy": "Tyler Warren is the clear TE1 of a thin tier (only 2 left) with just 10% survival, and TE is our other completely empty 'high need' starting slot.",
+    "strongestCounterargument": "In a 1QB league, the gain column for Burrow (440.3) is inflated purely because it's our first QB, and Jayden Daniels/Jalen Hurts both have much higher survival odds (61.7% and 77.7%) to pick 69, so we could wait on QB and grab Warren now instead.",
+    "whyRecommendationStillWins": "Burrow's own survival is only 7.3% versus Hurts/Daniels's 60-78%, meaning if we wait we likely still get a QB from this same tier at pick 69 anyway (92.7% chance at least one of Hurts/Daniels/Burrow remains) - but Burrow specifically will be gone, and the TE tier (Warren/Kraft) also has 76.3% combined survival, so both needs are addressable; taking the scarcest asset (Burrow, 7.3% survival) now and TE next is better sequencing than the reverse, since Hurts/Daniels are more likely to still be there than Warren/Kraft's steep dropoff after Kraft.",
+    "expectedNextPickPlan": "At pick 69 (16 selections later), target the TE tier - likely Tucker Kraft (72.3% survival) or Tyler Warren if he somehow lasts, or pivot to best remaining WR (Mike Evans, DJ Moore) if TE tier is gone, since our roster will then have QB, RB, WR locked and TE as the last high-need starter.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 1,
+        "why": "Picks at 53 and 60, needs QB high and WR/RB medium; could take a QB or WR we're eyeing before our next turn."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks at 58, needs QB/RB/TE high; hero_rb build may grab Rhamondre Stevenson or a QB from our target tier."
+      },
+      {
+        "rosterId": 7,
+        "why": "Already has Lamar Jackson at QB but needs WR high; unlikely to compete for Burrow but could take Warren-tier TE alternatives."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:6770",
+    "alternatives": [
+      {
+        "playerId": "jfp:12518",
+        "reason": "Tyler Warren is the top TE in a thin tier with only 10% survival, filling our empty TE slot with the best remaining option if we pivot off QB."
+      },
+      {
+        "playerId": "jfp:9997",
+        "reason": "Zay Flowers is First Seed's top-ranked player left and adds a strong WR3/flex if we decide WR depth matters more than QB timing."
+      }
+    ],
+    "confidence": 68,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build filling our empty QB slot with the clear QB1 of this tier (Joe Burrow, proj 300.3) while our next pick at 69 (16 selections away) is used to grab a TE from the Warren/Kraft tier or best remaining WR/RB depth.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "QB is our only truly empty starting slot with 'high' need, and we currently have zero quarterbacks rostered."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "QB tier 3 (Hurts, Daniels, Burrow) has only 3 players left with a steep 12.9-point gapAfter; Burrow's own survival to pick 69 is just 7.3%, meaning he is very unlikely to return."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "After this QB tier, the next tier (Dart, Herbert, etc.) projects roughly 20+ points lower (283.8 vs 300.3), a real cliff before it flattens into replaceable QBs."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "By contrast, Tyler Warren's TE tier still shows 76.3% chance at least one of Warren/Kraft survives, and Zay Flowers-tier WRs like Mike Evans (38% survival) or Terry McLaurin (15.7%) give us a fallback WR at 69, though thin."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Taking Burrow now means passing on Zay Flowers (proj 144, WR8 tier) but Flowers only has 4% survival to pick 69 anyway, so the choice is really QB-now vs WR-now, not QB-now vs WR-later."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed ranks Burrow 56th overall, only 4 spots below the best available (Flowers at 52), a minimal reach for a 1QB starter slot we must fill."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:12518",
+    "strongestAlternativeWhy": "Tyler Warren is the clear TE1 of a thin tier (only 2 left) with just 10% survival, and TE is our other completely empty 'high need' starting slot.",
+    "strongestCounterargument": "In a 1QB league, the gain column for Burrow (440.3) is inflated purely because it's our first QB, and Jayden Daniels/Jalen Hurts both have much higher survival odds (61.7% and 77.7%) to pick 69, so we could wait on QB and grab Warren now instead.",
+    "whyRecommendationStillWins": "Burrow's own survival is only 7.3% versus Hurts/Daniels's 60-78%, meaning if we wait we likely still get a QB from this same tier at pick 69 anyway (92.7% chance at least one of Hurts/Daniels/Burrow remains) - but Burrow specifically will be gone, and the TE tier (Warren/Kraft) also has 76.3% combined survival, so both needs are addressable; taking the scarcest asset (Burrow, 7.3% survival) now and TE next is better sequencing than the reverse, since Hurts/Daniels are more likely to still be there than Warren/Kraft's steep dropoff after Kraft.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 69 (16 selections later), target the TE tier - likely Tucker Kraft (72.3% survival) or Tyler Warren if he somehow lasts, or pivot to best remaining WR (Mike Evans, DJ Moore) if TE tier is gone, since our roster will then have QB, RB, WR locked and TE as the last high-need starter.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 1,
+        "why": "Picks at 53 and 60, needs QB high and WR/RB medium; could take a QB or WR we're eyeing before our next turn."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks at 58, needs QB/RB/TE high; hero_rb build may grab Rhamondre Stevenson or a QB from our target tier."
+      },
+      {
+        "rosterId": 7,
+        "why": "Already has Lamar Jackson at QB but needs WR high; unlikely to compete for Burrow but could take Warren-tier TE alternatives."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:6770",
+    "alternatives": [
+      {
+        "playerId": "jfp:12518",
+        "reason": "Tyler Warren is the top TE in a thin tier with only 10% survival, filling our empty TE slot with the best remaining option if we pivot off QB."
+      },
+      {
+        "playerId": "jfp:9997",
+        "reason": "Zay Flowers is First Seed's top-ranked player left and adds a strong WR3/flex if we decide WR depth matters more than QB timing."
+      }
+    ],
+    "confidence": 68,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build filling our empty QB slot with the clear QB1 of this tier (Joe Burrow, proj 300.3) while our next pick at 69 (16 selections away) is used to grab a TE from the Warren/Kraft tier or best remaining WR/RB depth.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "QB is our only truly empty starting slot with 'high' need, and we currently have zero quarterbacks rostered."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "QB tier 3 (Hurts, Daniels, Burrow) has only 3 players left with a steep 12.9-point gapAfter; Burrow's own survival to pick 69 is just 7.3%, meaning he is very unlikely to return."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "After this QB tier, the next tier (Dart, Herbert, etc.) projects roughly 20+ points lower (283.8 vs 300.3), a real cliff before it flattens into replaceable QBs."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "By contrast, Tyler Warren's TE tier still shows 76.3% chance at least one of Warren/Kraft survives, and Zay Flowers-tier WRs like Mike Evans (38% survival) or Terry McLaurin (15.7%) give us a fallback WR at 69, though thin."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Taking Burrow now means passing on Zay Flowers (proj 144, WR8 tier) but Flowers only has 4% survival to pick 69 anyway, so the choice is really QB-now vs WR-now, not QB-now vs WR-later."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed ranks Burrow 56th overall, only 4 spots below the best available (Flowers at 52), a minimal reach for a 1QB starter slot we must fill."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:12518",
+    "strongestAlternativeWhy": "Tyler Warren is the clear TE1 of a thin tier (only 2 left) with just 10% survival, and TE is our other completely empty 'high need' starting slot.",
+    "strongestCounterargument": "In a 1QB league, the gain column for Burrow (440.3) is inflated purely because it's our first QB, and Jayden Daniels/Jalen Hurts both have much higher survival odds (61.7% and 77.7%) to pick 69, so we could wait on QB and grab Warren now instead.",
+    "whyRecommendationStillWins": "Burrow's own survival is only 7.3% versus Hurts/Daniels's 60-78%, meaning if we wait we likely still get a QB from this same tier at pick 69 anyway (92.7% chance at least one of Hurts/Daniels/Burrow remains) - but Burrow specifically will be gone, and the TE tier (Warren/Kraft) also has 76.3% combined survival, so both needs are addressable; taking the scarcest asset (Burrow, 7.3% survival) now and TE next is better sequencing than the reverse, since Hurts/Daniels are more likely to still be there than Warren/Kraft's steep dropoff after Kraft.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 69 (16 selections later), target the TE tier - likely Tucker Kraft (72.3% survival) or Tyler Warren if he somehow lasts, or pivot to best remaining WR (Mike Evans, DJ Moore) if TE tier is gone, since our roster will then have QB, RB, WR locked and TE as the last high-need starter.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 1,
+        "why": "Picks at 53 and 60, needs QB high and WR/RB medium; could take a QB or WR we're eyeing before our next turn."
+      },
+      {
+        "rosterId": 3,
+        "why": "Picks at 58, needs QB/RB/TE high; hero_rb build may grab Rhamondre Stevenson or a QB from our target tier."
+      },
+      {
+        "rosterId": 7,
+        "why": "Already has Lamar Jackson at QB but needs WR high; unlikely to compete for Burrow but could take Warren-tier TE alternatives."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:6770",
+        "alternatives": [
+          {
+            "playerId": "jfp:12518",
+            "reason": "Tyler Warren is the top TE in a thin tier with only 10% survival, filling our empty TE slot with the best remaining option if we pivot off QB."
+          },
+          {
+            "playerId": "jfp:9997",
+            "reason": "Zay Flowers is First Seed's top-ranked player left and adds a strong WR3/flex if we decide WR depth matters more than QB timing."
+          }
+        ],
+        "confidence": 68,
+        "urgency": "must_take_now",
+        "strategy": "Balanced build filling our empty QB slot with the clear QB1 of this tier (Joe Burrow, proj 300.3) while our next pick at 69 (16 selections away) is used to grab a TE from the Warren/Kraft tier or best remaining WR/RB depth.",
+        "reasons": [
+          {
+            "code": "starter_need",
+            "detail": "QB is our only truly empty starting slot with 'high' need, and we currently have zero quarterbacks rostered."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "QB tier 3 (Hurts, Daniels, Burrow) has only 3 players left with a steep 12.9-point gapAfter; Burrow's own survival to pick 69 is just 7.3%, meaning he is very unlikely to return."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "After this QB tier, the next tier (Dart, Herbert, etc.) projects roughly 20+ points lower (283.8 vs 300.3), a real cliff before it flattens into replaceable QBs."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "By contrast, Tyler Warren's TE tier still shows 76.3% chance at least one of Warren/Kraft survives, and Zay Flowers-tier WRs like Mike Evans (38% survival) or Terry McLaurin (15.7%) give us a fallback WR at 69, though thin."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Taking Burrow now means passing on Zay Flowers (proj 144, WR8 tier) but Flowers only has 4% survival to pick 69 anyway, so the choice is really QB-now vs WR-now, not QB-now vs WR-later."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "First Seed ranks Burrow 56th overall, only 4 spots below the best available (Flowers at 52), a minimal reach for a 1QB starter slot we must fill."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:12518",
+        "strongestAlternativeWhy": "Tyler Warren is the clear TE1 of a thin tier (only 2 left) with just 10% survival, and TE is our other completely empty 'high need' starting slot.",
+        "strongestCounterargument": "In a 1QB league, the gain column for Burrow (440.3) is inflated purely because it's our first QB, and Jayden Daniels/Jalen Hurts both have much higher survival odds (61.7% and 77.7%) to pick 69, so we could wait on QB and grab Warren now instead.",
+        "whyRecommendationStillWins": "Burrow's own survival is only 7.3% versus Hurts/Daniels's 60-78%, meaning if we wait we likely still get a QB from this same tier at pick 69 anyway (92.7% chance at least one of Hurts/Daniels/Burrow remains) - but Burrow specifically will be gone, and the TE tier (Warren/Kraft) also has 76.3% combined survival, so both needs are addressable; taking the scarcest asset (Burrow, 7.3% survival) now and TE next is better sequencing than the reverse, since Hurts/Daniels are more likely to still be there than Warren/Kraft's steep dropoff after Kraft.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At pick 69 (16 selections later), target the TE tier - likely Tucker Kraft (72.3% survival) or Tyler Warren if he somehow lasts, or pivot to best remaining WR (Mike Evans, DJ Moore) if TE tier is gone, since our roster will then have QB, RB, WR locked and TE as the last high-need starter.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 1,
+            "why": "Picks at 53 and 60, needs QB high and WR/RB medium; could take a QB or WR we're eyeing before our next turn."
+          },
+          {
+            "rosterId": 3,
+            "why": "Picks at 58, needs QB/RB/TE high; hero_rb build may grab Rhamondre Stevenson or a QB from our target tier."
+          },
+          {
+            "rosterId": 7,
+            "why": "Already has Lamar Jackson at QB but needs WR high; unlikely to compete for Burrow but could take Warren-tier TE alternatives."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 16552,
+        "outputTokens": 1821
+      },
+      "latencyMs": 21757,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-sonnet-5",
+  "usage": {
+    "inputTokens": 16552,
+    "outputTokens": 1821
+  },
+  "latencyMs": 21757,
+  "error": null,
+  "cachedAt": "2026-08-27T19:50:38.616Z",
+  "key": "9af83436815a4eb3b0a60867c42b6263",
+  "label": "1398448522730221568 p52 claude-sonnet-5/playbook-v1 blind"
+}

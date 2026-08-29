@@ -1,0 +1,254 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 8,
+      "currentOverallPick": 9,
+      "currentRound": 1,
+      "boardFingerprint": "8-d2302e25",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:9493",
+      "reasoning": "tier_cliff: Puka Nacua is the sole remaining WR tier 1 (207.8 proj) with a 14.8-point gap to the next tier; JSN at 193.0 is the only other WR above 180 and CeeDee Lamb, the WR4, projects just 166.2. positional_scarcity: 7 of the last 8 picks were RBs (2.73x normal) which has left the RB board deep - 12 players remain in RB tier 9 - while WR has been almost untouched at the top, so the WR cliff is the one that actually bites. survives_to_next_turn: Jeanty (82.3%) and Barkley (90.7%) both survive to pick 12 far more often than Nacua (72.7%), and at least one of that RB pair remains in 99.7% of runs, so the RB half of the turn is nearly free. first_seed_prior: Nacua is First Seed's best available at rank 9 with fsGap 0, so this pick reaches past nobody and needs no justification against the board. opportunity_cost: Josh Allen's 484 gain is the 1QB artefact: Lamar (317.1), Maye (309.6), Hurts (309.6) and Daniels (306.5) are all still on the board and Hurts sits at fsRank 76, so the QB slot can be filled 60+ picks later for ~35 points of loss. opponent_demand: Roster 10 picks twice back-to-back at 10 and 11 with WR:critical and RB:critical and an empty roster, making him the single most likely team to take Nacua before we pick again.",
+      "reasonCodes": [
+        "tier_cliff",
+        "positional_scarcity",
+        "survives_to_next_turn",
+        "first_seed_prior",
+        "opportunity_cost",
+        "opponent_demand"
+      ],
+      "confidence": 0.72
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:12527",
+        "reasoning": "Ashton Jeanty is the top remaining RB in tier 6 (220.8 proj, best RB projection on the board) and standard scoring plus 7 RBs already gone makes the position the scarcest resource.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:9488",
+        "reasoning": "Jaxon Smith-Njigba is the only other WR in the top two tiers (193.0 proj) and would anchor the same WR-first shape if Nacua were gone.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Empty roster picking twice at 10 and 11 with WR:critical and RB:critical - he is the only team between us and pick 12 and can use Nacua, Jeanty and Barkley equally, which is exactly why Nacua's survival is only 72.7%.",
+    "confidence": 0.72,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Hero-WR opening at the 9/12 turn: take the last WR tier-1 player now, then use pick 12 on the best surviving RB (Jeanty or Barkley) so we leave the turn with an elite WR1 and a top-8 RB1.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternative": {
+      "playerId": "jfp:12527",
+      "why": "Jeanty is the highest projected non-QB on the board at 220.8 in a standard-scoring league where 8 of the top 9 backs are already rostered."
+    },
+    "strongestCounterargument": "Nacua survives to our pick at 12 in 72.7% of runs and he and Jeanty are jointly available 58.3% of the time, so the \"safe\" line is to take Jeanty now (only 82.3% survival) and still land Nacua more often than not.",
+    "whyRecommendationStillWins": "The comparison that matters is the conditional: if we take Nacua now, Jeanty still survives in 87.8% of runs and at least one of Jeanty/Barkley survives in 99.7%, whereas if we take Jeanty now Nacua only comes back 72.7% of the time - and the RB fallback (Kyren, Hampton, Chase Brown, all ~186-190 proj) is far closer to Jeanty than the WR fallback (Lamb 166.2) is to Nacua.",
+    "expectedNextPickPlan": "At pick 12 take Ashton Jeanty (82.3% survival) or Saquon Barkley (90.7%) as RB1 - one of the two remains in 99.7% of runs - with Kenneth Walker (95.7%) and Josh Jacobs (95.0%) as backups; Brock Bowers (98.3%), Trey McBride (96.3%) and the entire QB tier 3 (Maye, Hurts, Daniels, Burrow, all 100%) are safe to defer to rounds 3-6.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Empty roster picking twice at 10 and 11 with WR:critical and RB:critical - he is the only team between us and pick 12 and can use Nacua, Jeanty and Barkley equally, which is exactly why Nacua's survival is only 72.7%."
+      }
+    ]
+  },
+  "response": {
+    "playerId": "x",
+    "recommendedPlayerId": "jfp:9493",
+    "alternatives": [
+      {
+        "playerId": "jfp:12527",
+        "reason": "Ashton Jeanty is the top remaining RB in tier 6 (220.8 proj, best RB projection on the board) and standard scoring plus 7 RBs already gone makes the position the scarcest resource."
+      },
+      {
+        "playerId": "jfp:9488",
+        "reason": "Jaxon Smith-Njigba is the only other WR in the top two tiers (193.0 proj) and would anchor the same WR-first shape if Nacua were gone."
+      }
+    ],
+    "confidence": 72,
+    "decision": "DRAFT_NOW",
+    "strategy": "Hero-WR opening at the 9/12 turn: take the last WR tier-1 player now, then use pick 12 on the best surviving RB (Jeanty or Barkley) so we leave the turn with an elite WR1 and a top-8 RB1.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Puka Nacua is the sole remaining WR tier 1 (207.8 proj) with a 14.8-point gap to the next tier; JSN at 193.0 is the only other WR above 180 and CeeDee Lamb, the WR4, projects just 166.2."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "7 of the last 8 picks were RBs (2.73x normal) which has left the RB board deep - 12 players remain in RB tier 9 - while WR has been almost untouched at the top, so the WR cliff is the one that actually bites."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Jeanty (82.3%) and Barkley (90.7%) both survive to pick 12 far more often than Nacua (72.7%), and at least one of that RB pair remains in 99.7% of runs, so the RB half of the turn is nearly free."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "Nacua is First Seed's best available at rank 9 with fsGap 0, so this pick reaches past nobody and needs no justification against the board."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Josh Allen's 484 gain is the 1QB artefact: Lamar (317.1), Maye (309.6), Hurts (309.6) and Daniels (306.5) are all still on the board and Hurts sits at fsRank 76, so the QB slot can be filled 60+ picks later for ~35 points of loss."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Roster 10 picks twice back-to-back at 10 and 11 with WR:critical and RB:critical and an empty roster, making him the single most likely team to take Nacua before we pick again."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:12527",
+      "why": "Jeanty is the highest projected non-QB on the board at 220.8 in a standard-scoring league where 8 of the top 9 backs are already rostered."
+    },
+    "strongestCounterargument": "Nacua survives to our pick at 12 in 72.7% of runs and he and Jeanty are jointly available 58.3% of the time, so the \"safe\" line is to take Jeanty now (only 82.3% survival) and still land Nacua more often than not.",
+    "whyRecommendationStillWins": "The comparison that matters is the conditional: if we take Nacua now, Jeanty still survives in 87.8% of runs and at least one of Jeanty/Barkley survives in 99.7%, whereas if we take Jeanty now Nacua only comes back 72.7% of the time - and the RB fallback (Kyren, Hampton, Chase Brown, all ~186-190 proj) is far closer to Jeanty than the WR fallback (Lamb 166.2) is to Nacua.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 12 take Ashton Jeanty (82.3% survival) or Saquon Barkley (90.7%) as RB1 - one of the two remains in 99.7% of runs - with Kenneth Walker (95.7%) and Josh Jacobs (95.0%) as backups; Brock Bowers (98.3%), Trey McBride (96.3%) and the entire QB tier 3 (Maye, Hurts, Daniels, Burrow, all 100%) are safe to defer to rounds 3-6.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Empty roster picking twice at 10 and 11 with WR:critical and RB:critical - he is the only team between us and pick 12 and can use Nacua, Jeanty and Barkley equally, which is exactly why Nacua's survival is only 72.7%."
+      }
+    ]
+  },
+  "rawResponse": {
+    "playerId": "x",
+    "recommendedPlayerId": "jfp:9493",
+    "alternatives": [
+      {
+        "playerId": "jfp:12527",
+        "reason": "Ashton Jeanty is the top remaining RB in tier 6 (220.8 proj, best RB projection on the board) and standard scoring plus 7 RBs already gone makes the position the scarcest resource."
+      },
+      {
+        "playerId": "jfp:9488",
+        "reason": "Jaxon Smith-Njigba is the only other WR in the top two tiers (193.0 proj) and would anchor the same WR-first shape if Nacua were gone."
+      }
+    ],
+    "confidence": 72,
+    "decision": "DRAFT_NOW",
+    "strategy": "Hero-WR opening at the 9/12 turn: take the last WR tier-1 player now, then use pick 12 on the best surviving RB (Jeanty or Barkley) so we leave the turn with an elite WR1 and a top-8 RB1.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Puka Nacua is the sole remaining WR tier 1 (207.8 proj) with a 14.8-point gap to the next tier; JSN at 193.0 is the only other WR above 180 and CeeDee Lamb, the WR4, projects just 166.2."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "7 of the last 8 picks were RBs (2.73x normal) which has left the RB board deep - 12 players remain in RB tier 9 - while WR has been almost untouched at the top, so the WR cliff is the one that actually bites."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Jeanty (82.3%) and Barkley (90.7%) both survive to pick 12 far more often than Nacua (72.7%), and at least one of that RB pair remains in 99.7% of runs, so the RB half of the turn is nearly free."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "Nacua is First Seed's best available at rank 9 with fsGap 0, so this pick reaches past nobody and needs no justification against the board."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Josh Allen's 484 gain is the 1QB artefact: Lamar (317.1), Maye (309.6), Hurts (309.6) and Daniels (306.5) are all still on the board and Hurts sits at fsRank 76, so the QB slot can be filled 60+ picks later for ~35 points of loss."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Roster 10 picks twice back-to-back at 10 and 11 with WR:critical and RB:critical and an empty roster, making him the single most likely team to take Nacua before we pick again."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:12527",
+      "why": "Jeanty is the highest projected non-QB on the board at 220.8 in a standard-scoring league where 8 of the top 9 backs are already rostered."
+    },
+    "strongestCounterargument": "Nacua survives to our pick at 12 in 72.7% of runs and he and Jeanty are jointly available 58.3% of the time, so the \"safe\" line is to take Jeanty now (only 82.3% survival) and still land Nacua more often than not.",
+    "whyRecommendationStillWins": "The comparison that matters is the conditional: if we take Nacua now, Jeanty still survives in 87.8% of runs and at least one of Jeanty/Barkley survives in 99.7%, whereas if we take Jeanty now Nacua only comes back 72.7% of the time - and the RB fallback (Kyren, Hampton, Chase Brown, all ~186-190 proj) is far closer to Jeanty than the WR fallback (Lamb 166.2) is to Nacua.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 12 take Ashton Jeanty (82.3% survival) or Saquon Barkley (90.7%) as RB1 - one of the two remains in 99.7% of runs - with Kenneth Walker (95.7%) and Josh Jacobs (95.0%) as backups; Brock Bowers (98.3%), Trey McBride (96.3%) and the entire QB tier 3 (Maye, Hurts, Daniels, Burrow, all 100%) are safe to defer to rounds 3-6.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Empty roster picking twice at 10 and 11 with WR:critical and RB:critical - he is the only team between us and pick 12 and can use Nacua, Jeanty and Barkley equally, which is exactly why Nacua's survival is only 72.7%."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "playerId": "x",
+        "recommendedPlayerId": "jfp:9493",
+        "alternatives": [
+          {
+            "playerId": "jfp:12527",
+            "reason": "Ashton Jeanty is the top remaining RB in tier 6 (220.8 proj, best RB projection on the board) and standard scoring plus 7 RBs already gone makes the position the scarcest resource."
+          },
+          {
+            "playerId": "jfp:9488",
+            "reason": "Jaxon Smith-Njigba is the only other WR in the top two tiers (193.0 proj) and would anchor the same WR-first shape if Nacua were gone."
+          }
+        ],
+        "confidence": 72,
+        "decision": "DRAFT_NOW",
+        "strategy": "Hero-WR opening at the 9/12 turn: take the last WR tier-1 player now, then use pick 12 on the best surviving RB (Jeanty or Barkley) so we leave the turn with an elite WR1 and a top-8 RB1.",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "Puka Nacua is the sole remaining WR tier 1 (207.8 proj) with a 14.8-point gap to the next tier; JSN at 193.0 is the only other WR above 180 and CeeDee Lamb, the WR4, projects just 166.2."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "7 of the last 8 picks were RBs (2.73x normal) which has left the RB board deep - 12 players remain in RB tier 9 - while WR has been almost untouched at the top, so the WR cliff is the one that actually bites."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Jeanty (82.3%) and Barkley (90.7%) both survive to pick 12 far more often than Nacua (72.7%), and at least one of that RB pair remains in 99.7% of runs, so the RB half of the turn is nearly free."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "Nacua is First Seed's best available at rank 9 with fsGap 0, so this pick reaches past nobody and needs no justification against the board."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Josh Allen's 484 gain is the 1QB artefact: Lamar (317.1), Maye (309.6), Hurts (309.6) and Daniels (306.5) are all still on the board and Hurts sits at fsRank 76, so the QB slot can be filled 60+ picks later for ~35 points of loss."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Roster 10 picks twice back-to-back at 10 and 11 with WR:critical and RB:critical and an empty roster, making him the single most likely team to take Nacua before we pick again."
+          }
+        ],
+        "strongestAlternative": {
+          "playerId": "jfp:12527",
+          "why": "Jeanty is the highest projected non-QB on the board at 220.8 in a standard-scoring league where 8 of the top 9 backs are already rostered."
+        },
+        "strongestCounterargument": "Nacua survives to our pick at 12 in 72.7% of runs and he and Jeanty are jointly available 58.3% of the time, so the \"safe\" line is to take Jeanty now (only 82.3% survival) and still land Nacua more often than not.",
+        "whyRecommendationStillWins": "The comparison that matters is the conditional: if we take Nacua now, Jeanty still survives in 87.8% of runs and at least one of Jeanty/Barkley survives in 99.7%, whereas if we take Jeanty now Nacua only comes back 72.7% of the time - and the RB fallback (Kyren, Hampton, Chase Brown, all ~186-190 proj) is far closer to Jeanty than the WR fallback (Lamb 166.2) is to Nacua.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At pick 12 take Ashton Jeanty (82.3% survival) or Saquon Barkley (90.7%) as RB1 - one of the two remains in 99.7% of runs - with Kenneth Walker (95.7%) and Josh Jacobs (95.0%) as backups; Brock Bowers (98.3%), Trey McBride (96.3%) and the entire QB tier 3 (Maye, Hurts, Daniels, Burrow, all 100%) are safe to defer to rounds 3-6.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Empty roster picking twice at 10 and 11 with WR:critical and RB:critical - he is the only team between us and pick 12 and can use Nacua, Jeanty and Barkley equally, which is exactly why Nacua's survival is only 72.7%."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 16728,
+        "outputTokens": 1764
+      },
+      "latencyMs": 25282,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 16728,
+    "outputTokens": 1764
+  },
+  "latencyMs": 25282,
+  "error": null,
+  "cachedAt": "2026-08-27T15:34:26.510Z",
+  "key": "32fb5e80ab2a29f6c575639b6fad708b",
+  "label": "1398448522730221568 p9 claude-opus-5/playbook-v1"
+}

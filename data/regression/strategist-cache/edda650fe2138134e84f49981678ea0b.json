@@ -1,0 +1,423 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 111,
+      "currentOverallPick": 112,
+      "currentRound": 12,
+      "boardFingerprint": "33-0e8f5856",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8408",
+      "reasoning": "first_seed_prior: Jordan Mason is First Seed's best available player at fsRank 110 with fsGap 0 - this follows the board exactly rather than reaching. survives_to_next_turn: Mason's survival is 1.3% across the 16 intervening selections, while every WR alternative comes back far more often (Pittman 17.3%, Johnston 38.3%, Downs 40.3%, Diggs 55.7%, Reed 67.7%). tier_cliff: RB tier 13 has just 3 members left (Mason 113.5 proj, Brooks, Pacheco) with a 7.3-point gap beneath it; WR tier 12 has 11 members left with only a 2.7-point step down. opponent_demand: Teams 3, 5 and 6 all carry RB:medium needs and pick at 115, 116, 118, 123, 125 and 126 - precisely the buyers that make Mason's 1.3% survival credible. opportunity_cost: Our starting nine are set (Hurts/Barkley/Javonte/Nacua/Pickens/Warren/Judkins/Flowers) and with Javonte, Judkins and Conner all in committees, a 113.5-point back is better FLEX insurance than a fifth WR behind Marvin Harrison. positional_scarcity: TE is blocked and a third QB is unusable, so RB and WR are the only live positions and only two skill picks remain before K and DEF must be taken at 132 and 149.",
+      "reasonCodes": [
+        "first_seed_prior",
+        "survives_to_next_turn",
+        "tier_cliff",
+        "opponent_demand",
+        "opportunity_cost",
+        "positional_scarcity"
+      ],
+      "confidence": 0.62
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9754",
+        "reasoning": "Quentin Johnston is the last man in WR tier 11 (113.9 proj, 2.7-point gap to tier 12) and would be our best bench WR/FLEX insurance, but at 38.3% survival he has a real chance of coming back to us at 129.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:6819",
+        "reasoning": "Michael Pittman has the highest simulated final-roster value among the pass catchers we could realistically get (1357.5) with only 17.3% survival, making him the next best body if Mason is gone.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 3: RB:medium behind Gibbs, Dobbins and Allgeier; picks at 118 and 123 and is the likeliest taker of Mason. Roster 5: Flagged reachesAt RB with only Breece Hall plus committee backs; picks at 116 and 125. Roster 6: RB:medium with just McCaffrey and Pollard on a six-WR roster; picks at 115 and 126. Roster 2: WR:medium, picks at 119 and 122 - the main threat to Pittman and Johnston before our 129. Roster 4: WR:medium with only Tyson and Metcalf; picks at 117 and 124 and will raid the same WR tier 12. Roster 8: WR:medium and picks at 113 immediately after us, first crack at anything we pass on.",
+    "confidence": 0.62,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; we spend our last two skill selections (112, 129) on the scarcest remaining startable bodies, taking the tier-13 RB now because he cannot survive 16 selections while WR tier-12 depth demonstrably can, then reserving 132 and 149 for the mandatory K and DEF.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternative": {
+      "playerId": "jfp:9754",
+      "why": "Quentin Johnston is the highest-projected startable skill player on the board (113.9) and the sole remaining member of WR tier 11, the only tier flagged atRisk=1."
+    },
+    "strongestCounterargument": "Juancho's own simulation gives Johnston (1358.8), Pittman (1357.5) and Reed (1358) higher final-roster values than Mason (1355.8), and WR tier 11 is the only tier on the board flagged atRisk=1 - so on raw finished-team value we are conceding about 3 points to take the lower-ceiling back.",
+    "whyRecommendationStillWins": "Those ~3 plan points sit inside the noise of a greedy simulation and are outweighed by availability: at 38.3% (Johnston) and 17.3% (Pittman) versus Mason's 1.3%, taking Mason now and a WR at 129 captures both in a large share of runs, whereas taking Johnston now loses Mason in 98.7% of runs and leaves RB depth to tier 15/16 leftovers like Tyjae Spears (82.7% survival).",
+    "expectedNextPickPlan": "At 129 take the best surviving WR - Johnston (38.3%), Downs (40.3%), Diggs (55.7%) or Reed (67.7%), at least one of whom remains in essentially every run - then use 132 and 149 on the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 3,
+        "why": "RB:medium behind Gibbs, Dobbins and Allgeier; picks at 118 and 123 and is the likeliest taker of Mason."
+      },
+      {
+        "rosterId": 5,
+        "why": "Flagged reachesAt RB with only Breece Hall plus committee backs; picks at 116 and 125."
+      },
+      {
+        "rosterId": 6,
+        "why": "RB:medium with just McCaffrey and Pollard on a six-WR roster; picks at 115 and 126."
+      },
+      {
+        "rosterId": 2,
+        "why": "WR:medium, picks at 119 and 122 - the main threat to Pittman and Johnston before our 129."
+      },
+      {
+        "rosterId": 4,
+        "why": "WR:medium with only Tyson and Metcalf; picks at 117 and 124 and will raid the same WR tier 12."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:medium and picks at 113 immediately after us, first crack at anything we pass on."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8408",
+    "decision": "DRAFT_NOW",
+    "confidence": 62,
+    "alternatives": [
+      {
+        "playerId": "jfp:9754",
+        "reason": "Quentin Johnston is the last man in WR tier 11 (113.9 proj, 2.7-point gap to tier 12) and would be our best bench WR/FLEX insurance, but at 38.3% survival he has a real chance of coming back to us at 129."
+      },
+      {
+        "playerId": "jfp:6819",
+        "reason": "Michael Pittman has the highest simulated final-roster value among the pass catchers we could realistically get (1357.5) with only 17.3% survival, making him the next best body if Mason is gone."
+      }
+    ],
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; we spend our last two skill selections (112, 129) on the scarcest remaining startable bodies, taking the tier-13 RB now because he cannot survive 16 selections while WR tier-12 depth demonstrably can, then reserving 132 and 149 for the mandatory K and DEF.",
+    "reasons": [
+      {
+        "code": "first_seed_prior",
+        "detail": "Jordan Mason is First Seed's best available player at fsRank 110 with fsGap 0 - this follows the board exactly rather than reaching."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Mason's survival is 1.3% across the 16 intervening selections, while every WR alternative comes back far more often (Pittman 17.3%, Johnston 38.3%, Downs 40.3%, Diggs 55.7%, Reed 67.7%)."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 13 has just 3 members left (Mason 113.5 proj, Brooks, Pacheco) with a 7.3-point gap beneath it; WR tier 12 has 11 members left with only a 2.7-point step down."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Teams 3, 5 and 6 all carry RB:medium needs and pick at 115, 116, 118, 123, 125 and 126 - precisely the buyers that make Mason's 1.3% survival credible."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Our starting nine are set (Hurts/Barkley/Javonte/Nacua/Pickens/Warren/Judkins/Flowers) and with Javonte, Judkins and Conner all in committees, a 113.5-point back is better FLEX insurance than a fifth WR behind Marvin Harrison."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "TE is blocked and a third QB is unusable, so RB and WR are the only live positions and only two skill picks remain before K and DEF must be taken at 132 and 149."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:9754",
+      "why": "Quentin Johnston is the highest-projected startable skill player on the board (113.9) and the sole remaining member of WR tier 11, the only tier flagged atRisk=1."
+    },
+    "strongestCounterargument": "Juancho's own simulation gives Johnston (1358.8), Pittman (1357.5) and Reed (1358) higher final-roster values than Mason (1355.8), and WR tier 11 is the only tier on the board flagged atRisk=1 - so on raw finished-team value we are conceding about 3 points to take the lower-ceiling back.",
+    "whyRecommendationStillWins": "Those ~3 plan points sit inside the noise of a greedy simulation and are outweighed by availability: at 38.3% (Johnston) and 17.3% (Pittman) versus Mason's 1.3%, taking Mason now and a WR at 129 captures both in a large share of runs, whereas taking Johnston now loses Mason in 98.7% of runs and leaves RB depth to tier 15/16 leftovers like Tyjae Spears (82.7% survival).",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 129 take the best surviving WR - Johnston (38.3%), Downs (40.3%), Diggs (55.7%) or Reed (67.7%), at least one of whom remains in essentially every run - then use 132 and 149 on the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 3,
+        "why": "RB:medium behind Gibbs, Dobbins and Allgeier; picks at 118 and 123 and is the likeliest taker of Mason."
+      },
+      {
+        "rosterId": 5,
+        "why": "Flagged reachesAt RB with only Breece Hall plus committee backs; picks at 116 and 125."
+      },
+      {
+        "rosterId": 6,
+        "why": "RB:medium with just McCaffrey and Pollard on a six-WR roster; picks at 115 and 126."
+      },
+      {
+        "rosterId": 2,
+        "why": "WR:medium, picks at 119 and 122 - the main threat to Pittman and Johnston before our 129."
+      },
+      {
+        "rosterId": 4,
+        "why": "WR:medium with only Tyson and Metcalf; picks at 117 and 124 and will raid the same WR tier 12."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:medium and picks at 113 immediately after us, first crack at anything we pass on."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8408",
+    "decision": "DRAFT_NOW",
+    "confidence": 62,
+    "alternatives": [
+      {
+        "playerId": "jfp:9754",
+        "reason": "Quentin Johnston is the last man in WR tier 11 (113.9 proj, 2.7-point gap to tier 12) and would be our best bench WR/FLEX insurance, but at 38.3% survival he has a real chance of coming back to us at 129."
+      },
+      {
+        "playerId": "jfp:6819",
+        "reason": "Michael Pittman has the highest simulated final-roster value among the pass catchers we could realistically get (1357.5) with only 17.3% survival, making him the next best body if Mason is gone."
+      }
+    ],
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; we spend our last two skill selections (112, 129) on the scarcest remaining startable bodies, taking the tier-13 RB now because he cannot survive 16 selections while WR tier-12 depth demonstrably can, then reserving 132 and 149 for the mandatory K and DEF.",
+    "reasons": [
+      {
+        "code": "first_seed_prior",
+        "detail": "Jordan Mason is First Seed's best available player at fsRank 110 with fsGap 0 - this follows the board exactly rather than reaching."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Mason's survival is 1.3% across the 16 intervening selections, while every WR alternative comes back far more often (Pittman 17.3%, Johnston 38.3%, Downs 40.3%, Diggs 55.7%, Reed 67.7%)."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 13 has just 3 members left (Mason 113.5 proj, Brooks, Pacheco) with a 7.3-point gap beneath it; WR tier 12 has 11 members left with only a 2.7-point step down."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Teams 3, 5 and 6 all carry RB:medium needs and pick at 115, 116, 118, 123, 125 and 126 - precisely the buyers that make Mason's 1.3% survival credible."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Our starting nine are set (Hurts/Barkley/Javonte/Nacua/Pickens/Warren/Judkins/Flowers) and with Javonte, Judkins and Conner all in committees, a 113.5-point back is better FLEX insurance than a fifth WR behind Marvin Harrison."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "TE is blocked and a third QB is unusable, so RB and WR are the only live positions and only two skill picks remain before K and DEF must be taken at 132 and 149."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:9754",
+      "why": "Quentin Johnston is the highest-projected startable skill player on the board (113.9) and the sole remaining member of WR tier 11, the only tier flagged atRisk=1."
+    },
+    "strongestCounterargument": "Juancho's own simulation gives Johnston (1358.8), Pittman (1357.5) and Reed (1358) higher final-roster values than Mason (1355.8), and WR tier 11 is the only tier on the board flagged atRisk=1 - so on raw finished-team value we are conceding about 3 points to take the lower-ceiling back.",
+    "whyRecommendationStillWins": "Those ~3 plan points sit inside the noise of a greedy simulation and are outweighed by availability: at 38.3% (Johnston) and 17.3% (Pittman) versus Mason's 1.3%, taking Mason now and a WR at 129 captures both in a large share of runs, whereas taking Johnston now loses Mason in 98.7% of runs and leaves RB depth to tier 15/16 leftovers like Tyjae Spears (82.7% survival).",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 129 take the best surviving WR - Johnston (38.3%), Downs (40.3%), Diggs (55.7%) or Reed (67.7%), at least one of whom remains in essentially every run - then use 132 and 149 on the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 3,
+        "why": "RB:medium behind Gibbs, Dobbins and Allgeier; picks at 118 and 123 and is the likeliest taker of Mason."
+      },
+      {
+        "rosterId": 5,
+        "why": "Flagged reachesAt RB with only Breece Hall plus committee backs; picks at 116 and 125."
+      },
+      {
+        "rosterId": 6,
+        "why": "RB:medium with just McCaffrey and Pollard on a six-WR roster; picks at 115 and 126."
+      },
+      {
+        "rosterId": 2,
+        "why": "WR:medium, picks at 119 and 122 - the main threat to Pittman and Johnston before our 129."
+      },
+      {
+        "rosterId": 4,
+        "why": "WR:medium with only Tyson and Metcalf; picks at 117 and 124 and will raid the same WR tier 12."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:medium and picks at 113 immediately after us, first crack at anything we pass on."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [
+        {
+          "code": "missing_field",
+          "path": "decision",
+          "message": "Required field \"decision\" was not returned."
+        },
+        {
+          "code": "wrong_type",
+          "path": "strongestAlternative",
+          "message": "Expected an object with playerId and why."
+        }
+      ],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:9754",
+            "reason": "Quentin Johnston is the last man in WR tier 11 (113.9 proj, 2.7-point gap to tier 12) and would be our best bench WR/FLEX insurance, but at 38.3% survival he is the one candidate with a real chance of coming back to us at 129."
+          },
+          {
+            "playerId": "jfp:6819",
+            "reason": "Michael Pittman has the highest simulated final-roster value of the pass catchers (1357.5) and 17.3% survival, making him a reasonable substitute if Mason is somehow off the board."
+          }
+        ],
+        "confidence": 62,
+        "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; we spend our last two skill selections (112, 129) on the scarcest remaining startable bodies, taking the tier-13 RB now because he cannot survive 16 selections while WR tier-12 depth demonstrably can, then reserving 132/149 for the mandatory K and DEF.",
+        "reasons": [
+          {
+            "code": "first_seed_prior",
+            "detail": "Jordan Mason is First Seed's best available player at fsRank 110 with fsGap 0 - this is following the board exactly, not reaching."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Mason's survival is 1.3% over 16 intervening selections; every WR alternative (Pittman 17.3%, Johnston 38.3%, Downs 40.3%, Diggs 55.7%, Reed 67.7%) is far more likely to come back at 129."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "RB tier 13 has only 3 members left (Mason 113.5 proj, Brooks, Pacheco) with a 7.3-point gap to tier 15/14 beneath it, while WR tier 12 has 11 members left with a 2.7-point step down."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Teams 3, 5 and 6 all carry RB:medium needs and pick at 116, 118, 123, 125 and 126 - they are exactly the buyers who make Mason's 1.3% survival credible."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Our starting nine are set (Hurts/Barkley/Javonte/Nacua/Pickens/Warren/Judkins/Flowers); with Conner, Javonte and Judkins all in committee situations, a 113.5-point handcuff-quality RB4/5 is worth more as FLEX insurance than a fifth WR behind Harrison."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "TE is blocked (2 already, 1 slot) and a third QB is unusable, so RB and WR are the only live positions and only two skill picks remain before K/DEF must be taken at 132 and 149."
+          }
+        ],
+        "strongestAlternative": "{\"playerId\":\"jfp:9754\",\"why\":\"Quentin Johnston is the highest-projected player on the board among startable skill positions (113.9) and the sole remaining member of WR tier 11, the only tier flagged atRisk=1.",
+        "strongestCounterargument": "Juancho's own simulation ranks Michael Pittman (plan 1357.5), Quentin Johnston (1358.8) and Jayden Reed (1358) with HIGHER final-roster values than Mason (1355.8), and Johnston's tier is the only one flagged atRisk=1 - so on raw finished-team value we are giving up roughly 3 points to take the lower-ceiling back.",
+        "whyRecommendationStillWins": "Those 3 plan points are inside the noise of a greedy simulation, and they are more than paid for by the availability spread: Johnston survives 38.3% and Pittman 17.3% while Mason survives 1.3%, so taking Mason now and a WR at 129 captures both in a meaningful share of runs, whereas taking Johnston now loses Mason in 98.7% of them and leaves us picking from RB tier 15/16 scraps like Tyjae Spears (82.7% survival) as our only RB depth.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At 129 take the best surviving WR - Quentin Johnston (38.3%), Josh Downs (40.3%), Stefon Diggs (55.7%) or Jayden Reed (67.7%) are all live and at least one remains in essentially every run - then use 132 and 149 on the mandatory K and DEF.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 3,
+            "why": "RB:medium need with only Gibbs, Dobbins and Allgeier; picks at 118 and 123 and is the most likely taker of Mason."
+          },
+          {
+            "rosterId": 5,
+            "why": "Flagged reachesAt RB with Breece Hall plus committee backs; picks at 116 and 125."
+          },
+          {
+            "rosterId": 6,
+            "why": "RB:medium with only McCaffrey and Pollard on a 6-WR roster; picks at 115 and 126 and needs backfield bodies."
+          },
+          {
+            "rosterId": 2,
+            "why": "WR:medium and picks at 119 and 122, the main threat to Pittman and Johnston before our 129."
+          },
+          {
+            "rosterId": 4,
+            "why": "WR:medium with only Tyson and Metcalf; picks at 117 and 124 and will chase the same WR tier 12 we plan to raid."
+          },
+          {
+            "rosterId": 8,
+            "why": "WR:medium and picks at 113 immediately after us, first crack at anything we pass on."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 17036,
+        "outputTokens": 2008
+      },
+      "latencyMs": 38340,
+      "error": "The strategist's response did not satisfy the contract. decision: Required field \"decision\" was not returned. strongestAlternative: Expected an object with playerId and why."
+    },
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "decision": "DRAFT_NOW",
+        "confidence": 62,
+        "alternatives": [
+          {
+            "playerId": "jfp:9754",
+            "reason": "Quentin Johnston is the last man in WR tier 11 (113.9 proj, 2.7-point gap to tier 12) and would be our best bench WR/FLEX insurance, but at 38.3% survival he has a real chance of coming back to us at 129."
+          },
+          {
+            "playerId": "jfp:6819",
+            "reason": "Michael Pittman has the highest simulated final-roster value among the pass catchers we could realistically get (1357.5) with only 17.3% survival, making him the next best body if Mason is gone."
+          }
+        ],
+        "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; we spend our last two skill selections (112, 129) on the scarcest remaining startable bodies, taking the tier-13 RB now because he cannot survive 16 selections while WR tier-12 depth demonstrably can, then reserving 132 and 149 for the mandatory K and DEF.",
+        "reasons": [
+          {
+            "code": "first_seed_prior",
+            "detail": "Jordan Mason is First Seed's best available player at fsRank 110 with fsGap 0 - this follows the board exactly rather than reaching."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Mason's survival is 1.3% across the 16 intervening selections, while every WR alternative comes back far more often (Pittman 17.3%, Johnston 38.3%, Downs 40.3%, Diggs 55.7%, Reed 67.7%)."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "RB tier 13 has just 3 members left (Mason 113.5 proj, Brooks, Pacheco) with a 7.3-point gap beneath it; WR tier 12 has 11 members left with only a 2.7-point step down."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Teams 3, 5 and 6 all carry RB:medium needs and pick at 115, 116, 118, 123, 125 and 126 - precisely the buyers that make Mason's 1.3% survival credible."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Our starting nine are set (Hurts/Barkley/Javonte/Nacua/Pickens/Warren/Judkins/Flowers) and with Javonte, Judkins and Conner all in committees, a 113.5-point back is better FLEX insurance than a fifth WR behind Marvin Harrison."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "TE is blocked and a third QB is unusable, so RB and WR are the only live positions and only two skill picks remain before K and DEF must be taken at 132 and 149."
+          }
+        ],
+        "strongestAlternative": {
+          "playerId": "jfp:9754",
+          "why": "Quentin Johnston is the highest-projected startable skill player on the board (113.9) and the sole remaining member of WR tier 11, the only tier flagged atRisk=1."
+        },
+        "strongestCounterargument": "Juancho's own simulation gives Johnston (1358.8), Pittman (1357.5) and Reed (1358) higher final-roster values than Mason (1355.8), and WR tier 11 is the only tier on the board flagged atRisk=1 - so on raw finished-team value we are conceding about 3 points to take the lower-ceiling back.",
+        "whyRecommendationStillWins": "Those ~3 plan points sit inside the noise of a greedy simulation and are outweighed by availability: at 38.3% (Johnston) and 17.3% (Pittman) versus Mason's 1.3%, taking Mason now and a WR at 129 captures both in a large share of runs, whereas taking Johnston now loses Mason in 98.7% of runs and leaves RB depth to tier 15/16 leftovers like Tyjae Spears (82.7% survival).",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At 129 take the best surviving WR - Johnston (38.3%), Downs (40.3%), Diggs (55.7%) or Reed (67.7%), at least one of whom remains in essentially every run - then use 132 and 149 on the mandatory K and DEF.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 3,
+            "why": "RB:medium behind Gibbs, Dobbins and Allgeier; picks at 118 and 123 and is the likeliest taker of Mason."
+          },
+          {
+            "rosterId": 5,
+            "why": "Flagged reachesAt RB with only Breece Hall plus committee backs; picks at 116 and 125."
+          },
+          {
+            "rosterId": 6,
+            "why": "RB:medium with just McCaffrey and Pollard on a six-WR roster; picks at 115 and 126."
+          },
+          {
+            "rosterId": 2,
+            "why": "WR:medium, picks at 119 and 122 - the main threat to Pittman and Johnston before our 129."
+          },
+          {
+            "rosterId": 4,
+            "why": "WR:medium with only Tyson and Metcalf; picks at 117 and 124 and will raid the same WR tier 12."
+          },
+          {
+            "rosterId": 8,
+            "why": "WR:medium and picks at 113 immediately after us, first crack at anything we pass on."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 19276,
+        "outputTokens": 1964
+      },
+      "latencyMs": 25116,
+      "error": null
+    }
+  ],
+  "repairAttempted": true,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 36312,
+    "outputTokens": 3972
+  },
+  "latencyMs": 63456,
+  "error": null,
+  "cachedAt": "2026-08-27T15:37:17.015Z",
+  "key": "edda650fe2138134e84f49981678ea0b",
+  "label": "1398448522730221568 p112 claude-opus-5/playbook-v1"
+}

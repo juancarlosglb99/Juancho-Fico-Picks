@@ -1,0 +1,243 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 108,
+      "currentOverallPick": 109,
+      "currentRound": 11,
+      "boardFingerprint": "30-442e8b02",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8408",
+      "reasoning": "replacement_value: Mason projects 113.5 - the highest of any RB on the board with a defined role (Conner 40.4, Woody Marks 87.4, Tyrone Tracy 90.5) - and is the only back who would meaningfully start for us if Javonte Williams or Judkins misses time. first_seed_prior: fsGap is only 11 versus First Seed's best available James Conner (rank 99), and Conner carries an explicit ranking_projection_conflict warning (rank 99 vs 40.4 projected points), which makes the nominal reach smaller than it reads. tier_cliff: RB tier 13 has 3 players left (Mason, Brooks, Pacheco) with a 7.3-point gap to the next tier; TE and QB tier 4 both have 10 members left and 100% chance at least one survives, so neither is urgent and we are blocked from TE anyway. opportunity_cost: Juancho's own simulation puts Mason at 1361.9 final-roster points, +3.9 dPlan over Conner's 1358 - the negative dDec is purely the reaching penalty, i.e. the anchor overruling the simulation. roster_shape: QB Jalen Hurts already starts and usableCapacity caps QB at 2, so Mahomes/Stafford would be a bench arm in a 1QB league worth far less than his 276.1 raw points suggests; TE is hard-blocked with Warren and LaPorta rostered. opponent_demand: Roster 10 owns both 110 and 111 with 5 RBs already and a stated TE:medium need, so the two intervening picks are more likely to hit TE/WR than RB - but they are the only barrier and a back-to-back pair can clear the RB tier in one move.",
+      "reasonCodes": [
+        "replacement_value",
+        "first_seed_prior",
+        "tier_cliff",
+        "opportunity_cost",
+        "roster_shape",
+        "opponent_demand"
+      ],
+      "confidence": 0.61
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reasoning": "Jordan Addison (WR, 104.5 proj) is the best remaining pass-catcher and would upgrade the Marvin Harrison bench slot into a genuine flex/injury cover.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:6819",
+        "reasoning": "Michael Pittman (109.5 proj, 97.7% survival) is essentially the same depth WR value and is nearly certain to still be there at 112.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Owns both 110 and 111, holds 5 RBs and 1 TE with a TE:medium need, so most likely takes a TE and a WR/RB flier; a second RB from them would be the only way Mason disappears.",
+    "confidence": 0.61,
+    "model": "claude-opus-5",
+    "urgency": "likely_to_return",
+    "strategy": "Balanced roster with every starting slot filled; with only 5 selections left and Kx1/DEFx1 mandatory, this pick and 112 are for the highest-upside startable RB/WR depth behind Saquon Barkley, Javonte Williams and Quinshon Judkins, and Jordan Mason is the best real-workload back left.",
+    "firstSeedDeviationReason": "fsGap 11 past James Conner, justified because First Seed's own data flags Conner (rank 99 vs 40.4 projected, median 89 among comparable RBs) and Mason projects 73 points higher at the same position with only three players left in RB tier 13 before a 7.3-point cliff.",
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is the highest-ranked non-conflicted player by First Seed (108) and a 104.5-point WR who would be an immediate flex-quality body ahead of Marvin Harrison on the bench.",
+    "strongestCounterargument": "Mason's survival is 94% and the Conner/Mason joint pair shows both available in 74.7% of runs with Mason surviving in 98.3% of the runs where Conner is gone - so waiting until 112 almost certainly still gets him, and Addison at 77.3% is the genuinely scarcer of the two.",
+    "whyRecommendationStillWins": "The 94% figure argues for order, not for skipping him, and the same table gives Addison 77.3% with WR tier 12 still holding 12 members (Pittman 97.7%, Reed 99%, Diggs 98%, Doubs 98.7%) - so the WR body is fungible next turn while a 113.5-point starting-caliber back is not, and taking the thinner asset first costs us at most a marginal WR.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR depth - Michael Pittman (97.7%), Jordan Addison (77.3%) or Jayden Reed (99%) - then use 129/132/149 for one more RB/WR upside swing plus the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both 110 and 111, holds 5 RBs and 1 TE with a TE:medium need, so most likely takes a TE and a WR/RB flier; a second RB from them would be the only way Mason disappears."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Jordan Addison (WR, 104.5 proj) is the best remaining pass-catcher and would upgrade the Marvin Harrison bench slot into a genuine flex/injury cover."
+      },
+      {
+        "playerId": "jfp:6819",
+        "reason": "Michael Pittman (109.5 proj, 97.7% survival) is essentially the same depth WR value and is nearly certain to still be there at 112."
+      }
+    ],
+    "confidence": 61,
+    "strategy": "Balanced roster with every starting slot filled; with only 5 selections left and Kx1/DEFx1 mandatory, this pick and 112 are for the highest-upside startable RB/WR depth behind Saquon Barkley, Javonte Williams and Quinshon Judkins, and Jordan Mason is the best real-workload back left.",
+    "reasons": [
+      {
+        "code": "replacement_value",
+        "detail": "Mason projects 113.5 - the highest of any RB on the board with a defined role (Conner 40.4, Woody Marks 87.4, Tyrone Tracy 90.5) - and is the only back who would meaningfully start for us if Javonte Williams or Judkins misses time."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 11 versus First Seed's best available James Conner (rank 99), and Conner carries an explicit ranking_projection_conflict warning (rank 99 vs 40.4 projected points), which makes the nominal reach smaller than it reads."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 13 has 3 players left (Mason, Brooks, Pacheco) with a 7.3-point gap to the next tier; TE and QB tier 4 both have 10 members left and 100% chance at least one survives, so neither is urgent and we are blocked from TE anyway."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Juancho's own simulation puts Mason at 1361.9 final-roster points, +3.9 dPlan over Conner's 1358 - the negative dDec is purely the reaching penalty, i.e. the anchor overruling the simulation."
+      },
+      {
+        "code": "roster_shape",
+        "detail": "QB Jalen Hurts already starts and usableCapacity caps QB at 2, so Mahomes/Stafford would be a bench arm in a 1QB league worth far less than his 276.1 raw points suggests; TE is hard-blocked with Warren and LaPorta rostered."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Roster 10 owns both 110 and 111 with 5 RBs already and a stated TE:medium need, so the two intervening picks are more likely to hit TE/WR than RB - but they are the only barrier and a back-to-back pair can clear the RB tier in one move."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is the highest-ranked non-conflicted player by First Seed (108) and a 104.5-point WR who would be an immediate flex-quality body ahead of Marvin Harrison on the bench.",
+    "strongestCounterargument": "Mason's survival is 94% and the Conner/Mason joint pair shows both available in 74.7% of runs with Mason surviving in 98.3% of the runs where Conner is gone - so waiting until 112 almost certainly still gets him, and Addison at 77.3% is the genuinely scarcer of the two.",
+    "whyRecommendationStillWins": "The 94% figure argues for order, not for skipping him, and the same table gives Addison 77.3% with WR tier 12 still holding 12 members (Pittman 97.7%, Reed 99%, Diggs 98%, Doubs 98.7%) - so the WR body is fungible next turn while a 113.5-point starting-caliber back is not, and taking the thinner asset first costs us at most a marginal WR.",
+    "firstSeedDeviationReason": "fsGap 11 past James Conner, justified because First Seed's own data flags Conner (rank 99 vs 40.4 projected, median 89 among comparable RBs) and Mason projects 73 points higher at the same position with only three players left in RB tier 13 before a 7.3-point cliff.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR depth - Michael Pittman (97.7%), Jordan Addison (77.3%) or Jayden Reed (99%) - then use 129/132/149 for one more RB/WR upside swing plus the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both 110 and 111, holds 5 RBs and 1 TE with a TE:medium need, so most likely takes a TE and a WR/RB flier; a second RB from them would be the only way Mason disappears."
+      }
+    ],
+    "urgency": "likely_to_return"
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Jordan Addison (WR, 104.5 proj) is the best remaining pass-catcher and would upgrade the Marvin Harrison bench slot into a genuine flex/injury cover."
+      },
+      {
+        "playerId": "jfp:6819",
+        "reason": "Michael Pittman (109.5 proj, 97.7% survival) is essentially the same depth WR value and is nearly certain to still be there at 112."
+      }
+    ],
+    "confidence": 61,
+    "strategy": "Balanced roster with every starting slot filled; with only 5 selections left and Kx1/DEFx1 mandatory, this pick and 112 are for the highest-upside startable RB/WR depth behind Saquon Barkley, Javonte Williams and Quinshon Judkins, and Jordan Mason is the best real-workload back left.",
+    "reasons": [
+      {
+        "code": "replacement_value",
+        "detail": "Mason projects 113.5 - the highest of any RB on the board with a defined role (Conner 40.4, Woody Marks 87.4, Tyrone Tracy 90.5) - and is the only back who would meaningfully start for us if Javonte Williams or Judkins misses time."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 11 versus First Seed's best available James Conner (rank 99), and Conner carries an explicit ranking_projection_conflict warning (rank 99 vs 40.4 projected points), which makes the nominal reach smaller than it reads."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 13 has 3 players left (Mason, Brooks, Pacheco) with a 7.3-point gap to the next tier; TE and QB tier 4 both have 10 members left and 100% chance at least one survives, so neither is urgent and we are blocked from TE anyway."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Juancho's own simulation puts Mason at 1361.9 final-roster points, +3.9 dPlan over Conner's 1358 - the negative dDec is purely the reaching penalty, i.e. the anchor overruling the simulation."
+      },
+      {
+        "code": "roster_shape",
+        "detail": "QB Jalen Hurts already starts and usableCapacity caps QB at 2, so Mahomes/Stafford would be a bench arm in a 1QB league worth far less than his 276.1 raw points suggests; TE is hard-blocked with Warren and LaPorta rostered."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Roster 10 owns both 110 and 111 with 5 RBs already and a stated TE:medium need, so the two intervening picks are more likely to hit TE/WR than RB - but they are the only barrier and a back-to-back pair can clear the RB tier in one move."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is the highest-ranked non-conflicted player by First Seed (108) and a 104.5-point WR who would be an immediate flex-quality body ahead of Marvin Harrison on the bench.",
+    "strongestCounterargument": "Mason's survival is 94% and the Conner/Mason joint pair shows both available in 74.7% of runs with Mason surviving in 98.3% of the runs where Conner is gone - so waiting until 112 almost certainly still gets him, and Addison at 77.3% is the genuinely scarcer of the two.",
+    "whyRecommendationStillWins": "The 94% figure argues for order, not for skipping him, and the same table gives Addison 77.3% with WR tier 12 still holding 12 members (Pittman 97.7%, Reed 99%, Diggs 98%, Doubs 98.7%) - so the WR body is fungible next turn while a 113.5-point starting-caliber back is not, and taking the thinner asset first costs us at most a marginal WR.",
+    "firstSeedDeviationReason": "fsGap 11 past James Conner, justified because First Seed's own data flags Conner (rank 99 vs 40.4 projected, median 89 among comparable RBs) and Mason projects 73 points higher at the same position with only three players left in RB tier 13 before a 7.3-point cliff.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR depth - Michael Pittman (97.7%), Jordan Addison (77.3%) or Jayden Reed (99%) - then use 129/132/149 for one more RB/WR upside swing plus the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both 110 and 111, holds 5 RBs and 1 TE with a TE:medium need, so most likely takes a TE and a WR/RB flier; a second RB from them would be the only way Mason disappears."
+      }
+    ],
+    "urgency": "likely_to_return"
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:9756",
+            "reason": "Jordan Addison (WR, 104.5 proj) is the best remaining pass-catcher and would upgrade the Marvin Harrison bench slot into a genuine flex/injury cover."
+          },
+          {
+            "playerId": "jfp:6819",
+            "reason": "Michael Pittman (109.5 proj, 97.7% survival) is essentially the same depth WR value and is nearly certain to still be there at 112."
+          }
+        ],
+        "confidence": 61,
+        "strategy": "Balanced roster with every starting slot filled; with only 5 selections left and Kx1/DEFx1 mandatory, this pick and 112 are for the highest-upside startable RB/WR depth behind Saquon Barkley, Javonte Williams and Quinshon Judkins, and Jordan Mason is the best real-workload back left.",
+        "reasons": [
+          {
+            "code": "replacement_value",
+            "detail": "Mason projects 113.5 - the highest of any RB on the board with a defined role (Conner 40.4, Woody Marks 87.4, Tyrone Tracy 90.5) - and is the only back who would meaningfully start for us if Javonte Williams or Judkins misses time."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap is only 11 versus First Seed's best available James Conner (rank 99), and Conner carries an explicit ranking_projection_conflict warning (rank 99 vs 40.4 projected points), which makes the nominal reach smaller than it reads."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "RB tier 13 has 3 players left (Mason, Brooks, Pacheco) with a 7.3-point gap to the next tier; TE and QB tier 4 both have 10 members left and 100% chance at least one survives, so neither is urgent and we are blocked from TE anyway."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Juancho's own simulation puts Mason at 1361.9 final-roster points, +3.9 dPlan over Conner's 1358 - the negative dDec is purely the reaching penalty, i.e. the anchor overruling the simulation."
+          },
+          {
+            "code": "roster_shape",
+            "detail": "QB Jalen Hurts already starts and usableCapacity caps QB at 2, so Mahomes/Stafford would be a bench arm in a 1QB league worth far less than his 276.1 raw points suggests; TE is hard-blocked with Warren and LaPorta rostered."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Roster 10 owns both 110 and 111 with 5 RBs already and a stated TE:medium need, so the two intervening picks are more likely to hit TE/WR than RB - but they are the only barrier and a back-to-back pair can clear the RB tier in one move."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:9756",
+        "strongestAlternativeWhy": "Addison is the highest-ranked non-conflicted player by First Seed (108) and a 104.5-point WR who would be an immediate flex-quality body ahead of Marvin Harrison on the bench.",
+        "strongestCounterargument": "Mason's survival is 94% and the Conner/Mason joint pair shows both available in 74.7% of runs with Mason surviving in 98.3% of the runs where Conner is gone - so waiting until 112 almost certainly still gets him, and Addison at 77.3% is the genuinely scarcer of the two.",
+        "whyRecommendationStillWins": "The 94% figure argues for order, not for skipping him, and the same table gives Addison 77.3% with WR tier 12 still holding 12 members (Pittman 97.7%, Reed 99%, Diggs 98%, Doubs 98.7%) - so the WR body is fungible next turn while a 113.5-point starting-caliber back is not, and taking the thinner asset first costs us at most a marginal WR.",
+        "firstSeedDeviationReason": "fsGap 11 past James Conner, justified because First Seed's own data flags Conner (rank 99 vs 40.4 projected, median 89 among comparable RBs) and Mason projects 73 points higher at the same position with only three players left in RB tier 13 before a 7.3-point cliff.",
+        "expectedNextPickPlan": "At 112 take the best remaining WR depth - Michael Pittman (97.7%), Jordan Addison (77.3%) or Jayden Reed (99%) - then use 129/132/149 for one more RB/WR upside swing plus the mandatory K and DEF.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Owns both 110 and 111, holds 5 RBs and 1 TE with a TE:medium need, so most likely takes a TE and a WR/RB flier; a second RB from them would be the only way Mason disappears."
+          }
+        ],
+        "urgency": "likely_to_return"
+      },
+      "usage": {
+        "inputTokens": 17548,
+        "outputTokens": 1850
+      },
+      "latencyMs": 26263,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 17548,
+    "outputTokens": 1850
+  },
+  "latencyMs": 26263,
+  "error": null,
+  "cachedAt": "2026-08-27T19:24:53.038Z",
+  "key": "41a55118fd4ed53f03fc639f5452e61b",
+  "label": "1398448522730221568 p109 claude-opus-5/playbook-v1"
+}

@@ -1,0 +1,208 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 108,
+      "currentOverallPick": 109,
+      "currentRound": 11,
+      "boardFingerprint": "30-442e8b02",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8408",
+      "reasoning": "tier_cliff: RB tier 13 has only 3 left (Brooks, Mason, Pacheco) and Mason projects 113.5 - top-4 RB projection among all available backs - versus Conner's 40.4. opportunity_cost: We start 2 RB + 2 FLEX; our RB4 is currently nothing, and Mason at 113.5 proj beats every WR left except Quentin Johnston (113.9) as a flex body. first_seed_prior: fsGap of 11 over Conner (fsRank 99) is small, and the dataWarning says First Seed's own projection of Conner (40.4 vs 89 median for peers) undercuts their rank.",
+      "reasonCodes": [
+        "tier_cliff",
+        "opportunity_cost",
+        "first_seed_prior"
+      ],
+      "confidence": 0.62
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reasoning": "Jordan Addison (104.5 proj, WR12 tier) is the best flex-quality skill player left and First Seed's WR ahead of the pack.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:4137",
+        "reasoning": "First Seed's best available at 99 and RB depth behind Barkley/Judkins/Williams, though his 40.4 projection flags the conflict.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks twice at 110/111, RB-heavy build with 5 RBs, only real threat to Mason.",
+    "confidence": 0.62,
+    "model": "claude-opus-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced roster with all skill starters filled; add the best startable RB/WR/flex upside body now, with K and DEF reserved for the final two picks.",
+    "firstSeedDeviationReason": "Reaching 11 ranks past Conner because First Seed's own projection for him (40.4) contradicts their rank, and Mason is the last high-volume back in a 3-deep tier.",
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is the highest-ranked non-conflicted skill player left (fsRank 108, 104.5 proj) and would be our WR5/flex insurance.",
+    "strongestCounterargument": "Mason survives 94% to pick 112 and both Conner+Mason remain in 74.7% of runs, so we could take Addison now and still land Mason two picks later.",
+    "whyRecommendationStillWins": "The 6% loss risk is small but Addison's replacements are not: WR tier 12 still has 12 members (Pittman 97.7%, Diggs 98%, Doubs 98.7%, Reed 99%, Downs 96.7%) all near-certain to survive, while RB tier 13 has 3 and team 10 picking twice at 110/111 is RB-heavy (5 RBs, recent RB,QB,RB,RB). We take the scarce back now and collect a 100-plus-projection WR at 112.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR flex body - Pittman (97.7%), Diggs (98%) or Reed (99%) should all survive; picks 149/132 reserved for K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 110/111, RB-heavy build with 5 RBs, only real threat to Mason."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Jordan Addison (104.5 proj, WR12 tier) is the best flex-quality skill player left and First Seed's WR ahead of the pack."
+      },
+      {
+        "playerId": "jfp:4137",
+        "reason": "First Seed's best available at 99 and RB depth behind Barkley/Judkins/Williams, though his 40.4 projection flags the conflict."
+      }
+    ],
+    "confidence": 62,
+    "strategy": "Balanced roster with all skill starters filled; add the best startable RB/WR/flex upside body now, with K and DEF reserved for the final two picks.",
+    "urgency": "must_take_now",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 13 has only 3 left (Brooks, Mason, Pacheco) and Mason projects 113.5 - top-4 RB projection among all available backs - versus Conner's 40.4."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "We start 2 RB + 2 FLEX; our RB4 is currently nothing, and Mason at 113.5 proj beats every WR left except Quentin Johnston (113.9) as a flex body."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap of 11 over Conner (fsRank 99) is small, and the dataWarning says First Seed's own projection of Conner (40.4 vs 89 median for peers) undercuts their rank."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is the highest-ranked non-conflicted skill player left (fsRank 108, 104.5 proj) and would be our WR5/flex insurance.",
+    "strongestCounterargument": "Mason survives 94% to pick 112 and both Conner+Mason remain in 74.7% of runs, so we could take Addison now and still land Mason two picks later.",
+    "whyRecommendationStillWins": "The 6% loss risk is small but Addison's replacements are not: WR tier 12 still has 12 members (Pittman 97.7%, Diggs 98%, Doubs 98.7%, Reed 99%, Downs 96.7%) all near-certain to survive, while RB tier 13 has 3 and team 10 picking twice at 110/111 is RB-heavy (5 RBs, recent RB,QB,RB,RB). We take the scarce back now and collect a 100-plus-projection WR at 112.",
+    "firstSeedDeviationReason": "Reaching 11 ranks past Conner because First Seed's own projection for him (40.4) contradicts their rank, and Mason is the last high-volume back in a 3-deep tier.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR flex body - Pittman (97.7%), Diggs (98%) or Reed (99%) should all survive; picks 149/132 reserved for K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 110/111, RB-heavy build with 5 RBs, only real threat to Mason."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:9756",
+        "reason": "Jordan Addison (104.5 proj, WR12 tier) is the best flex-quality skill player left and First Seed's WR ahead of the pack."
+      },
+      {
+        "playerId": "jfp:4137",
+        "reason": "First Seed's best available at 99 and RB depth behind Barkley/Judkins/Williams, though his 40.4 projection flags the conflict."
+      }
+    ],
+    "confidence": 62,
+    "strategy": "Balanced roster with all skill starters filled; add the best startable RB/WR/flex upside body now, with K and DEF reserved for the final two picks.",
+    "urgency": "must_take_now",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "RB tier 13 has only 3 left (Brooks, Mason, Pacheco) and Mason projects 113.5 - top-4 RB projection among all available backs - versus Conner's 40.4."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "We start 2 RB + 2 FLEX; our RB4 is currently nothing, and Mason at 113.5 proj beats every WR left except Quentin Johnston (113.9) as a flex body."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap of 11 over Conner (fsRank 99) is small, and the dataWarning says First Seed's own projection of Conner (40.4 vs 89 median for peers) undercuts their rank."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9756",
+    "strongestAlternativeWhy": "Addison is the highest-ranked non-conflicted skill player left (fsRank 108, 104.5 proj) and would be our WR5/flex insurance.",
+    "strongestCounterargument": "Mason survives 94% to pick 112 and both Conner+Mason remain in 74.7% of runs, so we could take Addison now and still land Mason two picks later.",
+    "whyRecommendationStillWins": "The 6% loss risk is small but Addison's replacements are not: WR tier 12 still has 12 members (Pittman 97.7%, Diggs 98%, Doubs 98.7%, Reed 99%, Downs 96.7%) all near-certain to survive, while RB tier 13 has 3 and team 10 picking twice at 110/111 is RB-heavy (5 RBs, recent RB,QB,RB,RB). We take the scarce back now and collect a 100-plus-projection WR at 112.",
+    "firstSeedDeviationReason": "Reaching 11 ranks past Conner because First Seed's own projection for him (40.4) contradicts their rank, and Mason is the last high-volume back in a 3-deep tier.",
+    "expectedNextPickPlan": "At 112 take the best remaining WR flex body - Pittman (97.7%), Diggs (98%) or Reed (99%) should all survive; picks 149/132 reserved for K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice at 110/111, RB-heavy build with 5 RBs, only real threat to Mason."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:9756",
+            "reason": "Jordan Addison (104.5 proj, WR12 tier) is the best flex-quality skill player left and First Seed's WR ahead of the pack."
+          },
+          {
+            "playerId": "jfp:4137",
+            "reason": "First Seed's best available at 99 and RB depth behind Barkley/Judkins/Williams, though his 40.4 projection flags the conflict."
+          }
+        ],
+        "confidence": 62,
+        "strategy": "Balanced roster with all skill starters filled; add the best startable RB/WR/flex upside body now, with K and DEF reserved for the final two picks.",
+        "urgency": "must_take_now",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "RB tier 13 has only 3 left (Brooks, Mason, Pacheco) and Mason projects 113.5 - top-4 RB projection among all available backs - versus Conner's 40.4."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "We start 2 RB + 2 FLEX; our RB4 is currently nothing, and Mason at 113.5 proj beats every WR left except Quentin Johnston (113.9) as a flex body."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap of 11 over Conner (fsRank 99) is small, and the dataWarning says First Seed's own projection of Conner (40.4 vs 89 median for peers) undercuts their rank."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:9756",
+        "strongestAlternativeWhy": "Addison is the highest-ranked non-conflicted skill player left (fsRank 108, 104.5 proj) and would be our WR5/flex insurance.",
+        "strongestCounterargument": "Mason survives 94% to pick 112 and both Conner+Mason remain in 74.7% of runs, so we could take Addison now and still land Mason two picks later.",
+        "whyRecommendationStillWins": "The 6% loss risk is small but Addison's replacements are not: WR tier 12 still has 12 members (Pittman 97.7%, Diggs 98%, Doubs 98.7%, Reed 99%, Downs 96.7%) all near-certain to survive, while RB tier 13 has 3 and team 10 picking twice at 110/111 is RB-heavy (5 RBs, recent RB,QB,RB,RB). We take the scarce back now and collect a 100-plus-projection WR at 112.",
+        "firstSeedDeviationReason": "Reaching 11 ranks past Conner because First Seed's own projection for him (40.4) contradicts their rank, and Mason is the last high-volume back in a 3-deep tier.",
+        "expectedNextPickPlan": "At 112 take the best remaining WR flex body - Pittman (97.7%), Diggs (98%) or Reed (99%) should all survive; picks 149/132 reserved for K and DEF.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks twice at 110/111, RB-heavy build with 5 RBs, only real threat to Mason."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 8631,
+        "cacheWriteTokens": 0,
+        "cacheReadTokens": 5337,
+        "outputTokens": 1262
+      },
+      "latencyMs": 18365,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 8631,
+    "cacheWriteTokens": 0,
+    "cacheReadTokens": 5337,
+    "outputTokens": 1262
+  },
+  "latencyMs": 18365,
+  "error": null,
+  "cachedAt": "2026-08-27T20:35:33.280Z",
+  "key": "baa858c4428220ef7ac88398b0c01965",
+  "label": "1398448522730221568 p109 claude-opus-5/playbook-v1 blind concise compact"
+}

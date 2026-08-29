@@ -1,0 +1,138 @@
+# Builds the production image and publishes it to GHCR. Nothing else.
+#
+# Publishing and DEPLOYING are deliberately separate. This workflow puts an
+# image in the registry; the Droplet pulls it when an operator decides to, with
+# the two commands in DEPLOYMENT.md section 4.6. A pipeline that did both would
+# mean every push to this branch restarted production, which is not what a
+# private beta wants during a draft.
+#
+# The image contains application code and nothing else. Every secret -
+# DATABASE_URL, BETTER_AUTH_SECRET, ANTHROPIC_API_KEY - arrives as a runtime
+# environment variable on the Droplet. No secret is passed to the build, the
+# Dockerfile declares no ARG, and `.dockerignore` keeps `.env*` out of the
+# build context entirely.
+
+name: Publish image
+
+on:
+  # Run it by hand: Actions -> Publish image -> Run workflow.
+  workflow_dispatch:
+  # Production is deployed from this branch, so this is what gets built.
+  push:
+    branches:
+      - claude/draftiq-fantasy-extension-i5900y
+
+# Only what pushing a package needs. `contents: read` to check the code out,
+# `packages: write` to push to GHCR. GITHUB_TOKEN is minted per run with
+# exactly these rights; no personal access token is involved.
+permissions:
+  contents: read
+  packages: write
+
+# Two runs publishing the same tags at once would race over `latest`. Queue
+# them instead - and never cancel a run mid-publish, which could leave the tag
+# pointing at a half-pushed manifest.
+concurrency:
+  group: publish-image-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the commit being built
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Matches `engines.node` in package.json and the Dockerfile's base image.
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # The gate. A red suite must not become a production image, so these run
+      # before the build rather than beside it. They need no secrets and make
+      # no network calls to Anthropic.
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      # GHCR rejects an uppercase path, and this repository's name has capitals
+      # in it. Lowercase the owner and state the image name explicitly, so the
+      # result matches `APP_IMAGE` in .env.production.example exactly.
+      - name: Work out the image path
+        id: image
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: echo "path=ghcr.io/${OWNER,,}/juancho-fico-picks" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Two tags, each with a job:
+      #
+      #   sha-<short>  immutable. This is what you pin in .env.production when
+      #                a deploy should be a deliberate act, and what you set
+      #                APP_IMAGE back to when rolling one back.
+      #   latest       moves with this branch. Matches the shipped
+      #                .env.production.example, and is the convenient default.
+      - name: Work out the tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.path }}
+          tags: |
+            type=sha,format=short,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref_name == 'claude/draftiq-fantasy-extension-i5900y' }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          # The Droplet is amd64. Building anything else is time spent on an
+          # image that machine will never run.
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Layer cache between runs. `npm ci` is the slow layer and it only
+          # changes when package-lock.json does.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # A single-architecture image for one Droplet. Attestations would add
+          # extra manifest entries that show up as `unknown/unknown` platforms
+          # in the GHCR UI and confuse the thing they are meant to clarify.
+          provenance: false
+          sbom: false
+
+      - name: Say what was published
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          {
+            echo "### Image published"
+            echo
+            echo "Pull the immutable tag on the Droplet, then restart:"
+            echo
+            echo '```bash'
+            echo "$TAGS" | sed 's/^/# /'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

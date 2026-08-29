@@ -1,4 +1,5 @@
 import type { SleeperPlayerRaw, SleeperPlayersResponse } from '../sleeper/types';
+import { CURRENT_ELIGIBILITY_POLICY, type EligibilityPolicy } from './eligibility';
 import type { CanonicalPlayer, CanonicalPlayerMap, Position } from './types';
 
 const POSITIONS = new Set<Position>([
@@ -35,6 +36,7 @@ export function normalizePosition(position?: string | null): Position {
 function canonicalizeSleeperPlayer(
   sleeperId: string,
   raw: SleeperPlayerRaw,
+  eligibility: EligibilityPolicy,
 ): CanonicalPlayer | null {
   const name =
     raw.full_name?.trim() ||
@@ -54,6 +56,7 @@ function canonicalizeSleeperPlayer(
     position,
     team: raw.team ?? null,
     status: raw.status ?? null,
+    draftEligible: eligibility.isDraftEligible(raw),
     age: raw.age ?? null,
     yearsExperience: raw.years_exp ?? null,
     externalIds,
@@ -70,9 +73,15 @@ function addToIndex(
 
 export function buildCanonicalPlayerMap(
   response: SleeperPlayersResponse,
+  /**
+   * Which players may be SELECTED. Everyone is still mapped and nameable - a
+   * draft board has to render whoever another team took - so this decides
+   * `draftEligible` rather than membership.
+   */
+  eligibility: EligibilityPolicy = CURRENT_ELIGIBILITY_POLICY,
 ): CanonicalPlayerMap {
   const players = Object.entries(response)
-    .map(([sleeperId, raw]) => canonicalizeSleeperPlayer(sleeperId, raw))
+    .map(([sleeperId, raw]) => canonicalizeSleeperPlayer(sleeperId, raw, eligibility))
     .filter((player): player is CanonicalPlayer => player !== null)
     .sort((a, b) => a.name.localeCompare(b.name));
 

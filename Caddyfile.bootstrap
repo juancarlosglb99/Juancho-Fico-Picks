@@ -1,0 +1,72 @@
+# Bootstrap: HTTPS on a bare IP, before a domain exists.
+#
+# `tls internal` makes Caddy issue the certificate from its own local CA. A
+# browser will warn, and that warning is correct - nobody has vouched for this
+# certificate. Everything else is genuinely HTTPS: the scheme is https, session
+# cookies are marked Secure, and the application's production preflight (which
+# refuses a non-https BETTER_AUTH_URL) is satisfied honestly rather than
+# bypassed.
+#
+# Why not a real certificate for the IP? Let's Encrypt does not issue for bare
+# IPs, and the usual trick - `<ip>.sslip.io` - is not on the Public Suffix List,
+# so Let's Encrypt counts all of sslip.io as ONE registered domain with a shared
+# 50-per-week ceiling. Spending somebody else's rate limit to avoid a warning on
+# a server with no users yet is a bad trade.
+#
+# When the domain arrives: point it at the Droplet, set DOMAIN in
+# .env.production, drop CADDYFILE back to ./Caddyfile, and restart Caddy. It
+# obtains a real certificate on its own.
+
+{
+	# `disable_redirects`, NOT `off`.
+	#
+	# `auto_https off` disables all of automatic HTTPS - including certificate
+	# MANAGEMENT - so `tls internal` below has nothing to issue and the
+	# handshake fails with an internal error while port 443 sits there
+	# listening. That is exactly how it failed on the first deploy.
+	#
+	# What we actually want to switch off is the automatic HTTP->HTTPS
+	# redirect, because the `:80` block at the bottom is our own.
+	auto_https disable_redirects
+
+	# A client connecting to a bare IP sends NO SNI - the TLS extension is
+	# defined to carry a host name, and an IP literal is not one. With a single
+	# site keyed on {$DOMAIN}, Caddy then has no way to choose a certificate and
+	# aborts the handshake with an internal error, which is what a browser
+	# pointed at https://<ip> would have got.
+	#
+	# This is the whole reason the IP phase needs a line the domain phase does
+	# not: naming the default makes a no-SNI connection use that site's
+	# certificate.
+	default_sni {$DOMAIN}
+}
+
+https://{$DOMAIN} {
+	tls internal
+
+	encode zstd gzip
+
+	reverse_proxy app:8080 {
+		health_uri /api/health
+		health_interval 30s
+		health_timeout 5s
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Anything arriving on plain HTTP goes to HTTPS, including a bare IP request
+# that does not match the host above.
+:80 {
+	redir https://{$DOMAIN}{uri} permanent
+}

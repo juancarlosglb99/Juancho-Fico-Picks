@@ -1,0 +1,27 @@
+/**
+ * Server-only. Importing anything here pulls in the Anthropic SDK and reads
+ * `ANTHROPIC_API_KEY`, so it must never reach a browser bundle.
+ */
+export {
+  AnthropicStrategist,
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_STRATEGIST_MODEL,
+  resolveStrategistModel,
+  resolveThinkingBudget,
+  redactSecrets,
+  strategistFingerprint,
+  toAdvice,
+} from './client';
+export type { AnthropicStrategistOptions, StrategistCallResult } from './client';
+export { PLAYBOOK_VERSION, STRATEGIST_SYSTEM_PROMPT } from './playbook';
+export { SUBMIT_RECOMMENDATION_TOOL } from './schema';
+export type { StrategistResponse } from './schema';
+export {
+  describeProblems,
+  validateStrategistResponse,
+} from './validate';
+export type { ResponseProblem, ResponseProblemCode, ValidationResult } from './validate';
+export { estimateCost, MODEL_RATES } from './pricing';
+export type { ModelRate } from './pricing';
+export { CACHE_DIRECTORY, cacheKey, listCached, readCached, writeCached } from './cache';
+export type { CachedCall } from './cache';

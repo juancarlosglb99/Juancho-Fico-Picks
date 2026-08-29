@@ -3,7 +3,6 @@ import {
   calculateReplacementDemand,
   generateDraftRecommendations,
 } from '../../packages/engine/draft/recommendations';
-import { DRAFT_SCORE_WEIGHTS } from '../../packages/engine/draft/types';
 import type { MappedProjection } from '../../packages/projections/types';
 import type { SleeperDraftPick } from '../../packages/sleeper/types';
 import {
@@ -95,9 +94,12 @@ describe('redraft format behavior matrix', () => {
     );
     expect(vorp[0]).toBeLessThan(vorp[1]);
     expect(vorp[1]).toBeLessThan(vorp[2]);
-    expect(ten.result.recommendations[0].nextPickConfidence).toBe('medium');
-    expect(twelve.result.recommendations[0].nextPickConfidence).toBe('high');
-    expect(fourteen.result.recommendations[0].nextPickConfidence).toBe('medium');
+    // Availability is read from the First Seed draft-room rank. These fixtures
+    // supply none, so the engine must say so rather than inventing confidence
+    // from a market ADP it is no longer allowed to draft on.
+    for (const size of [ten, twelve, fourteen]) {
+      expect(size.result.recommendations[0].nextPickConfidence).toBe('low');
+    }
   });
 
   it('C: Superflex materially increases quarterback replacement demand and VORP', () => {
@@ -173,21 +175,31 @@ describe('redraft format behavior matrix', () => {
     expect(result.recommendations[0].player.name).toBe('WR Player 1');
   });
 
-  it('normalizes all score components and applies the published weights', () => {
-    const recommendation = scenario().result.recommendations[0];
-    for (const component of Object.values(recommendation.components)) {
-      expect(component).toBeGreaterThanOrEqual(0);
-      expect(component).toBeLessThanOrEqual(100);
+  it('scores the best plan at 100 and falls away in proportion to what is given up', () => {
+    const recommendations = scenario().result.recommendations;
+    const best = recommendations[0];
+    expect(best.score).toBe(100);
+    expect(best.components.planDelta).toBe(0);
+
+    // The 0-100 signals stay in range; the points figures are free to be
+    // negative, because giving up value is a real outcome.
+    for (const item of recommendations) {
+      expect(item.components.nextPickRisk).toBeGreaterThanOrEqual(0);
+      expect(item.components.nextPickRisk).toBeLessThanOrEqual(100);
+      expect(item.components.positionalSaturation).toBeGreaterThanOrEqual(0);
+      expect(item.components.positionalSaturation).toBeLessThanOrEqual(100);
+      expect(item.score).toBeGreaterThanOrEqual(0);
+      expect(item.score).toBeLessThanOrEqual(100);
+      expect(item.components.planDelta).toBeLessThanOrEqual(0);
     }
-    const weighted =
-      recommendation.components.vorp * DRAFT_SCORE_WEIGHTS.vorp +
-      recommendation.components.nextPickRisk * DRAFT_SCORE_WEIGHTS.nextPickRisk +
-      recommendation.components.tierUrgency * DRAFT_SCORE_WEIGHTS.tierUrgency +
-      recommendation.components.projection * DRAFT_SCORE_WEIGHTS.projection +
-      recommendation.components.rosterFit * DRAFT_SCORE_WEIGHTS.rosterFit +
-      recommendation.components.adpValue * DRAFT_SCORE_WEIGHTS.adpValue +
-      recommendation.components.scarcity * DRAFT_SCORE_WEIGHTS.scarcity;
-    expect(recommendation.score).toBeCloseTo(weighted, 1);
+
+    // Scores must fall as the plan value falls, never the other way round.
+    for (let i = 1; i < recommendations.length; i += 1) {
+      expect(recommendations[i].components.planValue).toBeLessThanOrEqual(
+        recommendations[i - 1].components.planValue + 0.001,
+      );
+      expect(recommendations[i].score).toBeLessThanOrEqual(recommendations[i - 1].score + 0.001);
+    }
   });
 
   it('does not treat reception-format metadata as proof of six-point passing scoring', () => {
@@ -256,16 +268,12 @@ describe('availability and unsupported-mode safeguards', () => {
     }).result;
     expect(result.status).toBe('limited');
     expect(result.messages.join(' ')).toContain('current-season only');
-    expect(result.recommendations[0].nextPickConfidence).toBe('medium');
   });
 
-  it('neutralizes classic roster-fit assumptions in Best Ball', () => {
+  it('still reports Best Ball as limited support', () => {
     const result = scenario({ leagueSettings: { best_ball: 1 } }).result;
     expect(result.status).toBe('limited');
-    expect(result.recommendations.every((item) => item.components.rosterFit === 50)).toBe(
-      true,
-    );
-    expect(result.recommendations[0].nextPickConfidence).toBe('low');
+    expect(result.messages.some((message) => message.includes('Best Ball'))).toBe(true);
   });
 
   it('disables snake-specific recommendations in auctions', () => {
@@ -300,7 +308,9 @@ describe('availability and unsupported-mode safeguards', () => {
       adpMatchLevel: 'weak' as const,
       adpSourceConfidence: 'low' as const,
       adpSource: 'Weak ADP',
-      adpMatchReasons: ['Format mismatch.'],
+      adpMatchReasons: [
+        'No draft-room rank matched this player; availability falls back to projection order.',
+      ],
     }));
 
     const exact = scenario({ projections: exactProjections }).result.recommendations.find(
@@ -310,17 +320,16 @@ describe('availability and unsupported-mode safeguards', () => {
       (item) => item.player.name === 'RB Player 1',
     )!;
 
-    expect(Math.abs(weak.components.adpValue - 50)).toBeLessThan(
-      Math.abs(exact.components.adpValue - 50),
-    );
-    expect(Math.abs(weak.components.nextPickRisk - 50)).toBeLessThan(
-      Math.abs(exact.components.nextPickRisk - 50),
-    );
+    // Without a matching room rank the engine must not claim a confident read
+    // on whether the player survives.
     expect(weak.nextPickConfidence).toBe('low');
+    expect(exact.player.name).toBe(weak.player.name);
     expect(weak.nextPickExplanation).toMatchObject({
-      adpSource: 'Weak ADP',
-      adpMatchLevel: 'weak',
-      adpMatchReasons: ['Format mismatch.'],
+      adpSource: 'Juancho-Fico projection rank',
+      adpMatchLevel: 'approximate',
+      adpMatchReasons: [
+        'No draft-room rank matched this player; availability falls back to projection order.',
+      ],
     });
     expect(weak.nextPickExplanation.interveningTeamsWithNeed).toBeGreaterThan(0);
   });

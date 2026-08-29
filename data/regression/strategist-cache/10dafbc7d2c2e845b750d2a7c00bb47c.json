@@ -1,0 +1,243 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11604",
+      "reasoning": "tier_cliff: TE tier 1 is Brock Bowers alone with a 15.7-point gap to the next tier, and the cliff row flags TE as atRisk=1 — Colston Loveland (120.4) and Tyler Warren (116.8) are our fallback, a 23-27 point downgrade at a mandatory starting slot. positional_scarcity: Seven teams still list TE:high need (1,2,3,4,5,6,7,8,10) while only one TE (McBride) has gone, so the position will be consumed rapidly and there is no second Bowers. survives_to_next_turn: Bowers has the lowest survival of any candidate at 74.3% versus Pickens 78.3%, Javonte 86%, A.J. Brown 86.3% and Drake Maye 97% — he is the one asset here we cannot replace if he goes. opportunity_cost: WR tier 8 has 16 members (Nabers, Rice, Higgins, McMillan, Waddle, McConkey all 91-99% to survive) and RB tier 9 has 7 with 100% chance at least one remains, so passing on Pickens costs us a tier, not a player. first_seed_prior: fsGap is only 1 — Bowers is First Seed's number 29 overall and we pick at 29, so this is following the board, not reaching. opponent_demand: Team 10 picks twice at 30 and 31 with TE:high among four high needs and nothing at TE, making them the single most plausible team to end our Bowers window.",
+      "reasonCodes": [
+        "tier_cliff",
+        "positional_scarcity",
+        "survives_to_next_turn",
+        "opportunity_cost",
+        "first_seed_prior",
+        "opponent_demand"
+      ],
+      "confidence": 0.64
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reasoning": "First Seed's best available and the WR most likely to be gone by 32 (78.3% survival), filling our second WR slot with a genuine target-hog in standard scoring.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7588",
+        "reasoning": "Javonte Williams headlines a seven-deep RB tier 9 and would give us a strong RB2 next to Saquon, but that exact tier is the one most likely to still be there at 32 and 49.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks both 30 and 31 with zero TE and TE:high alongside QB/RB/WR high needs — the only team that can take Bowers before us and they get two swings at it.",
+    "confidence": 0.64,
+    "model": "claude-opus-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced build off Nacua/Barkley: we take the one genuinely separating tight end now (15.7-point gap to tier 3) and use the back-to-back-ish turn at 32 to take from the deep RB/WR pools that survive, leaving QB for the flat tier 3/4 in the middle rounds.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's top player left, Juancho's DRAFT_NOW pick, and the only board name with a positive dDec relative to everyone else, filling our empty WR2 in a room where receivers have been going 6 of the last 15 picks.",
+    "strongestCounterargument": "Juancho charges Bowers dDec -11.5 and dPlan -0.5 versus Pickens, and the joint availability table shows Pickens and Bowers both survive to pick 32 in 55.7% of runs with either surviving in 97% — so taking Pickens now and Bowers at 32 is live more than half the time, and Bowers at 74.3% is more likely than not to be there anyway.",
+    "whyRecommendationStillWins": "That 55.7% cuts the other way too: in 44.3% of runs we do not get both, and the branch where we lose Bowers costs a 15.7-point tier cliff at a mandatory slot with only Loveland/Warren behind him, while the branch where we lose Pickens costs almost nothing because WR tier 8 has 16 members with Nabers (81.7%), Rice (91.7%) and Higgins (93.3%) all likely at 32 — we take the irreplaceable asset and let the deep pool wait.",
+    "expectedNextPickPlan": "At 32 take the best of the WR tier 8 block (Nabers 81.7%, Rice 91.7%, Higgins 93.3%, McConkey 97.7%) or A.J. Brown if he lasts at 86.3%, then use 49/52 on the RB tier 9 group (Judkins 98%, Montgomery 98%, Swift 97%, Skattebo 93.7%) for RB2/FLEX, with QB deferred to the flat tier 3/4 around 69-72 where Hurts, Daniels, Burrow and Maye are all 97-100% to survive two picks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks both 30 and 31 with zero TE and TE:high alongside QB/RB/WR high needs — the only team that can take Bowers before us and they get two swings at it."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "First Seed's best available and the WR most likely to be gone by 32 (78.3% survival), filling our second WR slot with a genuine target-hog in standard scoring."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams headlines a seven-deep RB tier 9 and would give us a strong RB2 next to Saquon, but that exact tier is the one most likely to still be there at 32 and 49."
+      }
+    ],
+    "confidence": 64,
+    "strategy": "Balanced build off Nacua/Barkley: we take the one genuinely separating tight end now (15.7-point gap to tier 3) and use the back-to-back-ish turn at 32 to take from the deep RB/WR pools that survive, leaving QB for the flat tier 3/4 in the middle rounds.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 1 is Brock Bowers alone with a 15.7-point gap to the next tier, and the cliff row flags TE as atRisk=1 — Colston Loveland (120.4) and Tyler Warren (116.8) are our fallback, a 23-27 point downgrade at a mandatory starting slot."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Seven teams still list TE:high need (1,2,3,4,5,6,7,8,10) while only one TE (McBride) has gone, so the position will be consumed rapidly and there is no second Bowers."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Bowers has the lowest survival of any candidate at 74.3% versus Pickens 78.3%, Javonte 86%, A.J. Brown 86.3% and Drake Maye 97% — he is the one asset here we cannot replace if he goes."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "WR tier 8 has 16 members (Nabers, Rice, Higgins, McMillan, Waddle, McConkey all 91-99% to survive) and RB tier 9 has 7 with 100% chance at least one remains, so passing on Pickens costs us a tier, not a player."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 1 — Bowers is First Seed's number 29 overall and we pick at 29, so this is following the board, not reaching."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 picks twice at 30 and 31 with TE:high among four high needs and nothing at TE, making them the single most plausible team to end our Bowers window."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's top player left, Juancho's DRAFT_NOW pick, and the only board name with a positive dDec relative to everyone else, filling our empty WR2 in a room where receivers have been going 6 of the last 15 picks.",
+    "strongestCounterargument": "Juancho charges Bowers dDec -11.5 and dPlan -0.5 versus Pickens, and the joint availability table shows Pickens and Bowers both survive to pick 32 in 55.7% of runs with either surviving in 97% — so taking Pickens now and Bowers at 32 is live more than half the time, and Bowers at 74.3% is more likely than not to be there anyway.",
+    "whyRecommendationStillWins": "That 55.7% cuts the other way too: in 44.3% of runs we do not get both, and the branch where we lose Bowers costs a 15.7-point tier cliff at a mandatory slot with only Loveland/Warren behind him, while the branch where we lose Pickens costs almost nothing because WR tier 8 has 16 members with Nabers (81.7%), Rice (91.7%) and Higgins (93.3%) all likely at 32 — we take the irreplaceable asset and let the deep pool wait.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best of the WR tier 8 block (Nabers 81.7%, Rice 91.7%, Higgins 93.3%, McConkey 97.7%) or A.J. Brown if he lasts at 86.3%, then use 49/52 on the RB tier 9 group (Judkins 98%, Montgomery 98%, Swift 97%, Skattebo 93.7%) for RB2/FLEX, with QB deferred to the flat tier 3/4 around 69-72 where Hurts, Daniels, Burrow and Maye are all 97-100% to survive two picks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks both 30 and 31 with zero TE and TE:high alongside QB/RB/WR high needs — the only team that can take Bowers before us and they get two swings at it."
+      }
+    ],
+    "urgency": "must_take_now"
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "First Seed's best available and the WR most likely to be gone by 32 (78.3% survival), filling our second WR slot with a genuine target-hog in standard scoring."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams headlines a seven-deep RB tier 9 and would give us a strong RB2 next to Saquon, but that exact tier is the one most likely to still be there at 32 and 49."
+      }
+    ],
+    "confidence": 64,
+    "strategy": "Balanced build off Nacua/Barkley: we take the one genuinely separating tight end now (15.7-point gap to tier 3) and use the back-to-back-ish turn at 32 to take from the deep RB/WR pools that survive, leaving QB for the flat tier 3/4 in the middle rounds.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 1 is Brock Bowers alone with a 15.7-point gap to the next tier, and the cliff row flags TE as atRisk=1 — Colston Loveland (120.4) and Tyler Warren (116.8) are our fallback, a 23-27 point downgrade at a mandatory starting slot."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Seven teams still list TE:high need (1,2,3,4,5,6,7,8,10) while only one TE (McBride) has gone, so the position will be consumed rapidly and there is no second Bowers."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Bowers has the lowest survival of any candidate at 74.3% versus Pickens 78.3%, Javonte 86%, A.J. Brown 86.3% and Drake Maye 97% — he is the one asset here we cannot replace if he goes."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "WR tier 8 has 16 members (Nabers, Rice, Higgins, McMillan, Waddle, McConkey all 91-99% to survive) and RB tier 9 has 7 with 100% chance at least one remains, so passing on Pickens costs us a tier, not a player."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 1 — Bowers is First Seed's number 29 overall and we pick at 29, so this is following the board, not reaching."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 picks twice at 30 and 31 with TE:high among four high needs and nothing at TE, making them the single most plausible team to end our Bowers window."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's top player left, Juancho's DRAFT_NOW pick, and the only board name with a positive dDec relative to everyone else, filling our empty WR2 in a room where receivers have been going 6 of the last 15 picks.",
+    "strongestCounterargument": "Juancho charges Bowers dDec -11.5 and dPlan -0.5 versus Pickens, and the joint availability table shows Pickens and Bowers both survive to pick 32 in 55.7% of runs with either surviving in 97% — so taking Pickens now and Bowers at 32 is live more than half the time, and Bowers at 74.3% is more likely than not to be there anyway.",
+    "whyRecommendationStillWins": "That 55.7% cuts the other way too: in 44.3% of runs we do not get both, and the branch where we lose Bowers costs a 15.7-point tier cliff at a mandatory slot with only Loveland/Warren behind him, while the branch where we lose Pickens costs almost nothing because WR tier 8 has 16 members with Nabers (81.7%), Rice (91.7%) and Higgins (93.3%) all likely at 32 — we take the irreplaceable asset and let the deep pool wait.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best of the WR tier 8 block (Nabers 81.7%, Rice 91.7%, Higgins 93.3%, McConkey 97.7%) or A.J. Brown if he lasts at 86.3%, then use 49/52 on the RB tier 9 group (Judkins 98%, Montgomery 98%, Swift 97%, Skattebo 93.7%) for RB2/FLEX, with QB deferred to the flat tier 3/4 around 69-72 where Hurts, Daniels, Burrow and Maye are all 97-100% to survive two picks.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks both 30 and 31 with zero TE and TE:high alongside QB/RB/WR high needs — the only team that can take Bowers before us and they get two swings at it."
+      }
+    ],
+    "urgency": "must_take_now"
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:11604",
+        "alternatives": [
+          {
+            "playerId": "jfp:8137",
+            "reason": "First Seed's best available and the WR most likely to be gone by 32 (78.3% survival), filling our second WR slot with a genuine target-hog in standard scoring."
+          },
+          {
+            "playerId": "jfp:7588",
+            "reason": "Javonte Williams headlines a seven-deep RB tier 9 and would give us a strong RB2 next to Saquon, but that exact tier is the one most likely to still be there at 32 and 49."
+          }
+        ],
+        "confidence": 64,
+        "strategy": "Balanced build off Nacua/Barkley: we take the one genuinely separating tight end now (15.7-point gap to tier 3) and use the back-to-back-ish turn at 32 to take from the deep RB/WR pools that survive, leaving QB for the flat tier 3/4 in the middle rounds.",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "TE tier 1 is Brock Bowers alone with a 15.7-point gap to the next tier, and the cliff row flags TE as atRisk=1 — Colston Loveland (120.4) and Tyler Warren (116.8) are our fallback, a 23-27 point downgrade at a mandatory starting slot."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "Seven teams still list TE:high need (1,2,3,4,5,6,7,8,10) while only one TE (McBride) has gone, so the position will be consumed rapidly and there is no second Bowers."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Bowers has the lowest survival of any candidate at 74.3% versus Pickens 78.3%, Javonte 86%, A.J. Brown 86.3% and Drake Maye 97% — he is the one asset here we cannot replace if he goes."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "WR tier 8 has 16 members (Nabers, Rice, Higgins, McMillan, Waddle, McConkey all 91-99% to survive) and RB tier 9 has 7 with 100% chance at least one remains, so passing on Pickens costs us a tier, not a player."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap is only 1 — Bowers is First Seed's number 29 overall and we pick at 29, so this is following the board, not reaching."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Team 10 picks twice at 30 and 31 with TE:high among four high needs and nothing at TE, making them the single most plausible team to end our Bowers window."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8137",
+        "strongestAlternativeWhy": "Pickens is First Seed's top player left, Juancho's DRAFT_NOW pick, and the only board name with a positive dDec relative to everyone else, filling our empty WR2 in a room where receivers have been going 6 of the last 15 picks.",
+        "strongestCounterargument": "Juancho charges Bowers dDec -11.5 and dPlan -0.5 versus Pickens, and the joint availability table shows Pickens and Bowers both survive to pick 32 in 55.7% of runs with either surviving in 97% — so taking Pickens now and Bowers at 32 is live more than half the time, and Bowers at 74.3% is more likely than not to be there anyway.",
+        "whyRecommendationStillWins": "That 55.7% cuts the other way too: in 44.3% of runs we do not get both, and the branch where we lose Bowers costs a 15.7-point tier cliff at a mandatory slot with only Loveland/Warren behind him, while the branch where we lose Pickens costs almost nothing because WR tier 8 has 16 members with Nabers (81.7%), Rice (91.7%) and Higgins (93.3%) all likely at 32 — we take the irreplaceable asset and let the deep pool wait.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At 32 take the best of the WR tier 8 block (Nabers 81.7%, Rice 91.7%, Higgins 93.3%, McConkey 97.7%) or A.J. Brown if he lasts at 86.3%, then use 49/52 on the RB tier 9 group (Judkins 98%, Montgomery 98%, Swift 97%, Skattebo 93.7%) for RB2/FLEX, with QB deferred to the flat tier 3/4 around 69-72 where Hurts, Daniels, Burrow and Maye are all 97-100% to survive two picks.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks both 30 and 31 with zero TE and TE:high alongside QB/RB/WR high needs — the only team that can take Bowers before us and they get two swings at it."
+          }
+        ],
+        "urgency": "must_take_now"
+      },
+      "usage": {
+        "inputTokens": 17329,
+        "outputTokens": 1843
+      },
+      "latencyMs": 27367,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 17329,
+    "outputTokens": 1843
+  },
+  "latencyMs": 27367,
+  "error": null,
+  "cachedAt": "2026-08-27T19:24:53.038Z",
+  "key": "10dafbc7d2c2e845b750d2a7c00bb47c",
+  "label": "1398448522730221568 p29 claude-opus-5/playbook-v1"
+}

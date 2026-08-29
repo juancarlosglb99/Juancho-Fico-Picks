@@ -1,0 +1,204 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11604",
+      "reasoning": "tier_cliff: Bowers is the only TE tier 1 left with a 15.7-point gap to tier 3 (Loveland 120.4, Warren 116.8, Kraft 116.3 vs his 143.7); atRisk=1. opportunity_cost: RB tier 9 has 7 members (Javonte 186.9 down to Etienne 170.6, all 85-98% surv) and WR tier 8 has 16; those slots keep at 32/49/52, the TE slot does not. opponent_demand: Team 10 picks 30 and 31 back-to-back with TE:high and no TE; Bowers survival is only 74.3%, lowest of any candidate.",
+      "reasonCodes": [
+        "tier_cliff",
+        "opportunity_cost",
+        "opponent_demand"
+      ],
+      "confidence": 0.72
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reasoning": "First Seed's best available and 78% likely to return at 32, but a WR3-tier body rather than a positional edge.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7588",
+        "reasoning": "Best RB left at 186.9 proj, fills the RB2 slot from a seven-deep tier.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks 30 and 31 back-to-back, TE:high and QB/RB/WR all open",
+    "confidence": 0.72,
+    "model": "claude-opus-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced start (Nacua/Barkley) now buying the one genuinely separating TE, leaving RB2/WR2 to a deep tier at 32/49/52.",
+    "firstSeedDeviationReason": "Reaching one rank (fsGap 1) for the last tier-1 TE - effectively free.",
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "First Seed's #28 overall, fsGap 0, and Juancho's nominal pick with the best WR projection left at 151.7.",
+    "strongestCounterargument": "Pickens/Bowers both survive in 55.7% of runs and Bowers survives in 86.2% of runs where Pickens is gone - so taking Pickens now still lands Bowers at 32 most of the time.",
+    "whyRecommendationStillWins": "That 86.2% is conditional on Pickens going; unconditionally Bowers is gone 25.7% of the time and his replacement is a 23-point cliff to Loveland, while Pickens' replacement (Rice 146.5, Higgins 148, McConkey 142.1, 16 in tier) costs ~5-10 points. Insure the irreplaceable asset.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/A.J. Brown if either survives, else Javonte Williams or Judkins for RB2; RB tier 9 should still offer 6+ names at 49/52.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks 30 and 31 back-to-back, TE:high and QB/RB/WR all open"
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "First Seed's best available and 78% likely to return at 32, but a WR3-tier body rather than a positional edge."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Best RB left at 186.9 proj, fills the RB2 slot from a seven-deep tier."
+      }
+    ],
+    "confidence": 72,
+    "strategy": "Balanced start (Nacua/Barkley) now buying the one genuinely separating TE, leaving RB2/WR2 to a deep tier at 32/49/52.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Bowers is the only TE tier 1 left with a 15.7-point gap to tier 3 (Loveland 120.4, Warren 116.8, Kraft 116.3 vs his 143.7); atRisk=1."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "RB tier 9 has 7 members (Javonte 186.9 down to Etienne 170.6, all 85-98% surv) and WR tier 8 has 16; those slots keep at 32/49/52, the TE slot does not."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 picks 30 and 31 back-to-back with TE:high and no TE; Bowers survival is only 74.3%, lowest of any candidate."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "First Seed's #28 overall, fsGap 0, and Juancho's nominal pick with the best WR projection left at 151.7.",
+    "strongestCounterargument": "Pickens/Bowers both survive in 55.7% of runs and Bowers survives in 86.2% of runs where Pickens is gone - so taking Pickens now still lands Bowers at 32 most of the time.",
+    "whyRecommendationStillWins": "That 86.2% is conditional on Pickens going; unconditionally Bowers is gone 25.7% of the time and his replacement is a 23-point cliff to Loveland, while Pickens' replacement (Rice 146.5, Higgins 148, McConkey 142.1, 16 in tier) costs ~5-10 points. Insure the irreplaceable asset.",
+    "firstSeedDeviationReason": "Reaching one rank (fsGap 1) for the last tier-1 TE - effectively free.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/A.J. Brown if either survives, else Javonte Williams or Judkins for RB2; RB tier 9 should still offer 6+ names at 49/52.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks 30 and 31 back-to-back, TE:high and QB/RB/WR all open"
+      }
+    ],
+    "urgency": "must_take_now"
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "First Seed's best available and 78% likely to return at 32, but a WR3-tier body rather than a positional edge."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Best RB left at 186.9 proj, fills the RB2 slot from a seven-deep tier."
+      }
+    ],
+    "confidence": 72,
+    "strategy": "Balanced start (Nacua/Barkley) now buying the one genuinely separating TE, leaving RB2/WR2 to a deep tier at 32/49/52.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Bowers is the only TE tier 1 left with a 15.7-point gap to tier 3 (Loveland 120.4, Warren 116.8, Kraft 116.3 vs his 143.7); atRisk=1."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "RB tier 9 has 7 members (Javonte 186.9 down to Etienne 170.6, all 85-98% surv) and WR tier 8 has 16; those slots keep at 32/49/52, the TE slot does not."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 picks 30 and 31 back-to-back with TE:high and no TE; Bowers survival is only 74.3%, lowest of any candidate."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "First Seed's #28 overall, fsGap 0, and Juancho's nominal pick with the best WR projection left at 151.7.",
+    "strongestCounterargument": "Pickens/Bowers both survive in 55.7% of runs and Bowers survives in 86.2% of runs where Pickens is gone - so taking Pickens now still lands Bowers at 32 most of the time.",
+    "whyRecommendationStillWins": "That 86.2% is conditional on Pickens going; unconditionally Bowers is gone 25.7% of the time and his replacement is a 23-point cliff to Loveland, while Pickens' replacement (Rice 146.5, Higgins 148, McConkey 142.1, 16 in tier) costs ~5-10 points. Insure the irreplaceable asset.",
+    "firstSeedDeviationReason": "Reaching one rank (fsGap 1) for the last tier-1 TE - effectively free.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens/A.J. Brown if either survives, else Javonte Williams or Judkins for RB2; RB tier 9 should still offer 6+ names at 49/52.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks 30 and 31 back-to-back, TE:high and QB/RB/WR all open"
+      }
+    ],
+    "urgency": "must_take_now"
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:11604",
+        "alternatives": [
+          {
+            "playerId": "jfp:8137",
+            "reason": "First Seed's best available and 78% likely to return at 32, but a WR3-tier body rather than a positional edge."
+          },
+          {
+            "playerId": "jfp:7588",
+            "reason": "Best RB left at 186.9 proj, fills the RB2 slot from a seven-deep tier."
+          }
+        ],
+        "confidence": 72,
+        "strategy": "Balanced start (Nacua/Barkley) now buying the one genuinely separating TE, leaving RB2/WR2 to a deep tier at 32/49/52.",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "Bowers is the only TE tier 1 left with a 15.7-point gap to tier 3 (Loveland 120.4, Warren 116.8, Kraft 116.3 vs his 143.7); atRisk=1."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "RB tier 9 has 7 members (Javonte 186.9 down to Etienne 170.6, all 85-98% surv) and WR tier 8 has 16; those slots keep at 32/49/52, the TE slot does not."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Team 10 picks 30 and 31 back-to-back with TE:high and no TE; Bowers survival is only 74.3%, lowest of any candidate."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8137",
+        "strongestAlternativeWhy": "First Seed's #28 overall, fsGap 0, and Juancho's nominal pick with the best WR projection left at 151.7.",
+        "strongestCounterargument": "Pickens/Bowers both survive in 55.7% of runs and Bowers survives in 86.2% of runs where Pickens is gone - so taking Pickens now still lands Bowers at 32 most of the time.",
+        "whyRecommendationStillWins": "That 86.2% is conditional on Pickens going; unconditionally Bowers is gone 25.7% of the time and his replacement is a 23-point cliff to Loveland, while Pickens' replacement (Rice 146.5, Higgins 148, McConkey 142.1, 16 in tier) costs ~5-10 points. Insure the irreplaceable asset.",
+        "firstSeedDeviationReason": "Reaching one rank (fsGap 1) for the last tier-1 TE - effectively free.",
+        "expectedNextPickPlan": "At 32 take the best of Pickens/A.J. Brown if either survives, else Javonte Williams or Judkins for RB2; RB tier 9 should still offer 6+ names at 49/52.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks 30 and 31 back-to-back, TE:high and QB/RB/WR all open"
+          }
+        ],
+        "urgency": "must_take_now"
+      },
+      "usage": {
+        "inputTokens": 14234,
+        "outputTokens": 1170
+      },
+      "latencyMs": 16944,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 14234,
+    "outputTokens": 1170
+  },
+  "latencyMs": 16944,
+  "error": null,
+  "cachedAt": "2026-08-27T20:13:31.819Z",
+  "key": "6cc5d666eb3b038507d0eef21efc385c",
+  "label": "1398448522730221568 p29 claude-opus-5/playbook-v1 blind concise compact"
+}

@@ -1,0 +1,318 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 91,
+      "currentOverallPick": 92,
+      "currentRound": 10,
+      "boardFingerprint": "2j-547c7fef",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11628",
+      "reasoning": "first_seed_prior: Harrison is First Seed's best available at rank 89 with fsGap 0 — this is following the board, not reaching. survives_to_next_turn: His survival to pick 109 is only 6% across 300 runs, the lowest of any realistic candidate, while Croskey-Merritt (46%), Prescott (49.7%) and Kittle (40.3%) can be revisited later. opponent_demand: Teams 2 (WR:medium), 4 (WR:medium), 8 (WR:medium) and 3/6 (WR-heavy builds) all pick twice before pick 109, and 16 selections separate our turns — a WR of Harrison's name value will not last. starter_need: Both FLEX slots currently hold Quinshon Judkins and Zay Flowers; Harrison at 107.5 projected is a direct upgrade path over Flowers/Judkins rather than a bench body. positional_scarcity: Rules block a third TE and cap QB at 2, and our RB room is 3 deep with RB tier 13 having only 4 left — WR is the only place a starting-caliber upgrade is still available. opportunity_cost: Passing costs us little at QB/TE: QB tier 4 has 14 members with eitherRemains 100% and TE tier 4 has 16 members, so both can be addressed at 109/112 if wanted at all.",
+      "reasonCodes": [
+        "first_seed_prior",
+        "survives_to_next_turn",
+        "opponent_demand",
+        "starter_need",
+        "positional_scarcity",
+        "opportunity_cost"
+      ],
+      "confidence": 0.66
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8142",
+        "reasoning": "Alec Pierce is the highest-projected receiver left (117.8) and the last of WR tier 11 (2 left, flagged atRisk), so he is the other genuine flex upgrade.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:12533",
+        "reasoning": "Jacory Croskey-Merritt projects 120.2 as an RB and would be our best bench back behind an already-full RB room, with 46% survival making him the more likely fallback than Harrison.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 2: WR:medium and TE:high with picks at 99 and 102; a WR-hungry roster that has taken WR in 3 of its last 4 and would happily take Harrison. Roster 4: WR:medium with only Jordyn Tyson and DK Metcalf at receiver, picking at 97 and 104 — a prime landing spot for Harrison. Roster 8: WR:medium with just Olave and Odunze, picks at 93 and 108, and takes best-available receivers when they fall. Roster 3: WR-heavy build with 6 receivers already but RB:medium; picks at 98 and 103 and would strip the RB fallbacks like Allgeier and Croskey-Merritt. Roster 6: Six WRs and RB:medium/TE:high, picks at 95 and 106; a name-brand receiver like Harrison fits their pattern of stacking pass catchers.",
+    "confidence": 0.66,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; this pick buys the best remaining upside at a startable flex position (WR) before the tier evaporates, leaving rounds 11-13 for RB/WR depth and the mandatory K and DEF late.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternative": {
+      "playerId": "jfp:8142",
+      "why": "Alec Pierce projects 10.3 points higher than Harrison (117.8 vs 107.5), sits in the scarcer WR tier 11 (2 left, atRisk=1), and Juancho's raw simulation actually prefers him (dPlan +1.1 vs 0)."
+    },
+    "strongestCounterargument": "Juancho's raw plan value is higher for Alec Pierce (1362.6) and Jacory Croskey-Merritt (1362.7) than for Harrison (1361.5), and Pierce still survives to our next pick 38.3% of the time — so the simulation says the better final roster comes from taking Pierce/JCM and Harrison is only on top because of First Seed's rank anchor.",
+    "whyRecommendationStillWins": "Those plan differences are 1.1-1.2 points on a 1361-point roster — statistical noise — while the availability spread is not: Harrison survives 6% and Pierce 38.3%, and in the joint runs at least one of them is there 22% of the time meaning the correct sequencing is to take the 6% player now and try for the 38% player at 109. Pierce's projection edge is also standard-scoring volume on a low-target profile, whereas Harrison carries the far higher realistic ceiling as a WR2/flex.",
+    "expectedNextPickPlan": "At 109/112 (back-to-back-ish with 112) target the survivors: Croskey-Merritt (46%), Jordan Mason (76.7%), Tyler Allgeier (18.3%) or Alec Pierce (38.3%) for flex-quality depth, plus optionally Brock Purdy (84.3%) or Bo Nix (97.3%) as a QB2 only if free; TE is blocked and K/DEF get filled at 149 and the final round.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 2,
+        "why": "WR:medium and TE:high with picks at 99 and 102; a WR-hungry roster that has taken WR in 3 of its last 4 and would happily take Harrison."
+      },
+      {
+        "rosterId": 4,
+        "why": "WR:medium with only Jordyn Tyson and DK Metcalf at receiver, picking at 97 and 104 — a prime landing spot for Harrison."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:medium with just Olave and Odunze, picks at 93 and 108, and takes best-available receivers when they fall."
+      },
+      {
+        "rosterId": 3,
+        "why": "WR-heavy build with 6 receivers already but RB:medium; picks at 98 and 103 and would strip the RB fallbacks like Allgeier and Croskey-Merritt."
+      },
+      {
+        "rosterId": 6,
+        "why": "Six WRs and RB:medium/TE:high, picks at 95 and 106; a name-brand receiver like Harrison fits their pattern of stacking pass catchers."
+      }
+    ]
+  },
+  "response": {
+    "playerId": "x",
+    "recommendedPlayerId": "jfp:11628",
+    "alternatives": [
+      {
+        "playerId": "jfp:8142",
+        "reason": "Alec Pierce is the highest-projected receiver left (117.8) and the last of WR tier 11 (2 left, flagged atRisk), so he is the other genuine flex upgrade."
+      },
+      {
+        "playerId": "jfp:12533",
+        "reason": "Jacory Croskey-Merritt projects 120.2 as an RB and would be our best bench back behind an already-full RB room, with 46% survival making him the more likely fallback than Harrison."
+      }
+    ],
+    "confidence": 66,
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; this pick buys the best remaining upside at a startable flex position (WR) before the tier evaporates, leaving rounds 11-13 for RB/WR depth and the mandatory K and DEF late.",
+    "reasons": [
+      {
+        "code": "first_seed_prior",
+        "detail": "Harrison is First Seed's best available at rank 89 with fsGap 0 — this is following the board, not reaching."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "His survival to pick 109 is only 6% across 300 runs, the lowest of any realistic candidate, while Croskey-Merritt (46%), Prescott (49.7%) and Kittle (40.3%) can be revisited later."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Teams 2 (WR:medium), 4 (WR:medium), 8 (WR:medium) and 3/6 (WR-heavy builds) all pick twice before pick 109, and 16 selections separate our turns — a WR of Harrison's name value will not last."
+      },
+      {
+        "code": "starter_need",
+        "detail": "Both FLEX slots currently hold Quinshon Judkins and Zay Flowers; Harrison at 107.5 projected is a direct upgrade path over Flowers/Judkins rather than a bench body."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Rules block a third TE and cap QB at 2, and our RB room is 3 deep with RB tier 13 having only 4 left — WR is the only place a starting-caliber upgrade is still available."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing costs us little at QB/TE: QB tier 4 has 14 members with eitherRemains 100% and TE tier 4 has 16 members, so both can be addressed at 109/112 if wanted at all."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:8142",
+      "why": "Alec Pierce projects 10.3 points higher than Harrison (117.8 vs 107.5), sits in the scarcer WR tier 11 (2 left, atRisk=1), and Juancho's raw simulation actually prefers him (dPlan +1.1 vs 0)."
+    },
+    "strongestCounterargument": "Juancho's raw plan value is higher for Alec Pierce (1362.6) and Jacory Croskey-Merritt (1362.7) than for Harrison (1361.5), and Pierce still survives to our next pick 38.3% of the time — so the simulation says the better final roster comes from taking Pierce/JCM and Harrison is only on top because of First Seed's rank anchor.",
+    "whyRecommendationStillWins": "Those plan differences are 1.1-1.2 points on a 1361-point roster — statistical noise — while the availability spread is not: Harrison survives 6% and Pierce 38.3%, and in the joint runs at least one of them is there 22% of the time meaning the correct sequencing is to take the 6% player now and try for the 38% player at 109. Pierce's projection edge is also standard-scoring volume on a low-target profile, whereas Harrison carries the far higher realistic ceiling as a WR2/flex.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 109/112 (back-to-back-ish with 112) target the survivors: Croskey-Merritt (46%), Jordan Mason (76.7%), Tyler Allgeier (18.3%) or Alec Pierce (38.3%) for flex-quality depth, plus optionally Brock Purdy (84.3%) or Bo Nix (97.3%) as a QB2 only if free; TE is blocked and K/DEF get filled at 149 and the final round.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 2,
+        "why": "WR:medium and TE:high with picks at 99 and 102; a WR-hungry roster that has taken WR in 3 of its last 4 and would happily take Harrison."
+      },
+      {
+        "rosterId": 4,
+        "why": "WR:medium with only Jordyn Tyson and DK Metcalf at receiver, picking at 97 and 104 — a prime landing spot for Harrison."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:medium with just Olave and Odunze, picks at 93 and 108, and takes best-available receivers when they fall."
+      },
+      {
+        "rosterId": 3,
+        "why": "WR-heavy build with 6 receivers already but RB:medium; picks at 98 and 103 and would strip the RB fallbacks like Allgeier and Croskey-Merritt."
+      },
+      {
+        "rosterId": 6,
+        "why": "Six WRs and RB:medium/TE:high, picks at 95 and 106; a name-brand receiver like Harrison fits their pattern of stacking pass catchers."
+      }
+    ]
+  },
+  "rawResponse": {
+    "playerId": "x",
+    "recommendedPlayerId": "jfp:11628",
+    "alternatives": [
+      {
+        "playerId": "jfp:8142",
+        "reason": "Alec Pierce is the highest-projected receiver left (117.8) and the last of WR tier 11 (2 left, flagged atRisk), so he is the other genuine flex upgrade."
+      },
+      {
+        "playerId": "jfp:12533",
+        "reason": "Jacory Croskey-Merritt projects 120.2 as an RB and would be our best bench back behind an already-full RB room, with 46% survival making him the more likely fallback than Harrison."
+      }
+    ],
+    "confidence": 66,
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; this pick buys the best remaining upside at a startable flex position (WR) before the tier evaporates, leaving rounds 11-13 for RB/WR depth and the mandatory K and DEF late.",
+    "reasons": [
+      {
+        "code": "first_seed_prior",
+        "detail": "Harrison is First Seed's best available at rank 89 with fsGap 0 — this is following the board, not reaching."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "His survival to pick 109 is only 6% across 300 runs, the lowest of any realistic candidate, while Croskey-Merritt (46%), Prescott (49.7%) and Kittle (40.3%) can be revisited later."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Teams 2 (WR:medium), 4 (WR:medium), 8 (WR:medium) and 3/6 (WR-heavy builds) all pick twice before pick 109, and 16 selections separate our turns — a WR of Harrison's name value will not last."
+      },
+      {
+        "code": "starter_need",
+        "detail": "Both FLEX slots currently hold Quinshon Judkins and Zay Flowers; Harrison at 107.5 projected is a direct upgrade path over Flowers/Judkins rather than a bench body."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Rules block a third TE and cap QB at 2, and our RB room is 3 deep with RB tier 13 having only 4 left — WR is the only place a starting-caliber upgrade is still available."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing costs us little at QB/TE: QB tier 4 has 14 members with eitherRemains 100% and TE tier 4 has 16 members, so both can be addressed at 109/112 if wanted at all."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:8142",
+      "why": "Alec Pierce projects 10.3 points higher than Harrison (117.8 vs 107.5), sits in the scarcer WR tier 11 (2 left, atRisk=1), and Juancho's raw simulation actually prefers him (dPlan +1.1 vs 0)."
+    },
+    "strongestCounterargument": "Juancho's raw plan value is higher for Alec Pierce (1362.6) and Jacory Croskey-Merritt (1362.7) than for Harrison (1361.5), and Pierce still survives to our next pick 38.3% of the time — so the simulation says the better final roster comes from taking Pierce/JCM and Harrison is only on top because of First Seed's rank anchor.",
+    "whyRecommendationStillWins": "Those plan differences are 1.1-1.2 points on a 1361-point roster — statistical noise — while the availability spread is not: Harrison survives 6% and Pierce 38.3%, and in the joint runs at least one of them is there 22% of the time meaning the correct sequencing is to take the 6% player now and try for the 38% player at 109. Pierce's projection edge is also standard-scoring volume on a low-target profile, whereas Harrison carries the far higher realistic ceiling as a WR2/flex.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 109/112 (back-to-back-ish with 112) target the survivors: Croskey-Merritt (46%), Jordan Mason (76.7%), Tyler Allgeier (18.3%) or Alec Pierce (38.3%) for flex-quality depth, plus optionally Brock Purdy (84.3%) or Bo Nix (97.3%) as a QB2 only if free; TE is blocked and K/DEF get filled at 149 and the final round.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 2,
+        "why": "WR:medium and TE:high with picks at 99 and 102; a WR-hungry roster that has taken WR in 3 of its last 4 and would happily take Harrison."
+      },
+      {
+        "rosterId": 4,
+        "why": "WR:medium with only Jordyn Tyson and DK Metcalf at receiver, picking at 97 and 104 — a prime landing spot for Harrison."
+      },
+      {
+        "rosterId": 8,
+        "why": "WR:medium with just Olave and Odunze, picks at 93 and 108, and takes best-available receivers when they fall."
+      },
+      {
+        "rosterId": 3,
+        "why": "WR-heavy build with 6 receivers already but RB:medium; picks at 98 and 103 and would strip the RB fallbacks like Allgeier and Croskey-Merritt."
+      },
+      {
+        "rosterId": 6,
+        "why": "Six WRs and RB:medium/TE:high, picks at 95 and 106; a name-brand receiver like Harrison fits their pattern of stacking pass catchers."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "playerId": "x",
+        "recommendedPlayerId": "jfp:11628",
+        "alternatives": [
+          {
+            "playerId": "jfp:8142",
+            "reason": "Alec Pierce is the highest-projected receiver left (117.8) and the last of WR tier 11 (2 left, flagged atRisk), so he is the other genuine flex upgrade."
+          },
+          {
+            "playerId": "jfp:12533",
+            "reason": "Jacory Croskey-Merritt projects 120.2 as an RB and would be our best bench back behind an already-full RB room, with 46% survival making him the more likely fallback than Harrison."
+          }
+        ],
+        "confidence": 66,
+        "decision": "DRAFT_NOW",
+        "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; this pick buys the best remaining upside at a startable flex position (WR) before the tier evaporates, leaving rounds 11-13 for RB/WR depth and the mandatory K and DEF late.",
+        "reasons": [
+          {
+            "code": "first_seed_prior",
+            "detail": "Harrison is First Seed's best available at rank 89 with fsGap 0 — this is following the board, not reaching."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "His survival to pick 109 is only 6% across 300 runs, the lowest of any realistic candidate, while Croskey-Merritt (46%), Prescott (49.7%) and Kittle (40.3%) can be revisited later."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Teams 2 (WR:medium), 4 (WR:medium), 8 (WR:medium) and 3/6 (WR-heavy builds) all pick twice before pick 109, and 16 selections separate our turns — a WR of Harrison's name value will not last."
+          },
+          {
+            "code": "starter_need",
+            "detail": "Both FLEX slots currently hold Quinshon Judkins and Zay Flowers; Harrison at 107.5 projected is a direct upgrade path over Flowers/Judkins rather than a bench body."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "Rules block a third TE and cap QB at 2, and our RB room is 3 deep with RB tier 13 having only 4 left — WR is the only place a starting-caliber upgrade is still available."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Passing costs us little at QB/TE: QB tier 4 has 14 members with eitherRemains 100% and TE tier 4 has 16 members, so both can be addressed at 109/112 if wanted at all."
+          }
+        ],
+        "strongestAlternative": {
+          "playerId": "jfp:8142",
+          "why": "Alec Pierce projects 10.3 points higher than Harrison (117.8 vs 107.5), sits in the scarcer WR tier 11 (2 left, atRisk=1), and Juancho's raw simulation actually prefers him (dPlan +1.1 vs 0)."
+        },
+        "strongestCounterargument": "Juancho's raw plan value is higher for Alec Pierce (1362.6) and Jacory Croskey-Merritt (1362.7) than for Harrison (1361.5), and Pierce still survives to our next pick 38.3% of the time — so the simulation says the better final roster comes from taking Pierce/JCM and Harrison is only on top because of First Seed's rank anchor.",
+        "whyRecommendationStillWins": "Those plan differences are 1.1-1.2 points on a 1361-point roster — statistical noise — while the availability spread is not: Harrison survives 6% and Pierce 38.3%, and in the joint runs at least one of them is there 22% of the time meaning the correct sequencing is to take the 6% player now and try for the 38% player at 109. Pierce's projection edge is also standard-scoring volume on a low-target profile, whereas Harrison carries the far higher realistic ceiling as a WR2/flex.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At 109/112 (back-to-back-ish with 112) target the survivors: Croskey-Merritt (46%), Jordan Mason (76.7%), Tyler Allgeier (18.3%) or Alec Pierce (38.3%) for flex-quality depth, plus optionally Brock Purdy (84.3%) or Bo Nix (97.3%) as a QB2 only if free; TE is blocked and K/DEF get filled at 149 and the final round.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 2,
+            "why": "WR:medium and TE:high with picks at 99 and 102; a WR-hungry roster that has taken WR in 3 of its last 4 and would happily take Harrison."
+          },
+          {
+            "rosterId": 4,
+            "why": "WR:medium with only Jordyn Tyson and DK Metcalf at receiver, picking at 97 and 104 — a prime landing spot for Harrison."
+          },
+          {
+            "rosterId": 8,
+            "why": "WR:medium with just Olave and Odunze, picks at 93 and 108, and takes best-available receivers when they fall."
+          },
+          {
+            "rosterId": 3,
+            "why": "WR-heavy build with 6 receivers already but RB:medium; picks at 98 and 103 and would strip the RB fallbacks like Allgeier and Croskey-Merritt."
+          },
+          {
+            "rosterId": 6,
+            "why": "Six WRs and RB:medium/TE:high, picks at 95 and 106; a name-brand receiver like Harrison fits their pattern of stacking pass catchers."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 17542,
+        "outputTokens": 2024
+      },
+      "latencyMs": 29960,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 17542,
+    "outputTokens": 2024
+  },
+  "latencyMs": 29960,
+  "error": null,
+  "cachedAt": "2026-08-27T15:34:26.510Z",
+  "key": "c07c707c8009eb998e1d8bc5a4a45291",
+  "label": "1398448522730221568 p92 claude-opus-5/playbook-v1"
+}

@@ -1,0 +1,184 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 148,
+      "currentOverallPick": 149,
+      "currentRound": 15,
+      "boardFingerprint": "44-10bd6676",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11583",
+      "reasoning": "starter_need: Lineup is complete (QB/2RB/2WR/TE/2FLEX/K/DEF filled); TE is blocked at 2 bodies, so this pick can only be bench value. opportunity_cost: Brooks projects 124.7, the highest of any non-QB on the board (projRank 91) and 9.2 ahead of Pacheco's 115.5. first_seed_prior: fsGap 27 past Kamara, but First Seed's own value delta on Brooks is +0.79 with landmine 1.2 - their lowest risk score on the board.",
+      "reasonCodes": [
+        "starter_need",
+        "opportunity_cost",
+        "first_seed_prior"
+      ],
+      "confidence": 0.7
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8205",
+        "reasoning": "Isiah Pacheco, 115.5 proj, is the next-best upside RB body for a final bench spot.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:12501",
+        "reasoning": "Matthew Golden, 100.7 proj and WR tier 12, is the best receiver left if we prefer WR depth.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": null,
+    "confidence": 0.7,
+    "model": "claude-opus-5",
+    "urgency": "neutral",
+    "strategy": "Final pick on a full, balanced roster: take the highest-upside flex-eligible bench asset rather than an unusable third TE or second QB.",
+    "firstSeedDeviationReason": "With one selection left and no lineup holes, the only value is bench upside, and Brooks' 124.7 projection beats every player First Seed ranks ahead of him here (Kamara 76.0).",
+    "strongestAlternativePlayerId": "jfp:8205",
+    "strongestAlternativeWhy": "Pacheco is a proven volume back at 115.5 proj with a clearer immediate role than a returning-from-injury Brooks.",
+    "strongestCounterargument": "Brooks reaches 27 ranks past First Seed's best available (Alvin Kamara, rank 132), and Juancho's sim gap for him is -1.9 versus Bo Nix at 0.0, i.e. the engine's best completed roster comes from taking Nix.",
+    "whyRecommendationStillWins": "Nix's 0.0 simGap and 16.6 gain are the QB-inflation artifact the format warns about - we already start Jalen Hurts, so a second QB in a 1QB league adds nothing startable. Among usable bodies Brooks has the best projection and First Seed's own +0.79 value / 1.2 landmine backs the reach.",
+    "expectedNextPickPlan": "No further selections - pick 149 is our last of 15 rounds.",
+    "opponentsThatMatter": []
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:11583",
+    "alternatives": [
+      {
+        "playerId": "jfp:8205",
+        "reason": "Isiah Pacheco, 115.5 proj, is the next-best upside RB body for a final bench spot."
+      },
+      {
+        "playerId": "jfp:12501",
+        "reason": "Matthew Golden, 100.7 proj and WR tier 12, is the best receiver left if we prefer WR depth."
+      }
+    ],
+    "confidence": 70,
+    "strategy": "Final pick on a full, balanced roster: take the highest-upside flex-eligible bench asset rather than an unusable third TE or second QB.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Lineup is complete (QB/2RB/2WR/TE/2FLEX/K/DEF filled); TE is blocked at 2 bodies, so this pick can only be bench value."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Brooks projects 124.7, the highest of any non-QB on the board (projRank 91) and 9.2 ahead of Pacheco's 115.5."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap 27 past Kamara, but First Seed's own value delta on Brooks is +0.79 with landmine 1.2 - their lowest risk score on the board."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8205",
+    "strongestAlternativeWhy": "Pacheco is a proven volume back at 115.5 proj with a clearer immediate role than a returning-from-injury Brooks.",
+    "strongestCounterargument": "Brooks reaches 27 ranks past First Seed's best available (Alvin Kamara, rank 132), and Juancho's sim gap for him is -1.9 versus Bo Nix at 0.0, i.e. the engine's best completed roster comes from taking Nix.",
+    "whyRecommendationStillWins": "Nix's 0.0 simGap and 16.6 gain are the QB-inflation artifact the format warns about - we already start Jalen Hurts, so a second QB in a 1QB league adds nothing startable. Among usable bodies Brooks has the best projection and First Seed's own +0.79 value / 1.2 landmine backs the reach.",
+    "firstSeedDeviationReason": "With one selection left and no lineup holes, the only value is bench upside, and Brooks' 124.7 projection beats every player First Seed ranks ahead of him here (Kamara 76.0).",
+    "expectedNextPickPlan": "No further selections - pick 149 is our last of 15 rounds.",
+    "opponentsThatMatter": [],
+    "urgency": "neutral"
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:11583",
+    "alternatives": [
+      {
+        "playerId": "jfp:8205",
+        "reason": "Isiah Pacheco, 115.5 proj, is the next-best upside RB body for a final bench spot."
+      },
+      {
+        "playerId": "jfp:12501",
+        "reason": "Matthew Golden, 100.7 proj and WR tier 12, is the best receiver left if we prefer WR depth."
+      }
+    ],
+    "confidence": 70,
+    "strategy": "Final pick on a full, balanced roster: take the highest-upside flex-eligible bench asset rather than an unusable third TE or second QB.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Lineup is complete (QB/2RB/2WR/TE/2FLEX/K/DEF filled); TE is blocked at 2 bodies, so this pick can only be bench value."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Brooks projects 124.7, the highest of any non-QB on the board (projRank 91) and 9.2 ahead of Pacheco's 115.5."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap 27 past Kamara, but First Seed's own value delta on Brooks is +0.79 with landmine 1.2 - their lowest risk score on the board."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8205",
+    "strongestAlternativeWhy": "Pacheco is a proven volume back at 115.5 proj with a clearer immediate role than a returning-from-injury Brooks.",
+    "strongestCounterargument": "Brooks reaches 27 ranks past First Seed's best available (Alvin Kamara, rank 132), and Juancho's sim gap for him is -1.9 versus Bo Nix at 0.0, i.e. the engine's best completed roster comes from taking Nix.",
+    "whyRecommendationStillWins": "Nix's 0.0 simGap and 16.6 gain are the QB-inflation artifact the format warns about - we already start Jalen Hurts, so a second QB in a 1QB league adds nothing startable. Among usable bodies Brooks has the best projection and First Seed's own +0.79 value / 1.2 landmine backs the reach.",
+    "firstSeedDeviationReason": "With one selection left and no lineup holes, the only value is bench upside, and Brooks' 124.7 projection beats every player First Seed ranks ahead of him here (Kamara 76.0).",
+    "expectedNextPickPlan": "No further selections - pick 149 is our last of 15 rounds.",
+    "opponentsThatMatter": [],
+    "urgency": "neutral"
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:11583",
+        "alternatives": [
+          {
+            "playerId": "jfp:8205",
+            "reason": "Isiah Pacheco, 115.5 proj, is the next-best upside RB body for a final bench spot."
+          },
+          {
+            "playerId": "jfp:12501",
+            "reason": "Matthew Golden, 100.7 proj and WR tier 12, is the best receiver left if we prefer WR depth."
+          }
+        ],
+        "confidence": 70,
+        "strategy": "Final pick on a full, balanced roster: take the highest-upside flex-eligible bench asset rather than an unusable third TE or second QB.",
+        "reasons": [
+          {
+            "code": "starter_need",
+            "detail": "Lineup is complete (QB/2RB/2WR/TE/2FLEX/K/DEF filled); TE is blocked at 2 bodies, so this pick can only be bench value."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Brooks projects 124.7, the highest of any non-QB on the board (projRank 91) and 9.2 ahead of Pacheco's 115.5."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap 27 past Kamara, but First Seed's own value delta on Brooks is +0.79 with landmine 1.2 - their lowest risk score on the board."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8205",
+        "strongestAlternativeWhy": "Pacheco is a proven volume back at 115.5 proj with a clearer immediate role than a returning-from-injury Brooks.",
+        "strongestCounterargument": "Brooks reaches 27 ranks past First Seed's best available (Alvin Kamara, rank 132), and Juancho's sim gap for him is -1.9 versus Bo Nix at 0.0, i.e. the engine's best completed roster comes from taking Nix.",
+        "whyRecommendationStillWins": "Nix's 0.0 simGap and 16.6 gain are the QB-inflation artifact the format warns about - we already start Jalen Hurts, so a second QB in a 1QB league adds nothing startable. Among usable bodies Brooks has the best projection and First Seed's own +0.79 value / 1.2 landmine backs the reach.",
+        "firstSeedDeviationReason": "With one selection left and no lineup holes, the only value is bench upside, and Brooks' 124.7 projection beats every player First Seed ranks ahead of him here (Kamara 76.0).",
+        "expectedNextPickPlan": "No further selections - pick 149 is our last of 15 rounds.",
+        "opponentsThatMatter": [],
+        "urgency": "neutral"
+      },
+      "usage": {
+        "inputTokens": 16367,
+        "outputTokens": 1084
+      },
+      "latencyMs": 16525,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 16367,
+    "outputTokens": 1084
+  },
+  "latencyMs": 16525,
+  "error": null,
+  "cachedAt": "2026-08-27T20:01:56.659Z",
+  "key": "1f773a623c4ae240ee3a34fbede1dbd3",
+  "label": "1398448522730221568 p149 claude-opus-5/playbook-v1 blind concise"
+}

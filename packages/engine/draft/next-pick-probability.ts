@@ -62,6 +62,47 @@ export function findNextUserSelection(
   return null;
 }
 
+/**
+ * Every selection we still own, from the one on the clock to the last round.
+ *
+ * Planning the rest of the roster needs the whole schedule, not just the next
+ * pick: what a position is worth now depends on how many chances remain to fill
+ * the slots that are still empty.
+ */
+export function listUserSelections(
+  currentOverallPick: number,
+  teams: number,
+  rounds: number,
+  draftType: NormalizedDraftType,
+  userSlot: number | null,
+  ownership?: {
+    userRosterId: number | null;
+    slotToRosterId: Record<string, number> | null;
+    tradedPicks: SleeperTradedPick[];
+  },
+): number[] {
+  const totalPicks = teams * rounds;
+  if (draftType === 'auction' || draftType === 'unknown') return [];
+  if (userSlot === null && (ownership?.userRosterId ?? null) === null) return [];
+
+  const selections: number[] = [];
+  for (let pick = currentOverallPick; pick <= totalPicks; pick += 1) {
+    const slot = slotForOverallPick(pick, teams, draftType);
+    const round = Math.ceil(pick / teams);
+    const originalRosterId = ownership?.slotToRosterId?.[String(slot)] ?? null;
+    const traded = ownership?.tradedPicks.find(
+      (candidate) => candidate.round === round && candidate.roster_id === originalRosterId,
+    );
+    const ownerRosterId = traded?.owner_id ?? originalRosterId;
+    const isUserSelection =
+      ownership?.userRosterId !== null && ownership?.userRosterId !== undefined
+        ? ownerRosterId === ownership.userRosterId
+        : slot === userSlot;
+    if (isUserSelection) selections.push(pick);
+  }
+  return selections;
+}
+
 export function getInterveningDraftSlots(
   currentOverallPick: number,
   nextUserPick: number | null,

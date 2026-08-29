@@ -96,6 +96,21 @@ export const sleeperClient = {
     );
   },
 
+  /**
+   * The drafts a user has taken part in this season.
+   *
+   * Observed against the live API to return only league drafts: a known mock
+   * the user had drafted in was absent from the response. So discovery cannot
+   * be relied on to surface mocks, and pasting a draft link stays the way to
+   * reach one.
+   */
+  getUserDrafts(userId: string, season: string, signal?: AbortSignal) {
+    return request<SleeperDraft[]>(
+      `/user/${encodeURIComponent(userId)}/drafts/nfl/${encodeURIComponent(season)}`,
+      signal,
+    );
+  },
+
   getDraft(draftId: string, signal?: AbortSignal) {
     return request<SleeperDraft>(
       `/draft/${encodeURIComponent(draftId)}`,

@@ -8,23 +8,37 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "start": "vinext start",
+    "start": "node dist/standalone/server.js",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "test": "vitest run --config vitest.config.ts",
     "test:smoke": "vitest run --config vitest.smoke.config.ts",
-    "test:watch": "vitest --config vitest.config.ts"
+    "test:watch": "vitest --config vitest.config.ts",
+    "capture": "node scripts/capture.mjs",
+    "test:regression": "vitest run --config vitest.config.ts tests/regression",
+    "tune:consensus": "node scripts/tune-consensus.mjs",
+    "brief": "node scripts/brief.mjs",
+    "strategist:eval": "node scripts/strategist-eval.mjs",
+    "calibration": "npx vitest run --config vitest.config.ts tests/regression/survival-calibration.test.ts --reporter=verbose",
+    "strategist:size": "node scripts/strategist-size.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:check": "node scripts/check-auth-schema.mjs",
+    "account": "node scripts/account.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "start:preflight": "node scripts/preflight.mjs && node dist/standalone/server.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.121.0",
+    "better-auth": "^1.7.2",
     "next": "^16.3.3",
+    "pg": "^8.23.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.53.1",
-    "@cloudflare/workers-types": "^5.20260825.1",
     "@openai/sites-vite-plugin": "^0.1.0 || ^0.2.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
+    "@types/pg": "^8.23.1",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
@@ -36,8 +50,7 @@
     "typescript": "5.9.3",
     "vinext": "^1.0.0-beta.8",
     "vite": "^8.2.2",
-    "vitest": "^4.1.11",
-    "wrangler": "^4.125.0"
+    "vitest": "^4.1.11"
   },
   "type": "module"
 }

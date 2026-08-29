@@ -1,0 +1,251 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 108,
+      "currentOverallPick": 109,
+      "currentRound": 11,
+      "boardFingerprint": "30-442e8b02",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8408",
+      "reasoning": "starter_need: Lineup is full at QB/RB/RB/WR/WR/TE/FLEX/FLEX; only K and DEF are empty and rules block them until the final rounds, so this pick is about the best startable-quality depth, not a hole. positional_scarcity: RB tier 13 has just 3 left with a 7.3-point gap after it, and Jordan Mason at 113.5 projected points is the highest-projected RB on the board other than Jonathon Brooks (124.7, injury-tier) and Isiah Pacheco (115.5). first_seed_prior: Mason is fsRank 110, only 11 ranks past First Seed's best available (Conner, 99), so this is a marginal deviation, and Juancho's own simulation has him at dPlan +3.9 - the best raw final-roster value of any candidate in the top five. opportunity_cost: Passing WRs costs little: we already start Nacua, Pickens and Flowers with Harrison on the bench, and Addison/Pittman/Reed/Johnston all survive at 77-99% while nine WRs in tier 12 remain. opponent_demand: Only roster 10 picks twice before us (110, 111) and their listed need is TE:medium with 5 RBs already, so the WR/QB tail is safe but a run-happy RB-heavy room has consumed 38% of picks at RB. tier_cliff: Conner's data warning (fsRank 99 vs 40.4 projected points, against a median of 89 for RBs ranked near him) makes him the riskier of the two RB bodies at effectively the same cost.",
+      "reasonCodes": [
+        "starter_need",
+        "positional_scarcity",
+        "first_seed_prior",
+        "opportunity_cost",
+        "opponent_demand",
+        "tier_cliff"
+      ],
+      "confidence": 0.62
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:4137",
+        "reasoning": "James Conner is First Seed's best available and a proven RB2/flex body, but his 40.4 recalculated projection versus Mason's 113.5 flags a rank/projection conflict and he is 31 with tier-18 standing.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:6819",
+        "reasoning": "Michael Pittman (109.5 proj) is the best remaining WR upgrade over Marvin Harrison as a bench/flex piece, but WR is our deepest position and he survives at 97.7%.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Holds both intervening selections (110, 111) with RB5/WR3/TE1 and a stated TE:medium need; most likely takes a TE and a depth RB, which is the only realistic threat to Mason and Conner before 112.",
+    "confidence": 0.62,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; with only 5 selections left and K+DEF mandatory, we use this pick on the one position where a real injury/handcuff-quality starter still exists - a high-projection RB body (Jordan Mason, 113.5 proj) behind Saquon/Javonte/Judkins - rather than a fourth WR or an unusable third TE.",
+    "firstSeedDeviationReason": "Mason is 11 ranks past First Seed's best available; the reason is the published data conflict on Conner (fsRank 99 against a 40.4-point projection versus a 89-point median for his rank neighbours), which makes First Seed's own top name unreliable here, while Mason projects 73 points higher in this league's standard scoring.",
+    "strongestAlternative": {
+      "playerId": "jfp:4137",
+      "why": "Conner is First Seed's literal best available at fsGap 0 and Juancho's DRAFT_NOW recommendation, an established lead back whose rank implies far more value than his 40.4 projection."
+    },
+    "strongestCounterargument": "Jordan Mason survives to our pick at 112 in 94% of runs and both Conner and Mason remain together in 74.7%, so we could simply take Conner (80.3% survival, First Seed's #99 and Juancho's DRAFT_NOW) here and still land Mason two picks later.",
+    "whyRecommendationStillWins": "That 94% is exactly why Mason is not the one to gamble on only if we actually want both - but we do not: with five picks left and K+DEF mandatory we get at most three more skill bodies, so we should take the single best one, and Mason's 113.5 projection versus Conner's flagged 40.4 (dPlan +3.9 vs 0) makes him the better single body; if Mason is somehow gone at 112, Conner survives in 86.4% of those runs anyway.",
+    "expectedNextPickPlan": "At 112 take the best remaining of James Conner (80.3% survival) or a WR upgrade in Michael Pittman (97.7%) / Jordan Addison (77.3%); then use 129, 132 and 149 on the last skill body plus the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Holds both intervening selections (110, 111) with RB5/WR3/TE1 and a stated TE:medium need; most likely takes a TE and a depth RB, which is the only realistic threat to Mason and Conner before 112."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:4137",
+        "reason": "James Conner is First Seed's best available and a proven RB2/flex body, but his 40.4 recalculated projection versus Mason's 113.5 flags a rank/projection conflict and he is 31 with tier-18 standing."
+      },
+      {
+        "playerId": "jfp:6819",
+        "reason": "Michael Pittman (109.5 proj) is the best remaining WR upgrade over Marvin Harrison as a bench/flex piece, but WR is our deepest position and he survives at 97.7%."
+      }
+    ],
+    "confidence": 62,
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; with only 5 selections left and K+DEF mandatory, we use this pick on the one position where a real injury/handcuff-quality starter still exists - a high-projection RB body (Jordan Mason, 113.5 proj) behind Saquon/Javonte/Judkins - rather than a fourth WR or an unusable third TE.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Lineup is full at QB/RB/RB/WR/WR/TE/FLEX/FLEX; only K and DEF are empty and rules block them until the final rounds, so this pick is about the best startable-quality depth, not a hole."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "RB tier 13 has just 3 left with a 7.3-point gap after it, and Jordan Mason at 113.5 projected points is the highest-projected RB on the board other than Jonathon Brooks (124.7, injury-tier) and Isiah Pacheco (115.5)."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "Mason is fsRank 110, only 11 ranks past First Seed's best available (Conner, 99), so this is a marginal deviation, and Juancho's own simulation has him at dPlan +3.9 - the best raw final-roster value of any candidate in the top five."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing WRs costs little: we already start Nacua, Pickens and Flowers with Harrison on the bench, and Addison/Pittman/Reed/Johnston all survive at 77-99% while nine WRs in tier 12 remain."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Only roster 10 picks twice before us (110, 111) and their listed need is TE:medium with 5 RBs already, so the WR/QB tail is safe but a run-happy RB-heavy room has consumed 38% of picks at RB."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "Conner's data warning (fsRank 99 vs 40.4 projected points, against a median of 89 for RBs ranked near him) makes him the riskier of the two RB bodies at effectively the same cost."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:4137",
+      "why": "Conner is First Seed's literal best available at fsGap 0 and Juancho's DRAFT_NOW recommendation, an established lead back whose rank implies far more value than his 40.4 projection."
+    },
+    "strongestCounterargument": "Jordan Mason survives to our pick at 112 in 94% of runs and both Conner and Mason remain together in 74.7%, so we could simply take Conner (80.3% survival, First Seed's #99 and Juancho's DRAFT_NOW) here and still land Mason two picks later.",
+    "whyRecommendationStillWins": "That 94% is exactly why Mason is not the one to gamble on only if we actually want both - but we do not: with five picks left and K+DEF mandatory we get at most three more skill bodies, so we should take the single best one, and Mason's 113.5 projection versus Conner's flagged 40.4 (dPlan +3.9 vs 0) makes him the better single body; if Mason is somehow gone at 112, Conner survives in 86.4% of those runs anyway.",
+    "firstSeedDeviationReason": "Mason is 11 ranks past First Seed's best available; the reason is the published data conflict on Conner (fsRank 99 against a 40.4-point projection versus a 89-point median for his rank neighbours), which makes First Seed's own top name unreliable here, while Mason projects 73 points higher in this league's standard scoring.",
+    "expectedNextPickPlan": "At 112 take the best remaining of James Conner (80.3% survival) or a WR upgrade in Michael Pittman (97.7%) / Jordan Addison (77.3%); then use 129, 132 and 149 on the last skill body plus the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Holds both intervening selections (110, 111) with RB5/WR3/TE1 and a stated TE:medium need; most likely takes a TE and a depth RB, which is the only realistic threat to Mason and Conner before 112."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8408",
+    "alternatives": [
+      {
+        "playerId": "jfp:4137",
+        "reason": "James Conner is First Seed's best available and a proven RB2/flex body, but his 40.4 recalculated projection versus Mason's 113.5 flags a rank/projection conflict and he is 31 with tier-18 standing."
+      },
+      {
+        "playerId": "jfp:6819",
+        "reason": "Michael Pittman (109.5 proj) is the best remaining WR upgrade over Marvin Harrison as a bench/flex piece, but WR is our deepest position and he survives at 97.7%."
+      }
+    ],
+    "confidence": 62,
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; with only 5 selections left and K+DEF mandatory, we use this pick on the one position where a real injury/handcuff-quality starter still exists - a high-projection RB body (Jordan Mason, 113.5 proj) behind Saquon/Javonte/Judkins - rather than a fourth WR or an unusable third TE.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Lineup is full at QB/RB/RB/WR/WR/TE/FLEX/FLEX; only K and DEF are empty and rules block them until the final rounds, so this pick is about the best startable-quality depth, not a hole."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "RB tier 13 has just 3 left with a 7.3-point gap after it, and Jordan Mason at 113.5 projected points is the highest-projected RB on the board other than Jonathon Brooks (124.7, injury-tier) and Isiah Pacheco (115.5)."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "Mason is fsRank 110, only 11 ranks past First Seed's best available (Conner, 99), so this is a marginal deviation, and Juancho's own simulation has him at dPlan +3.9 - the best raw final-roster value of any candidate in the top five."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing WRs costs little: we already start Nacua, Pickens and Flowers with Harrison on the bench, and Addison/Pittman/Reed/Johnston all survive at 77-99% while nine WRs in tier 12 remain."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Only roster 10 picks twice before us (110, 111) and their listed need is TE:medium with 5 RBs already, so the WR/QB tail is safe but a run-happy RB-heavy room has consumed 38% of picks at RB."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "Conner's data warning (fsRank 99 vs 40.4 projected points, against a median of 89 for RBs ranked near him) makes him the riskier of the two RB bodies at effectively the same cost."
+      }
+    ],
+    "strongestAlternative": {
+      "playerId": "jfp:4137",
+      "why": "Conner is First Seed's literal best available at fsGap 0 and Juancho's DRAFT_NOW recommendation, an established lead back whose rank implies far more value than his 40.4 projection."
+    },
+    "strongestCounterargument": "Jordan Mason survives to our pick at 112 in 94% of runs and both Conner and Mason remain together in 74.7%, so we could simply take Conner (80.3% survival, First Seed's #99 and Juancho's DRAFT_NOW) here and still land Mason two picks later.",
+    "whyRecommendationStillWins": "That 94% is exactly why Mason is not the one to gamble on only if we actually want both - but we do not: with five picks left and K+DEF mandatory we get at most three more skill bodies, so we should take the single best one, and Mason's 113.5 projection versus Conner's flagged 40.4 (dPlan +3.9 vs 0) makes him the better single body; if Mason is somehow gone at 112, Conner survives in 86.4% of those runs anyway.",
+    "firstSeedDeviationReason": "Mason is 11 ranks past First Seed's best available; the reason is the published data conflict on Conner (fsRank 99 against a 40.4-point projection versus a 89-point median for his rank neighbours), which makes First Seed's own top name unreliable here, while Mason projects 73 points higher in this league's standard scoring.",
+    "expectedNextPickPlan": "At 112 take the best remaining of James Conner (80.3% survival) or a WR upgrade in Michael Pittman (97.7%) / Jordan Addison (77.3%); then use 129, 132 and 149 on the last skill body plus the mandatory K and DEF.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Holds both intervening selections (110, 111) with RB5/WR3/TE1 and a stated TE:medium need; most likely takes a TE and a depth RB, which is the only realistic threat to Mason and Conner before 112."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8408",
+        "alternatives": [
+          {
+            "playerId": "jfp:4137",
+            "reason": "James Conner is First Seed's best available and a proven RB2/flex body, but his 40.4 recalculated projection versus Mason's 113.5 flags a rank/projection conflict and he is 31 with tier-18 standing."
+          },
+          {
+            "playerId": "jfp:6819",
+            "reason": "Michael Pittman (109.5 proj) is the best remaining WR upgrade over Marvin Harrison as a bench/flex piece, but WR is our deepest position and he survives at 97.7%."
+          }
+        ],
+        "confidence": 62,
+        "decision": "DRAFT_NOW",
+        "strategy": "Balanced roster with all eight non-K/DEF starting slots filled; with only 5 selections left and K+DEF mandatory, we use this pick on the one position where a real injury/handcuff-quality starter still exists - a high-projection RB body (Jordan Mason, 113.5 proj) behind Saquon/Javonte/Judkins - rather than a fourth WR or an unusable third TE.",
+        "reasons": [
+          {
+            "code": "starter_need",
+            "detail": "Lineup is full at QB/RB/RB/WR/WR/TE/FLEX/FLEX; only K and DEF are empty and rules block them until the final rounds, so this pick is about the best startable-quality depth, not a hole."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "RB tier 13 has just 3 left with a 7.3-point gap after it, and Jordan Mason at 113.5 projected points is the highest-projected RB on the board other than Jonathon Brooks (124.7, injury-tier) and Isiah Pacheco (115.5)."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "Mason is fsRank 110, only 11 ranks past First Seed's best available (Conner, 99), so this is a marginal deviation, and Juancho's own simulation has him at dPlan +3.9 - the best raw final-roster value of any candidate in the top five."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Passing WRs costs little: we already start Nacua, Pickens and Flowers with Harrison on the bench, and Addison/Pittman/Reed/Johnston all survive at 77-99% while nine WRs in tier 12 remain."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Only roster 10 picks twice before us (110, 111) and their listed need is TE:medium with 5 RBs already, so the WR/QB tail is safe but a run-happy RB-heavy room has consumed 38% of picks at RB."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "Conner's data warning (fsRank 99 vs 40.4 projected points, against a median of 89 for RBs ranked near him) makes him the riskier of the two RB bodies at effectively the same cost."
+          }
+        ],
+        "strongestAlternative": {
+          "playerId": "jfp:4137",
+          "why": "Conner is First Seed's literal best available at fsGap 0 and Juancho's DRAFT_NOW recommendation, an established lead back whose rank implies far more value than his 40.4 projection."
+        },
+        "strongestCounterargument": "Jordan Mason survives to our pick at 112 in 94% of runs and both Conner and Mason remain together in 74.7%, so we could simply take Conner (80.3% survival, First Seed's #99 and Juancho's DRAFT_NOW) here and still land Mason two picks later.",
+        "whyRecommendationStillWins": "That 94% is exactly why Mason is not the one to gamble on only if we actually want both - but we do not: with five picks left and K+DEF mandatory we get at most three more skill bodies, so we should take the single best one, and Mason's 113.5 projection versus Conner's flagged 40.4 (dPlan +3.9 vs 0) makes him the better single body; if Mason is somehow gone at 112, Conner survives in 86.4% of those runs anyway.",
+        "firstSeedDeviationReason": "Mason is 11 ranks past First Seed's best available; the reason is the published data conflict on Conner (fsRank 99 against a 40.4-point projection versus a 89-point median for his rank neighbours), which makes First Seed's own top name unreliable here, while Mason projects 73 points higher in this league's standard scoring.",
+        "expectedNextPickPlan": "At 112 take the best remaining of James Conner (80.3% survival) or a WR upgrade in Michael Pittman (97.7%) / Jordan Addison (77.3%); then use 129, 132 and 149 on the last skill body plus the mandatory K and DEF.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Holds both intervening selections (110, 111) with RB5/WR3/TE1 and a stated TE:medium need; most likely takes a TE and a depth RB, which is the only realistic threat to Mason and Conner before 112."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 17427,
+        "outputTokens": 1851
+      },
+      "latencyMs": 28301,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 17427,
+    "outputTokens": 1851
+  },
+  "latencyMs": 28301,
+  "error": null,
+  "cachedAt": "2026-08-27T19:14:38.356Z",
+  "key": "77e8039d70efb64249fbc75eb8da059c",
+  "label": "1398448522730221568 p109 claude-opus-5/playbook-v1"
+}

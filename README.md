@@ -11,13 +11,15 @@ CSV projections are an optional advanced override.
 1. **League import** — username lookup, current leagues, settings, scoring and
    roster ownership.
 2. **Draft synchronization** — draft selection, pick history, availability and
-   five-second refresh while a draft is live.
+   automatic pick-by-pick sync while a draft is live.
 3. **Projection mapping** — CSV provider, canonical player IDs, exact Sleeper-ID
    matching, normalized name/position matching and an unmatched-row review.
-4. **Draft scoring engine** — normalized projection, VORP, scarcity, tier urgency,
-   roster fit and ADP-value factors with a deterministic weighted score.
-5. **Next-pick probability** — snake-draft turn detection plus ADP, variance and
-   positional-demand estimates for whether a player will make it back.
+4. **Draft scoring engine** — deterministic scoring anchored on what a player
+   adds to a starting lineup, superseded in milestone 11 by roster-completion
+   planning.
+5. **Next-pick probability** — snake-draft turn detection plus draft-room rank,
+   variance and positional-demand estimates for whether a player will make it
+   back.
 6. **Draft Now / Wait recommendations** — live primary and alternative picks,
    transparent reasons, component scores and the next user selection.
 7. **Format hardening** — normalized LeagueContext, Superflex/2QB replacement,
@@ -34,6 +36,16 @@ CSV projections are an optional advanced override.
     opponent archetypes, probabilistic room-rank/market/need behavior, complete
     draft continuations, candidate comparisons, wait probabilities, and
     final-roster outcome scoring.
+11. **Roster construction** — lineup-anchored value, positional saturation,
+    roster-completion planning, emergent build classification, positional-run
+    detection, opponent-roster-aware availability, and an autodraft acceptance
+    harness that plays whole drafts on recommendation #1.
+12. **Measured quality and speed** — a permanent regression corpus of real
+    mocks pinned to the data they were drafted on, roster and decision quality
+    scoring, and pick-to-advice latency measured against the live API.
+13. **First Seed as the prior** — a consensus anchor tuned against the corpus, a
+    per-pick deviation audit with named reasons, and a First-Seed-only control
+    the strategy engine has to beat.
 
 Lineup, waiver, trade, browser-extension and AI explanation features remain
 future milestones. See [the format audit](docs/format-audit.md) for the exact
@@ -55,6 +67,228 @@ npm run test:smoke
 npm run lint
 npm run build
 ```
+
+### Development-only flags
+
+Both are ignored in a production build unless `?diagnostics=1` is passed
+explicitly, and neither can reach the Anthropic API.
+
+| Query | What it does |
+|---|---|
+| `?diagnostics=1` | Reveals the engine panel: source provenance and match rates, reaction-time percentiles, the model inspector, league context. Always on in development. |
+| `?ai=confirmed` \| `override` \| `analyzing` \| `fallback` | Answers with a **fake** strategist transport so every state of the recommendation card can be looked at without spending anything. The fake response still goes through the real validator, guardrails and staleness gate. |
+
+## Running it in production
+
+One DigitalOcean Droplet: Caddy, the app and PostgreSQL in Docker Compose on a
+$6/month machine. The image is built by GitHub Actions and the Droplet only
+pulls it - a 1 GB box running Postgres has no business also running a Vite
+build. Exact sizes, SSH hardening, DNS, environment variables, backups and the
+admin bootstrap are in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+App Platform and a managed database remain a supported scaling path; the spec is
+committed at [`.do/app.yaml`](.do/app.yaml).
+
+Production refuses to run unconfigured. With no `DATABASE_URL` this application
+happily serves a draft room with no accounts and no authorisation, which is
+correct on a laptop and an unsecured public application on the internet - so
+`scripts/preflight.mjs` runs before the server and exits non-zero, and
+`/api/health` fails a production instance for the same reasons.
+
+Access during the private beta is a person rather than a payment: registering
+creates an account with no entitlement and a "waiting for activation" screen,
+and `npm run account -- plan <email> basic|pro` lets somebody in. On the Droplet
+that runs inside the app container, so the database never needs a public port.
+
+## Where the numbers come from
+
+| Source | Owns | Never used for |
+|---|---|---|
+| **Sleeper** | Who exists, who is on an NFL team, the draft itself | Anything about how good a player is |
+| **First Seed** | QB/RB/WR/TE projections and the draft-room board | Kickers and defenses, which it does not publish |
+| **FantasyPros** | The order of the K/DST shortlist | Everything else - it is never merged into scoring |
+| **Fantasy Football Calculator** | Market ADP, shown as context | Any decision |
+
+Eligibility is Sleeper's alone, and the field that decides it is `team`. Its
+player endpoint is an archive rather than a roster: `active` is `true` on all
+9,418 entries, and `status` says `"Active"` for players who retired years ago
+while saying `"Injured Reserve"` for both a retired kicker and a current starter
+with a hamstring. Only the team assignment tracks reality, so a player Sleeper
+places on no team cannot be selected - though he stays in the player map, because
+a draft board still has to render a name somebody else picked.
+
+Regenerate the supplemental board after dropping in a new export:
+
+```bash
+node scripts/build-supplemental-rankings.mjs
+```
+
+## The draft room
+
+The live screen is three regions: the roster and its holes on the left, one
+recommendation and the board in the middle, what survives to your next selection
+on the right. On a phone they become three tabs, with the recommendation pinned
+above them so opening the draft board never takes the pick off the screen.
+
+Everything the screen decides lives in `packages/ui` as pure functions - which
+card state to show, how the draft board snakes, what belongs in the player table,
+which charts have real data behind them - so it is all tested in `tests/ui`
+without a browser. The components under `app/components` only draw.
+
+## Measuring whether it is any good
+
+Two things decide whether this is worth using: the team you end up with, and how
+quickly the advice reacts. Both are measured rather than asserted.
+
+### Save every mock you draft
+
+```bash
+npm run capture -- "https://sleeper.com/draft/nfl/1234567890123456789" "yourusername"
+```
+
+That freezes the draft into `data/regression/mocks/` — the whole board, the
+format, your seat, what the engine recommended and what its strategy state was
+at every one of your selections, what you actually took, and the finished
+roster. The First Seed projections, the Sleeper draft-room ranks and the player
+pool are pinned alongside it, so the case replays identically in six weeks when
+the weekly data has moved on. Snapshots are shared between drafts captured in
+the same week rather than copied into each case.
+
+Every saved mock is replayed by `npm test`. Each one has to field a legal
+starting lineup, avoid hoarding a position it cannot start, produce no
+unexplained contradictions, stay at least as good as the roster recorded when it
+was captured, and answer every pick inside the compute budget. The suite prints
+a line per case:
+
+```text
+[corpus] 1 saved mock
+  1398412036827783168 seat 1 10-team standard: starting 1667.5 (+0 vs baseline) ·
+  unfilled 0 · unusable 1 · meanRegret 4.5 · compute p50 6.1ms max 8.3ms ·
+  RB6 WR4 QB2 TE1 K1 DEF1
+```
+
+`npm run test:regression` runs only the corpus.
+
+### How far it may stray from First Seed
+
+First Seed's draft-room ranking is the prior, not a suggestion. Reaching past it
+costs something, and the cost grows with the distance reached, so a deviation
+has to be worth it. The legitimate reasons are narrow and each one is named on
+the pick that used it:
+
+| Reason | Meaning |
+| --- | --- |
+| `positional_saturation` | The higher-ranked player cannot enter our lineup. |
+| `starter_need` | Ours fills an empty starting slot; theirs does not. |
+| `tier_cliff` | Our position is about to run out and theirs is not. |
+| `returns_to_us` | The higher-ranked player is very likely to come back. |
+| `opportunity_cost` | Completing the roster from ours is measurably better. |
+| `higher_projection` | Same position and slot, and First Seed projects ours higher than the one it ranks above him. |
+
+Anything else is the engine inventing its own board, and `npm test` fails on it.
+
+**The simulation is the arbiter; heuristics only break ties.** A starter need or
+a tier cliff is a reason to prefer a player when the completed-roster
+simulation is close. It is not a reason to override it. A candidate beaten on
+both counts — First Seed ranks the other player higher *and* our own simulation
+finishes with a better roster from him — is dominated and cannot be recommended
+above him, whatever heuristic applies.
+
+The audit prints per pick, so an extreme override is obvious:
+
+```text
+R 8 p 80 │ FS# 71 Jayden Daniels  │ FS# 77 Tucker Kraft  │ gap 6 │ plan +10.0 ✓ │ starter_need
+```
+
+The live screen carries the same thing as a badge on every recommendation —
+`FS 71 → 77 · +6` — amber past eight ranks and red past twenty-five.
+
+### Beating the board
+
+A strategy engine that loses to simply taking the best player available should
+not be overriding anything, so the corpus runs both:
+
+```bash
+npm run test:regression   # audit + baseline comparison
+npm run tune:consensus    # sweep the anchor weight against every saved mock
+```
+
+The anchor weight is chosen from that sweep rather than by taste, and the
+comparison is part of the suite: if Juancho drops below the First Seed-only
+baseline, the build fails.
+
+Two captured mocks is a thin basis for a ranking rule, but each contains a whole
+room. Every saved board is therefore replayed from **all ten or twelve seats**,
+which keeps the data real while multiplying the situations the engine has to get
+right — seat position changes who survives to your turn, how long you wait, and
+whether you pick back-to-back:
+
+```text
+[seats] 20 seat-drafts across 2 real boards
+[seats] mean +51.7 · better 10 · matched 10 · worse 0 · worst 0.0 · best 312.2
+```
+
+Worse on no seat is the bar. A recommendation that loses to simply taking the
+best player available is the failure this engine keeps being reported for, so
+the sweep optimizes the tail rather than the average.
+
+### Reaction time
+
+The live screen shows how long a pick takes to become advice, split into
+noticing it and thinking about it, against a one-second budget. The same
+measurement runs against the live API in `npm run test:smoke`:
+
+| Part | Cost |
+| --- | ---: |
+| Poll interval | 800ms |
+| Sleeper round trip | ~50ms |
+| Rebuild board, context and every recommendation | ~15ms |
+| **Typical pick to advice** | **~460ms** |
+| Worst observed | ~870ms |
+
+Rebuilding the recommendations is a rounding error next to waiting for the next
+poll, so the polling interval is the budget. Traded picks are read every twenty
+seconds instead of every poll — they almost never change, and a mock draft has
+none — which leaves the request budget for the picks that actually move.
+
+## Attaching to a mock or live draft
+
+Juancho follows any Sleeper draft, whether or not it belongs to a league.
+
+Two ways to attach:
+
+1. **Pick a discovered draft.** After connecting your username, the *Follow a
+   draft* panel lists your active and upcoming drafts, mock drafts included.
+   Mocks have no league, so they never appear in the league dropdown; they are
+   read from `/user/{user_id}/drafts/nfl/{season}`.
+2. **Paste the draft link.** Open the Sleeper draft room and copy the address,
+   e.g. `https://sleeper.com/draft/nfl/1234567890123456789`. A bare draft ID, a
+   `sleeper.app` link, and a link with extra path or query segments all work.
+   This route always works, even when discovery cannot see the draft.
+
+Once attached, the banner at the top of the screen names the draft, its format,
+and its draft ID, and shows a live status:
+
+| Status | Meaning |
+| --- | --- |
+| **Watching** | Attached before the first pick. The room is still `pre_draft`; picks appear the moment it goes live. |
+| **Live · auto-syncing** | Following the draft. Every pick updates the board, your roster, the current and next pick, availability probabilities, and the recommendations. |
+| **Reconnecting** | A request to Sleeper failed. The last known board stays on screen while the sync retries with exponential backoff. |
+| **Draft complete** | The draft finished and polling stopped on purpose. |
+
+There is no refresh step. *Sync now* exists only to force an immediate poll.
+
+Synchronization cadence is 2.5s while drafting, 10s before the draft starts, and
+4x slower in a background tab, all with jitter. Failures back off exponentially
+from 2s to a 30s ceiling and never clear the board or raise a page-level error.
+Returning to the tab, or the machine coming back online, triggers an immediate
+resync.
+
+Mock drafts and league drafts use the identical engine path. A mock has no
+league object, so the league and rosters are synthesized from the draft room's
+own settings and `draft_order`. Nothing is invented silently: roster slots and
+scoring are read from `draft.settings`, the normalized context labels that source
+honestly, and the attach banner lists everything that was inferred.
 
 ## Automatic projections and room order
 
@@ -95,7 +329,14 @@ The latest valid custom override is stored locally by season and restored on
 the same browser, so a user does not need to repeat the import for every draft
 session. A failed replacement import never clears the last valid snapshot.
 
-## Automatic ADP
+## Automatic ADP (reference only)
+
+Market ADP is shown for context and is **not** part of the recommendation
+decision path. Availability and value both read First Seed's Sleeper draft-room
+rank, which describes the room you are actually drafting in; ADP from a
+different format was a poor substitute and is no longer trusted with the
+decision. It remains useful for spotting where the wider market disagrees with
+your board.
 
 Eligible redraft snake/linear/3RR leagues automatically request current ADP
 through the server-side `/api/adp` route. The provider is Fantasy Football
@@ -111,34 +352,72 @@ weak. Automatic redraft ADP is not applied to dynasty or auction drafts.
 
 ## Draft score
 
-Every factor is normalized to a 0–100 scale before weighting:
+Juancho does not rank players. It ranks **the roster you end up with**.
 
-| Factor | Weight |
-| --- | ---: |
-| Value over replacement (VORP) | 30% |
-| Risk the player is gone by the next pick | 20% |
-| Tier urgency | 15% |
-| Raw projection | 15% |
-| Roster fit | 10% |
-| ADP value | 5% |
-| Positional scarcity | 5% |
+For each candidate it completes the draft from that pick — taking your
+remaining selections in order while the room in front of you keeps taking the
+consensus board — and scores the finished team. Points only count if they can
+reach a starting lineup, so a second quarterback in a 1QB league is worth
+roughly nothing no matter how many points he projects, while a fourth running
+back still has a flex slot and an injury to walk into.
 
-The live recommendation result is deterministic for a given draft state,
-normalized LeagueContext, and source snapshots. Low-confidence or
-format-mismatched ADP is downweighted.
-The score is decision support, not a promise of fantasy results.
+Several behaviours that would otherwise need their own rules fall out of this:
+
+| Behaviour | Why it happens |
+| --- | --- |
+| Positional saturation | A player who cannot enter your lineup does not improve the finished roster. |
+| Tier cliffs | If the last useful tight end goes before your next pick, every plan that waited inherits a worse one. |
+| Opportunity cost | Spending a pick on a position you have costs whatever would have filled an empty slot. |
+| Early-investment payoff | An elite quarterback in round 3 leaves nothing for a second one to improve. |
+
+Bench value is discounted by how likely a player is to ever start. A position
+with one starting slot can use exactly one backup; the third has no path into
+the lineup in any week and is scored at zero.
+
+### Draft now or wait
+
+Both options are played out the same way, which is what makes the answer
+trustworthy:
+
+- **Take him now** — and the alternative either survives to your next pick or
+  does not, weighted by how likely that is.
+- **Wait** — take the alternative, and *he* either survives or does not.
+
+Whichever finishes with the better roster is the recommendation. A player who is
+coming back is never urgent, however good he is, and the headline pick never
+tells you to wait on itself. When you pick back-to-back at the turn, nobody
+selects in between and availability is reported as exactly 100%.
+
+Availability is estimated from First Seed's Sleeper draft-room rank and from the
+actual rosters of the teams picking before you: a quarterback is far likelier to
+survive a stretch of teams that all already have one. Market ADP is displayed
+for reference but does not drive recommendations.
+
+The result is deterministic for a given draft state, normalized LeagueContext
+and source snapshots. The score is decision support, not a promise of fantasy
+results.
+
+### Checking it still drafts well
+
+The engine is held to one standard: if you follow recommendation #1 every round,
+you should finish with a team you would have built yourself. `npm test` plays
+complete drafts from early, middle and late seats across 10-team, 12-team and
+Superflex leagues and fails if any required starting slot is left empty or any
+position is hoarded. It also finishes drafts it did not choose to start —
+RB-heavy, Zero-RB, Hero-RB, early TE, early QB — and benchmarks the result
+against rank-only and need-then-rank baselines using the same roster evaluation.
 
 ## Structure
 
 ```text
 app/                       Web application
-packages/sleeper/          Public Sleeper API client and normalization
+packages/sleeper/          Public Sleeper API client, draft attachment and live sync
 packages/players/          Canonical player model and external-ID indexes
 packages/projections/      Replaceable projection-provider contracts and CSV
 packages/adp/              Automatic ADP planning, providers and canonical mapping
 packages/first-seed/       JuiceSheets, room-rank and signal providers/mapping
 packages/data/             Snapshots, provenance, freshness and last-good cache
-packages/engine/draft/     Draft state, availability, tiers and recommendations
+packages/engine/draft/     Lineup value, roster planning, strategy and recommendations
 packages/engine/mock/      Opponent behavior, Monte Carlo, and backtesting
 packages/engine/context/   Sleeper normalization and league scoring
 packages/dynasty/          Replaceable dynasty value-provider contract

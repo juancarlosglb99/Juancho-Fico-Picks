@@ -1,3 +1,4 @@
+import type { DraftRoomRankingSnapshot } from '../../packages/data/types';
 import { normalizeLeagueContext } from '../../packages/engine/context/normalize';
 import type { LeagueContextOverrides } from '../../packages/engine/context/types';
 import { deriveDraftBoardState } from '../../packages/engine/draft/state';
@@ -70,12 +71,21 @@ export function makeDraft({
   type = 'snake',
   name = 'Synthetic Draft',
   settings = {},
+  leagueId = 'league-1',
+  status = 'drafting',
+  metadata = {},
+  draftOrder: draftOrderOverride,
 }: {
   teams?: number;
   rounds?: number;
   type?: string;
   name?: string;
   settings?: Record<string, number>;
+  /** Pass null to model a Sleeper mock draft, which has no league behind it. */
+  leagueId?: string | null;
+  status?: SleeperDraft['status'];
+  metadata?: Record<string, string | undefined>;
+  draftOrder?: Record<string, number> | null;
 } = {}): SleeperDraft {
   const draftOrder = Object.fromEntries(
     Array.from({ length: teams }, (_, index) => [`user-${index + 1}`, index + 1]),
@@ -85,8 +95,8 @@ export function makeDraft({
   );
   return {
     draft_id: 'draft-1',
-    league_id: 'league-1',
-    status: 'drafting',
+    league_id: leagueId,
+    status,
     type,
     season: '2026',
     start_time: null,
@@ -102,8 +112,9 @@ export function makeDraft({
       slots_bn: 6,
       ...settings,
     },
-    metadata: { name },
-    draft_order: draftOrder,
+    metadata: { name, ...metadata },
+    draft_order:
+      draftOrderOverride === undefined ? draftOrder : draftOrderOverride,
     slot_to_roster_id: slotToRoster,
   };
 }
@@ -230,5 +241,71 @@ export function makeContext({
       userId,
       overrides,
     }),
+  };
+}
+
+/**
+ * A First Seed draft-room ranking over the same pool.
+ *
+ * The engine anchors to a published board and deliberately does nothing of the
+ * sort when there is none - its own projection order is not a consensus. A
+ * synthetic scenario without this is therefore a different situation from a
+ * real draft, and anything that depends on the anchor has to supply one.
+ */
+export function makeRoomRankings(
+  projections: MappedProjection[],
+  {
+    scoringFormat = 'standard',
+    qbFormat = '1qb',
+  }: { scoringFormat?: string; qbFormat?: '1qb' | 'superflex' } = {},
+): DraftRoomRankingSnapshot {
+  const ranked = [...projections].sort(
+    (a, b) => b.projection - a.projection || a.playerName.localeCompare(b.playerName),
+  );
+  return {
+    kind: 'draft-room-ranking',
+    provenance: {
+      sourceId: 'synthetic-first-seed',
+      sourceLabel: 'Synthetic First Seed board',
+      season: '2026',
+      fetchedAt: '2026-08-01T00:00:00.000Z',
+      sourceUpdatedAt: null,
+      sourceConfidence: 'high',
+    },
+    context: {
+      platform: 'sleeper',
+      scoringFormat: scoringFormat as DraftRoomRankingSnapshot['context']['scoringFormat'],
+      qbFormat,
+      sheet: 'Synthetic',
+    },
+    records: ranked.map((projection, index) => ({
+      sourceRow: index + 2,
+      playerName: projection.playerName,
+      position: projection.position,
+      team: projection.team ?? null,
+      rank: index + 1,
+      upstreamMarketAdp: null,
+      upstreamExpertRank: index + 1,
+      firstSeedValueDelta: null,
+      firstSeedLandmineScore: null,
+      playerId: projection.playerId,
+      resolutionMethod: 'direct-external-id',
+      resolutionConfidence: 1,
+    })),
+    unresolved: [],
+    resolution: {
+      total: ranked.length,
+      matched: ranked.length,
+      directExternalId: ranked.length,
+      exactCanonical: 0,
+      normalizedName: 0,
+      ambiguous: 0,
+      unresolved: 0,
+    },
+    compatibility: {
+      level: 'exact',
+      confidence: 'high',
+      reasons: ['Synthetic board built for the exact league format under test.'],
+    },
   };
 }

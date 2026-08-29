@@ -1,0 +1,259 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:8137",
+      "reasoning": "best_available: George Pickens is First Seed's top-ranked available player (fsRank 28) and projects at 151.7 points, tier 7 with only 1 left in that WR tier. starter_need: We have only 1 WR (Puka Nacua) and an open WR/FLEX slot; Pickens immediately fills a starting slot at elite value. survives_to_next_turn: RB tier 9 (Javonte Williams, Quinshon Judkins, Cam Skattebo, etc.) has 7 players left with 86-98% survival odds, so we can safely wait on RB depth at pick 32. tier_cliff: WR tier 5 (A.J. Brown) has only 1 left and 86.3% survival - Pickens is a tier below but still the best available WR body now; waiting risks losing top WR value entirely since Pickens' own survival is only 78.3%. opportunity_cost: Taking Bowers now would strand elite WR value (Pickens 78.3% survival) while Bowers himself still has 74.3% survival - similar risk profile but Pickens fills a more pressing 2-slot need (WR+FLEX) versus a single TE slot. positional_scarcity: TE has a true cliff after Bowers (tier drops from 1 to next tier with -12.7 gap), but our roster needs two WR/FLEX bodies more urgently than the single TE slot right now.",
+      "reasonCodes": [
+        "best_available",
+        "starter_need",
+        "survives_to_next_turn",
+        "tier_cliff",
+        "opportunity_cost",
+        "positional_scarcity"
+      ],
+      "confidence": 0.72
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:11604",
+        "reasoning": "Brock Bowers is the clear TE1 tier-of-one and would lock elite TE value if Pickens is somehow gone.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7588",
+        "reasoning": "Javonte Williams is the top of a deep RB tier (7 left, 86% survival) and a fine fallback if we prioritize WR now.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Picks twice before our next turn (30, 31) and needs QB/RB/WR/TE all high - could take Pickens or Bowers, directly competing for our top targets. Roster 1: Already has TE (McBride) so less likely to take Bowers, but needs WR and could grab a WR8-tier player, reducing our WR depth pool slightly.",
+    "confidence": 0.72,
+    "model": "claude-sonnet-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced build off Puka Nacua/Saquon Barkley: take the best player available now (Pickens, WR2) to lock elite WR depth, then use our back-to-back picks at 32 to grab from the deep RB tier (7 players, 86% survival) or Bowers if he somehow falls.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternativePlayerId": "jfp:11604",
+    "strongestAlternativeWhy": "Brock Bowers is a true tier-of-one at TE with a massive 12.7-point gap to the next tier, and locking him now guarantees premium TE production for the season.",
+    "strongestCounterargument": "Bowers has only 74.3% survival to our pick at 32, slightly lower than Pickens' 78.3%, and if we pass on him now there is a real chance no comparable TE exists later in the draft (next tier gap is -36 or worse).",
+    "whyRecommendationStillWins": "We still have 13 selections remaining and only one TE slot to fill, versus two WR/FLEX slots that need bodies; Pickens fills a more numerous need while the RB tier (86-98% survival) and even a chance at Bowers or a lesser TE remain live options at 32, whereas passing on Pickens risks losing our best chance at true WR2 value with no equivalent replacement in the shallow WR8 tier below him.",
+    "expectedNextPickPlan": "At pick 32 (our very next selection, only 2 picks away), target Brock Bowers if he somehow survives (18.7% chance he's best available then), otherwise take the best of the deep RB tier (Javonte Williams, Quinshon Judkins, Cam Skattebo, David Montgomery) to fill our second RB/FLEX slot.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice before our next turn (30, 31) and needs QB/RB/WR/TE all high - could take Pickens or Bowers, directly competing for our top targets."
+      },
+      {
+        "rosterId": 1,
+        "why": "Already has TE (McBride) so less likely to take Bowers, but needs WR and could grab a WR8-tier player, reducing our WR depth pool slightly."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:8137",
+    "alternatives": [
+      {
+        "playerId": "jfp:11604",
+        "reason": "Brock Bowers is the clear TE1 tier-of-one and would lock elite TE value if Pickens is somehow gone."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams is the top of a deep RB tier (7 left, 86% survival) and a fine fallback if we prioritize WR now."
+      }
+    ],
+    "confidence": 72,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build off Puka Nacua/Saquon Barkley: take the best player available now (Pickens, WR2) to lock elite WR depth, then use our back-to-back picks at 32 to grab from the deep RB tier (7 players, 86% survival) or Bowers if he somehow falls.",
+    "reasons": [
+      {
+        "code": "best_available",
+        "detail": "George Pickens is First Seed's top-ranked available player (fsRank 28) and projects at 151.7 points, tier 7 with only 1 left in that WR tier."
+      },
+      {
+        "code": "starter_need",
+        "detail": "We have only 1 WR (Puka Nacua) and an open WR/FLEX slot; Pickens immediately fills a starting slot at elite value."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "RB tier 9 (Javonte Williams, Quinshon Judkins, Cam Skattebo, etc.) has 7 players left with 86-98% survival odds, so we can safely wait on RB depth at pick 32."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "WR tier 5 (A.J. Brown) has only 1 left and 86.3% survival - Pickens is a tier below but still the best available WR body now; waiting risks losing top WR value entirely since Pickens' own survival is only 78.3%."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Taking Bowers now would strand elite WR value (Pickens 78.3% survival) while Bowers himself still has 74.3% survival - similar risk profile but Pickens fills a more pressing 2-slot need (WR+FLEX) versus a single TE slot."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "TE has a true cliff after Bowers (tier drops from 1 to next tier with -12.7 gap), but our roster needs two WR/FLEX bodies more urgently than the single TE slot right now."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:11604",
+    "strongestAlternativeWhy": "Brock Bowers is a true tier-of-one at TE with a massive 12.7-point gap to the next tier, and locking him now guarantees premium TE production for the season.",
+    "strongestCounterargument": "Bowers has only 74.3% survival to our pick at 32, slightly lower than Pickens' 78.3%, and if we pass on him now there is a real chance no comparable TE exists later in the draft (next tier gap is -36 or worse).",
+    "whyRecommendationStillWins": "We still have 13 selections remaining and only one TE slot to fill, versus two WR/FLEX slots that need bodies; Pickens fills a more numerous need while the RB tier (86-98% survival) and even a chance at Bowers or a lesser TE remain live options at 32, whereas passing on Pickens risks losing our best chance at true WR2 value with no equivalent replacement in the shallow WR8 tier below him.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 32 (our very next selection, only 2 picks away), target Brock Bowers if he somehow survives (18.7% chance he's best available then), otherwise take the best of the deep RB tier (Javonte Williams, Quinshon Judkins, Cam Skattebo, David Montgomery) to fill our second RB/FLEX slot.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice before our next turn (30, 31) and needs QB/RB/WR/TE all high - could take Pickens or Bowers, directly competing for our top targets."
+      },
+      {
+        "rosterId": 1,
+        "why": "Already has TE (McBride) so less likely to take Bowers, but needs WR and could grab a WR8-tier player, reducing our WR depth pool slightly."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:8137",
+    "alternatives": [
+      {
+        "playerId": "jfp:11604",
+        "reason": "Brock Bowers is the clear TE1 tier-of-one and would lock elite TE value if Pickens is somehow gone."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams is the top of a deep RB tier (7 left, 86% survival) and a fine fallback if we prioritize WR now."
+      }
+    ],
+    "confidence": 72,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build off Puka Nacua/Saquon Barkley: take the best player available now (Pickens, WR2) to lock elite WR depth, then use our back-to-back picks at 32 to grab from the deep RB tier (7 players, 86% survival) or Bowers if he somehow falls.",
+    "reasons": [
+      {
+        "code": "best_available",
+        "detail": "George Pickens is First Seed's top-ranked available player (fsRank 28) and projects at 151.7 points, tier 7 with only 1 left in that WR tier."
+      },
+      {
+        "code": "starter_need",
+        "detail": "We have only 1 WR (Puka Nacua) and an open WR/FLEX slot; Pickens immediately fills a starting slot at elite value."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "RB tier 9 (Javonte Williams, Quinshon Judkins, Cam Skattebo, etc.) has 7 players left with 86-98% survival odds, so we can safely wait on RB depth at pick 32."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "WR tier 5 (A.J. Brown) has only 1 left and 86.3% survival - Pickens is a tier below but still the best available WR body now; waiting risks losing top WR value entirely since Pickens' own survival is only 78.3%."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Taking Bowers now would strand elite WR value (Pickens 78.3% survival) while Bowers himself still has 74.3% survival - similar risk profile but Pickens fills a more pressing 2-slot need (WR+FLEX) versus a single TE slot."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "TE has a true cliff after Bowers (tier drops from 1 to next tier with -12.7 gap), but our roster needs two WR/FLEX bodies more urgently than the single TE slot right now."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:11604",
+    "strongestAlternativeWhy": "Brock Bowers is a true tier-of-one at TE with a massive 12.7-point gap to the next tier, and locking him now guarantees premium TE production for the season.",
+    "strongestCounterargument": "Bowers has only 74.3% survival to our pick at 32, slightly lower than Pickens' 78.3%, and if we pass on him now there is a real chance no comparable TE exists later in the draft (next tier gap is -36 or worse).",
+    "whyRecommendationStillWins": "We still have 13 selections remaining and only one TE slot to fill, versus two WR/FLEX slots that need bodies; Pickens fills a more numerous need while the RB tier (86-98% survival) and even a chance at Bowers or a lesser TE remain live options at 32, whereas passing on Pickens risks losing our best chance at true WR2 value with no equivalent replacement in the shallow WR8 tier below him.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At pick 32 (our very next selection, only 2 picks away), target Brock Bowers if he somehow survives (18.7% chance he's best available then), otherwise take the best of the deep RB tier (Javonte Williams, Quinshon Judkins, Cam Skattebo, David Montgomery) to fill our second RB/FLEX slot.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Picks twice before our next turn (30, 31) and needs QB/RB/WR/TE all high - could take Pickens or Bowers, directly competing for our top targets."
+      },
+      {
+        "rosterId": 1,
+        "why": "Already has TE (McBride) so less likely to take Bowers, but needs WR and could grab a WR8-tier player, reducing our WR depth pool slightly."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:8137",
+        "alternatives": [
+          {
+            "playerId": "jfp:11604",
+            "reason": "Brock Bowers is the clear TE1 tier-of-one and would lock elite TE value if Pickens is somehow gone."
+          },
+          {
+            "playerId": "jfp:7588",
+            "reason": "Javonte Williams is the top of a deep RB tier (7 left, 86% survival) and a fine fallback if we prioritize WR now."
+          }
+        ],
+        "confidence": 72,
+        "urgency": "must_take_now",
+        "strategy": "Balanced build off Puka Nacua/Saquon Barkley: take the best player available now (Pickens, WR2) to lock elite WR depth, then use our back-to-back picks at 32 to grab from the deep RB tier (7 players, 86% survival) or Bowers if he somehow falls.",
+        "reasons": [
+          {
+            "code": "best_available",
+            "detail": "George Pickens is First Seed's top-ranked available player (fsRank 28) and projects at 151.7 points, tier 7 with only 1 left in that WR tier."
+          },
+          {
+            "code": "starter_need",
+            "detail": "We have only 1 WR (Puka Nacua) and an open WR/FLEX slot; Pickens immediately fills a starting slot at elite value."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "RB tier 9 (Javonte Williams, Quinshon Judkins, Cam Skattebo, etc.) has 7 players left with 86-98% survival odds, so we can safely wait on RB depth at pick 32."
+          },
+          {
+            "code": "tier_cliff",
+            "detail": "WR tier 5 (A.J. Brown) has only 1 left and 86.3% survival - Pickens is a tier below but still the best available WR body now; waiting risks losing top WR value entirely since Pickens' own survival is only 78.3%."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Taking Bowers now would strand elite WR value (Pickens 78.3% survival) while Bowers himself still has 74.3% survival - similar risk profile but Pickens fills a more pressing 2-slot need (WR+FLEX) versus a single TE slot."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "TE has a true cliff after Bowers (tier drops from 1 to next tier with -12.7 gap), but our roster needs two WR/FLEX bodies more urgently than the single TE slot right now."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:11604",
+        "strongestAlternativeWhy": "Brock Bowers is a true tier-of-one at TE with a massive 12.7-point gap to the next tier, and locking him now guarantees premium TE production for the season.",
+        "strongestCounterargument": "Bowers has only 74.3% survival to our pick at 32, slightly lower than Pickens' 78.3%, and if we pass on him now there is a real chance no comparable TE exists later in the draft (next tier gap is -36 or worse).",
+        "whyRecommendationStillWins": "We still have 13 selections remaining and only one TE slot to fill, versus two WR/FLEX slots that need bodies; Pickens fills a more numerous need while the RB tier (86-98% survival) and even a chance at Bowers or a lesser TE remain live options at 32, whereas passing on Pickens risks losing our best chance at true WR2 value with no equivalent replacement in the shallow WR8 tier below him.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At pick 32 (our very next selection, only 2 picks away), target Brock Bowers if he somehow survives (18.7% chance he's best available then), otherwise take the best of the deep RB tier (Javonte Williams, Quinshon Judkins, Cam Skattebo, David Montgomery) to fill our second RB/FLEX slot.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Picks twice before our next turn (30, 31) and needs QB/RB/WR/TE all high - could take Pickens or Bowers, directly competing for our top targets."
+          },
+          {
+            "rosterId": 1,
+            "why": "Already has TE (McBride) so less likely to take Bowers, but needs WR and could grab a WR8-tier player, reducing our WR depth pool slightly."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 15966,
+        "outputTokens": 1642
+      },
+      "latencyMs": 20126,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-sonnet-5",
+  "usage": {
+    "inputTokens": 15966,
+    "outputTokens": 1642
+  },
+  "latencyMs": 20126,
+  "error": null,
+  "cachedAt": "2026-08-27T19:50:38.616Z",
+  "key": "87394f597e53170a60dc4c099450c27c",
+  "label": "1398448522730221568 p29 claude-sonnet-5/playbook-v1 blind"
+}

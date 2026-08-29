@@ -1,0 +1,338 @@
+/**
+ * The brief, built from the real drafts in the corpus.
+ *
+ * A brief assembled from a synthetic board proves the shape is right. It does
+ * not prove the thing that actually matters, which is that at every real
+ * selection of every real mock the strategist would have been handed a complete
+ * and honest picture: every opponent, nobody who is already gone, and the
+ * player Juancho itself would have taken.
+ *
+ *     npm run test:regression
+ */
+import { writeFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import {
+  buildBriefAtPick,
+  ourPickNumbers,
+} from '../../packages/engine/benchmark/brief-replay';
+import { listCases, readProjectionSnapshot, readRoomSnapshot } from '../../packages/engine/benchmark/store';
+import { validateStrategistPick } from '../../packages/engine/strategist/guardrails';
+import { buildStrategistPromptContext } from '../../packages/engine/strategist/prompt-context';
+import { findInterestingPicks } from '../../packages/engine/strategist/anthropic/evaluate';
+import { buildDraftAttachment } from '../../packages/sleeper/attachment';
+import { draftFor, playersFor, replayCase } from './replay-harness';
+
+const cases = listCases();
+
+function inputFor(entry: (typeof cases)[number]) {
+  const draft = draftFor(entry);
+  const attachment = buildDraftAttachment({ draft, league: null, rosters: null });
+  return {
+    regression: entry,
+    projections: readProjectionSnapshot(entry.projectionsRef),
+    roomRankings: entry.roomRankingsRef ? readRoomSnapshot(entry.roomRankingsRef) : null,
+    players: playersFor(entry),
+    league: attachment.league,
+    draft,
+    rosters: attachment.rosters,
+  };
+}
+
+describe('the brief on real drafts', () => {
+  it.each(cases.map((entry) => ({ entry, name: entry.draftId })))(
+    'is complete at every selection of $name',
+    ({ entry }) => {
+      const input = inputFor(entry);
+      const picks = ourPickNumbers(entry);
+      expect(picks.length).toBeGreaterThan(0);
+
+      for (const overallPick of picks) {
+        const brief = buildBriefAtPick(input, overallPick);
+        expect(brief, `no brief at pick ${overallPick}`).not.toBeNull();
+        const at = `pick ${overallPick}`;
+
+        // The whole room, described team by team.
+        expect(brief!.opponents, at).toHaveLength(entry.format.teams - 1);
+        expect(brief!.ourTeam.isUs, at).toBe(true);
+        expect(brief!.ourTeam.draftSlot, at).toBe(entry.userSlot);
+
+        // Nobody who is already gone.
+        const drafted = new Set(brief!.room.allDraftedPlayerIds);
+        const ghosts = brief!.candidates.filter((candidate) => drafted.has(candidate.playerId));
+        expect(ghosts.map((candidate) => candidate.name), at).toEqual([]);
+
+        // Whatever Juancho would have taken is always visible.
+        const recommended = brief!.deterministic.recommended;
+        expect(recommended, at).not.toBeNull();
+        expect(
+          brief!.candidates.some((candidate) => candidate.playerId === recommended!.playerId),
+          at,
+        ).toBe(true);
+
+        /*
+         * Legality is deliberately NOT asserted here.
+         *
+         * This board keeps the picks a person really made, and the oldest case
+         * in the corpus is the nine-quarterback draft that started all of this.
+         * That roster genuinely cannot field a legal lineup by round fourteen,
+         * and a guardrail that said otherwise would be broken. What the engine
+         * builds today is checked below, against the replayed board.
+         */
+
+        // The state it describes is the state it was built from.
+        expect(brief!.state.picksMade, at).toBe(overallPick - 1);
+        expect(brief!.state.currentOverallPick, at).toBe(overallPick);
+        expect(brief!.state.isOurSelection, at).toBe(true);
+
+        // Serializable, because it has to survive a round trip to an API.
+        expect(() => JSON.stringify(brief), at).not.toThrow();
+      }
+    },
+  );
+
+  it.each(cases.map((entry) => ({ entry, name: entry.draftId })))(
+    'separates First Seed from Juancho on $name',
+    ({ entry }) => {
+      const input = inputFor(entry);
+      const brief = buildBriefAtPick(input, ourPickNumbers(entry)[2])!;
+
+      const ranked = brief.candidates.filter((candidate) => candidate.firstSeed.rank !== null);
+      expect(ranked.length, 'the corpus pins a First Seed board').toBeGreaterThan(0);
+
+      for (const candidate of ranked.slice(0, 20)) {
+        expect(candidate.firstSeed.rank).toBeTypeOf('number');
+        expect(candidate.juancho.projectedPoints).toBeTypeOf('number');
+        expect(candidate.firstSeed.rankGapFromBestAvailable).toBeTypeOf('number');
+      }
+
+      // The two boards genuinely disagree, which is the whole reason to keep
+      // them apart: a blended score would hide exactly this.
+      const disagreements = ranked.filter(
+        (candidate) =>
+          candidate.juancho.boardRank !== null &&
+          Math.abs(candidate.juancho.boardRank - candidate.firstSeed.rank!) > 5,
+      );
+      expect(disagreements.length).toBeGreaterThan(0);
+    },
+  );
+
+  it.each(cases.map((entry) => ({ entry, name: entry.draftId })))(
+    'compresses to a payload that hides nothing on $name',
+    ({ entry }) => {
+      const input = inputFor(entry);
+      for (const overallPick of ourPickNumbers(entry)) {
+        const brief = buildBriefAtPick(input, overallPick)!;
+        const context = buildStrategistPromptContext(brief);
+        const at = `pick ${overallPick}`;
+
+        // Every available player still offered.
+        const idColumn = context.board.columns.indexOf('id');
+        const offered = context.board.rows.map((row) => row[idColumn]);
+        expect(offered.sort(), at).toEqual(
+          brief.candidates.map((candidate) => candidate.playerId).sort(),
+        );
+
+        // Every team still described, with its actual players.
+        expect(context.opponents, at).toHaveLength(entry.format.teams - 1);
+        for (const team of brief.opponents) {
+          const compact = context.opponents.find((other) => other.id === team.rosterId)!;
+          for (const player of team.players) expect(compact.roster, at).toContain(player.name);
+        }
+
+        // And the deterministic pick, which the whole layer is judged against.
+        expect(offered, at).toContain(brief.deterministic.recommended!.playerId);
+
+        expect(
+          JSON.stringify(context).length,
+          `${at}: payload should be a fraction of the brief`,
+        ).toBeLessThan(JSON.stringify(brief).length * 0.35);
+      }
+    },
+  );
+
+  it.each(cases.map((entry) => ({ entry, name: entry.draftId })))(
+    "passes its own guardrails at every pick the engine makes on $name",
+    ({ entry }) => {
+      /*
+       * The replayed board, not the historical one.
+       *
+       * Here our seat is drafted by the CURRENT engine, so the roster is the
+       * one it would actually build. If its own recommendation ever fails the
+       * guardrails on a roster of its own making, one of the two is wrong and
+       * this is where that shows up.
+       */
+      const { briefs } = replayCase(entry, { collectBriefs: true });
+      expect(briefs.length).toBeGreaterThan(0);
+
+      for (const brief of briefs) {
+        const recommended = brief.deterministic.recommended;
+        expect(recommended, `pick ${brief.draft.currentOverallPick}`).not.toBeNull();
+        const verdict = validateStrategistPick(
+          {
+            playerId: recommended!.playerId,
+            reasoning: 'Deterministic recommendation.',
+            reasonCodes: [],
+            confidence: 1,
+          },
+          brief,
+        );
+        expect(
+          verdict.violations.map((violation) => `${violation.code}: ${violation.message}`),
+          `R${brief.draft.currentRound} pick ${brief.draft.currentOverallPick}: ${recommended!.name} (${recommended!.position})`,
+        ).toEqual([]);
+      }
+    },
+  );
+
+  /**
+   * Prints what a real brief actually contains, and writes one out on request.
+   *
+   *     npm run brief
+   *
+   * The example is generated rather than written by hand, so it can never
+   * describe a shape the code stopped producing.
+   */
+  /**
+   * The evaluation harness has to find the selections worth paying to examine.
+   *
+   * A pick where First Seed, our simulation and our ranking all agree teaches
+   * nothing: the strategist can only match or be wrong. This checks that the
+   * disputes are actually detected, including the one used as the first test.
+   */
+  it('finds the disputed selections in every mock', () => {
+    for (const entry of cases) {
+      const interesting = findInterestingPicks(inputFor(entry));
+      expect(interesting.length, entry.draftId).toBeGreaterThan(0);
+      for (const pick of interesting) {
+        expect(pick.reasons.length, `p${pick.overallPick}`).toBeGreaterThan(0);
+        expect(pick.score).toBeGreaterThan(0);
+      }
+      // Ordered by how much is actually in dispute.
+      const scores = interesting.map((pick) => pick.score);
+      expect([...scores].sort((a, b) => b - a)).toEqual(scores);
+    }
+  });
+
+  it('flags pick 69 of the third mock, where the simulation disputes the ranking', () => {
+    const entry = cases.find((item) => item.draftId === '1398448522730221568');
+    if (!entry) return;
+    const found = findInterestingPicks(inputFor(entry)).find((pick) => pick.overallPick === 69);
+    expect(found, 'pick 69 should be recognised as disputed').toBeTruthy();
+    expect(found!.reasons).toContain('simulation_disagrees');
+  });
+
+  /**
+   * The comparison the strategist got wrong from marginals alone.
+   *
+   * At pick 52 it argued "two TEs cannot both survive sixteen selections" from
+   * Warren at 10% and Kraft at 72% - a joint claim read off two marginals. The
+   * runs contain the actual answer, and it is not the product of the two.
+   */
+  it('answers the pick-52 tight end question from the runs, not from marginals', () => {
+    const entry = cases.find((item) => item.draftId === '1398448522730221568');
+    if (!entry) return;
+    const brief = buildBriefAtPick(inputFor(entry), 52)!;
+    const joint = brief.jointAvailability;
+    expect(joint, 'the simulation should expose its futures').not.toBeNull();
+
+    const tierPair = joint!.pairs.find(
+      (pair) =>
+        pair.reason === 'same_tier_alternatives' &&
+        pair.a.position === 'TE' &&
+        pair.b.position === 'TE',
+    );
+    expect(tierPair, 'the two remaining tier-3 tight ends should be paired').toBeTruthy();
+
+    const names = [tierPair!.a.name, tierPair!.b.name].sort();
+    expect(names).toEqual(['Tucker Kraft', 'Tyler Warren']);
+
+    // The marginals the strategist had, unchanged.
+    const marginal = (name: string) =>
+      brief.candidates.find((candidate) => candidate.name === name)!.survival.probability!;
+    expect(tierPair!.aSurvives).toBeCloseTo(marginal(tierPair!.a.name), 1);
+    expect(tierPair!.bSurvives).toBeCloseTo(marginal(tierPair!.b.name), 1);
+
+    /*
+     * The claim it could not previously check. "Both survive" is low, which is
+     * what it guessed - but "either survives" is high, which is the number the
+     * decision actually turns on and which no pair of marginals implies.
+     */
+    expect(tierPair!.bothSurvive).toBeLessThan(15);
+    expect(tierPair!.atLeastOneSurvives).toBeGreaterThan(60);
+    expect(
+      tierPair!.atLeastOneSurvives + tierPair!.neitherSurvives,
+      'either and neither must partition the runs',
+    ).toBeCloseTo(100, 0);
+
+    // And it is genuinely not independence.
+    const independent = (tierPair!.aSurvives / 100) * (tierPair!.bSurvives / 100) * 100;
+    expect(Math.abs(tierPair!.bothSurvive - independent)).toBeGreaterThan(0.5);
+
+    // The tier outlook says the same thing in the form the question was asked.
+    const teTier = joint!.scenarios.tiers.find((tier) => tier.position === 'TE')!;
+    expect(teTier.members).toHaveLength(2);
+    expect(teTier.atLeastOneRemains).toBeCloseTo(tierPair!.atLeastOneSurvives, 0);
+  });
+
+  it('keeps the joint section bounded rather than quadratic', () => {
+    for (const entry of cases) {
+      for (const overallPick of ourPickNumbers(entry).slice(0, 6)) {
+        const brief = buildBriefAtPick(inputFor(entry), overallPick);
+        const joint = brief?.jointAvailability;
+        if (!joint) continue;
+        // A pool of eighty players is 3,160 pairs; only the contested handful
+        // are worth a row.
+        expect(joint.pairs.length, `p${overallPick}`).toBeLessThanOrEqual(12);
+        expect(joint.scenarios.tiers.length).toBeLessThanOrEqual(6);
+        expect(joint.scenarios.likelyBestAvailable.length).toBeLessThanOrEqual(5);
+        // Every pair must name players the strategist can actually see.
+        const ids = new Set(brief!.candidates.map((candidate) => candidate.playerId));
+        for (const pair of joint.pairs) {
+          expect(ids.has(pair.a.playerId)).toBe(true);
+          expect(ids.has(pair.b.playerId)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('reports what a real brief contains', () => {
+    const wanted = process.env.JUANCHO_BRIEF_DRAFT;
+    const entry = (wanted ? cases.find((item) => item.draftId === wanted) : cases[0]) ?? cases[0];
+    if (!entry) return;
+    const input = inputFor(entry);
+    const picks = ourPickNumbers(entry);
+    const sample = [picks[0], picks[Math.floor(picks.length / 2)], picks.at(-1)!];
+
+    console.log(`\n[brief] ${entry.draftId} · seat ${entry.userSlot} · ${entry.format.teams}-team`);
+    for (const overallPick of sample) {
+      const brief = buildBriefAtPick(input, overallPick)!;
+      const context = buildStrategistPromptContext(brief);
+      const kb = (value: unknown) => JSON.stringify(value).length / 1024;
+      const full = kb(brief);
+      const compact = kb(context);
+      console.log(
+        `  R${String(brief.draft.currentRound).padStart(2)} p${String(overallPick).padStart(3)} · ` +
+          `${brief.candidates.length} candidates · ${brief.opponents.length} opponents · ` +
+          `brief ${full.toFixed(1)}KB → context ${compact.toFixed(1)}KB ` +
+          `(${(100 - (compact / full) * 100).toFixed(0)}% smaller, ~${Math.round((compact * 1024) / 3.6)} tokens)`,
+      );
+    }
+
+    const out = process.env.JUANCHO_BRIEF_OUT;
+    if (out) {
+      const at = Number(process.env.JUANCHO_BRIEF_PICK ?? sample[1]);
+      const brief = buildBriefAtPick(input, at)!;
+      writeFileSync(out, `${JSON.stringify(brief, null, 2)}\n`, 'utf8');
+      const contextPath = out.replace(/\.json$/, '-context.json');
+      writeFileSync(
+        contextPath,
+        `${JSON.stringify(buildStrategistPromptContext(brief), null, 2)}\n`,
+        'utf8',
+      );
+      console.log(`[brief] wrote pick ${at} of ${entry.draftId} to ${out}`);
+      console.log(`[brief] wrote the strategist context to ${contextPath}`);
+    }
+
+    expect(picks.length).toBeGreaterThan(0);
+  });
+});

@@ -1,0 +1,154 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 71,
+      "currentOverallPick": 72,
+      "currentRound": 8,
+      "boardFingerprint": "1z-ecf20012",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:6904",
+      "reasoning": "starter_need: Our lineup reads QB=EMPTY with RB, RB, WR, WR, TE and both FLEX slots already filled by Saquon, Javonte, Nacua, Pickens, Warren, Judkins and Flowers, so a fourth RB or WR is bench depth while Hurts is a starter. tier_cliff: QB tier 3 has exactly one player left (Hurts, 309.6 proj) with a 12.9-point gap to tier 4, where the next 16 QBs (Herbert 283.8, Caleb Williams 284.3, Dak 287.4) are essentially interchangeable. survives_to_next_turn: Hurts has just 15.7% survival to pick 89 and five of the eight teams picking before us (1, 2, 4, 5 plus 3-slot QB needs) are listed QB:high with no starter, so he will not last 16 selections. opportunity_cost: Passing costs us only the last RB tier-11 body (Dowdle 145.3) or a WR tier-10 name, while Courtland Sutton, Alec Pierce, Parker Washington, Croskey-Merritt and Jordan Mason all project to survive to 89/92 at 50%+. first_seed_prior: Hurts is fsRank 76, only 6 ranks past First Seed's best available Rico Dowdle at 70, so this is essentially on-board and not a reach. positional_scarcity: Standard scoring with 2xFLEX means our RB/WR depth is already startable seven deep; the QB slot has zero acceptable in-house answer and cannot be left empty with 8 selections left that must also produce a K and DEF.",
+      "reasonCodes": [
+        "starter_need",
+        "tier_cliff",
+        "survives_to_next_turn",
+        "opportunity_cost",
+        "first_seed_prior",
+        "positional_scarcity"
+      ],
+      "confidence": 0.76
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9484",
+        "reasoning": "Tucker Kraft is the last player in TE tier 3 with a 10.6-point gap to tier 4, and would upgrade our TE/flex picture, but a second TE is far less useful than our only QB.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7021",
+        "reasoning": "Rico Dowdle is First Seed's best available (fsRank 70) and the last of RB tier 11, giving real flex depth behind Saquon/Javonte/Judkins.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 1: QB:high with picks at 80 and 81 back-to-back and no QB on a roster fronted by Jonathan Taylor and Trey McBride - a prime Hurts taker. Roster 2: QB:high, four RBs and three WRs already, holes at QB and TE; picks 79 and 82 and has no reason to pass an elite QB. Roster 4: QB:high with six RBs and one WR, picking 77 and 84; must start addressing QB and TE. Roster 5: QB:high at pick 76, only three selections away, with a full WR/RB core and no quarterback. Roster 3: Already has Joe Burrow so cannot take Hurts, but RB:high and TE:high at 78/83 means they will take Dowdle or Kraft before our next turn. Roster 8: Has Drake Maye so no QB demand, but WR:high at 73 will consume Odunze/Metcalf-class receivers we might otherwise wait on.",
+    "confidence": 0.76,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced build with all seven skill starters already filled (RB3/WR3/TE1); this pick deliberately closes the last real starting hole at QB by taking the last member of the QB tier-3 cliff rather than adding a fourth RB/WR body who would only ride the bench.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 89/92 (back-to-back turns) take the best remaining flex body plus a TE hedge or WR3 upgrade: Courtland Sutton (17.4% now but tier 11 has 4 left), Alec Pierce (53.8% surv), Parker Washington (23%), Jacory Croskey-Merritt (61%) and Jordan Mason (66%) should all be live, with Kyle Pitts/LaPorta/Mark Andrews-class TEs (tier 4, 18 left) still on the board if we want a Warren backup. K and DEF are reserved for 149 and the final rounds.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 1,
+        "why": "QB:high with picks at 80 and 81 back-to-back and no QB on a roster fronted by Jonathan Taylor and Trey McBride - a prime Hurts taker."
+      },
+      {
+        "rosterId": 2,
+        "why": "QB:high, four RBs and three WRs already, holes at QB and TE; picks 79 and 82 and has no reason to pass an elite QB."
+      },
+      {
+        "rosterId": 4,
+        "why": "QB:high with six RBs and one WR, picking 77 and 84; must start addressing QB and TE."
+      },
+      {
+        "rosterId": 5,
+        "why": "QB:high at pick 76, only three selections away, with a full WR/RB core and no quarterback."
+      },
+      {
+        "rosterId": 3,
+        "why": "Already has Joe Burrow so cannot take Hurts, but RB:high and TE:high at 78/83 means they will take Dowdle or Kraft before our next turn."
+      },
+      {
+        "rosterId": 8,
+        "why": "Has Drake Maye so no QB demand, but WR:high at 73 will consume Odunze/Metcalf-class receivers we might otherwise wait on."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:6904",
+    "alternatives": [
+      {
+        "playerId": "jfp:9484",
+        "reason": "Tucker Kraft is the last player in TE tier 3 with a 10.6-point gap to tier 4, and would upgrade our TE/flex picture, but a second TE is far less useful than our only QB."
+      },
+      {
+        "playerId": "jfp:7021",
+        "reason": "Rico Dowdle is First Seed's best available (fsRank 70) and the last of RB tier 11, giving real flex depth behind Saquon/Javonte/Judkins."
+      }
+    ],
+    "confidence": 76,
+    "strategy": "Balanced build with all seven skill starters already filled (RB3/WR3/TE1); this pick deliberately closes the last real starting hole at QB by taking the last member of the QB tier-3 cliff rather than adding a fourth RB/WR body who would only ride the bench.",
+    "reasons": [
+      {
+        "code": "starter_need",
+        "detail": "Our lineup reads QB=EMPTY with RB, RB, WR, WR, TE and both FLEX slots already filled by Saquon, Javonte, Nacua, Pickens, Warren, Judkins and Flowers, so a fourth RB or WR is bench depth while Hurts is a starter."
+      },
+      {
+        "code": "tier_cliff",
+        "detail": "QB tier 3 has exactly one player left (Hurts, 309.6 proj) with a 12.9-point gap to tier 4, where the next 16 QBs (Herbert 283.8, Caleb Williams 284.3, Dak 287.4) are essentially interchangeable."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Hurts has just 15.7% survival to pick 89 and five of the eight teams picking before us (1, 2, 4, 5 plus 3-slot QB needs) are listed QB:high with no starter, so he will not last 16 selections."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing costs us only the last RB tier-11 body (Dowdle 145.3) or a WR tier-10 name, while Courtland Sutton, Alec Pierce, Parker Washington, Croskey-Merritt and Jordan Mason all project to survive to 89/92 at 50%+."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "Hurts is fsRank 76, only 6 ranks past First Seed's best available Rico Dowdle at 70, so this is essentially on-board and not a reach."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Standard scoring with 2xFLEX means our RB/WR depth is already startable seven deep; the QB slot has zero acceptable in-house answer and cannot be left empty with 8 selections left that must also produce a K and DEF."
+      }
+    ],
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 89/92 (back-to-back turns) take the best remaining flex body plus a TE hedge or WR3 upgrade: Courtland Sutton (17.4% now but tier 11 has 4 left), Alec Pierce (53.8% surv), Parker Washington (23%), Jacory Croskey-Merritt (61%) and Jordan Mason (66%) should all be live, with Kyle Pitts/LaPorta/Mark Andrews-class TEs (tier 4, 18 left) still on the board if we want a Warren backup. K and DEF are reserved for 149 and the final rounds.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 1,
+        "why": "QB:high with picks at 80 and 81 back-to-back and no QB on a roster fronted by Jonathan Taylor and Trey McBride - a prime Hurts taker."
+      },
+      {
+        "rosterId": 2,
+        "why": "QB:high, four RBs and three WRs already, holes at QB and TE; picks 79 and 82 and has no reason to pass an elite QB."
+      },
+      {
+        "rosterId": 4,
+        "why": "QB:high with six RBs and one WR, picking 77 and 84; must start addressing QB and TE."
+      },
+      {
+        "rosterId": 5,
+        "why": "QB:high at pick 76, only three selections away, with a full WR/RB core and no quarterback."
+      },
+      {
+        "rosterId": 3,
+        "why": "Already has Joe Burrow so cannot take Hurts, but RB:high and TE:high at 78/83 means they will take Dowdle or Kraft before our next turn."
+      },
+      {
+        "rosterId": 8,
+        "why": "Has Drake Maye so no QB demand, but WR:high at 73 will consume Odunze/Metcalf-class receivers we might otherwise wait on."
+      }
+    ],
+    "decision": "DRAFT_NOW"
+  },
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 15562,
+    "outputTokens": 1684
+  },
+  "latencyMs": 23754,
+  "error": null,
+  "cachedAt": "2026-08-27T00:57:48.809Z",
+  "key": "d9095a08d423505977b07b27048222e5",
+  "label": "1398448522730221568 p72 claude-opus-5/playbook-v1"
+}

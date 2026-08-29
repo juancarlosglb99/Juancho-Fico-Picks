@@ -1,0 +1,106 @@
+# DigitalOcean App Platform specification.
+#
+# Committed so the deployment is reviewable and reproducible rather than a set
+# of choices somebody made in a web form eight months ago. Apply it with:
+#
+#   doctl apps create --spec .do/app.yaml
+#   doctl apps update <app-id> --spec .do/app.yaml
+#
+# Every value marked CHANGE ME is specific to the account it is deployed into.
+# Nothing secret is in this file: the secrets are set once in the App Platform
+# dashboard as encrypted variables and are never committed anywhere.
+
+name: juancho-fico-picks
+region: nyc
+
+services:
+  - name: web
+    # A Dockerfile rather than the Node buildpack, deliberately. The build
+    # output here is `vinext`'s standalone directory, which the buildpack does
+    # not know about - it would run `npm start` against a tree it had pruned
+    # dev dependencies out of, and the failure would be at boot rather than at
+    # build. The Dockerfile also lets the container refuse to start when it is
+    # misconfigured, which is the whole point of the preflight.
+    dockerfile_path: Dockerfile
+    source_dir: /
+
+    github:
+      repo: juancarlosglb99/Juancho-Fico-Picks # CHANGE ME if the repo moves
+      branch: main # CHANGE ME - this is currently on a feature branch
+      deploy_on_push: true
+
+    instance_count: 1
+    # 1 GB. The recommendation engine runs in the browser, so the server does
+    # SSR and route handlers only - but Node plus the bundle is not comfortable
+    # in 512 MB, and an out-of-memory restart mid-draft is the worst failure
+    # this product has.
+    instance_size_slug: apps-s-1vcpu-1gb
+
+    http_port: 8080
+
+    health_check:
+      http_path: /api/health
+      # In production that endpoint is strict: it fails unless the environment
+      # is fully configured, the database answers, and the schema is current.
+      # So a deploy that is missing a variable never gets promoted.
+      initial_delay_seconds: 30
+      period_seconds: 15
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+
+    envs:
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: production
+
+      # Supplied by the attached database component. App Platform substitutes
+      # the real connection string, including SSL parameters.
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+
+      # The managed database's CA certificate, so TLS is verified rather than
+      # merely switched on.
+      - key: DATABASE_CA_CERT
+        scope: RUN_TIME
+        type: SECRET
+        value: CHANGE ME # paste from the database's Connection Details
+
+      - key: BETTER_AUTH_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: CHANGE ME # node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+
+      # Must be the https origin the app is actually served from. The health
+      # check fails a production instance whose value is not https, because
+      # session cookies would not be marked Secure.
+      - key: BETTER_AUTH_URL
+        scope: RUN_TIME
+        value: https://CHANGE-ME.ondigitalocean.app
+
+      # Optional. Without it the strategist reports itself unconfigured and the
+      # deterministic engine carries every draft.
+      - key: ANTHROPIC_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: CHANGE ME
+
+      - key: JUANCHO_STRATEGIST_MODEL
+        scope: RUN_TIME
+        value: claude-opus-5
+
+      # Connections per instance. Well under a dev database's ceiling, with
+      # room for the migration client and a psql session.
+      - key: DATABASE_POOL_MAX
+        scope: RUN_TIME
+        value: "8"
+
+databases:
+  - name: db
+    engine: PG
+    version: "16"
+    # A dev database: $7/month, one node, no failover. Right for a private
+    # beta, and the thing to change first when it stops being one. Set
+    # `production: true` and pick a size to move to a managed cluster.
+    production: false

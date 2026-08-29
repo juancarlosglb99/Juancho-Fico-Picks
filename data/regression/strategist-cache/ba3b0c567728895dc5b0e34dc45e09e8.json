@@ -1,0 +1,112 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11604",
+      "reasoning": "tier_cliff: TE tier 1 has exactly one player left - Brock Bowers - with a 15.7-point gap to the next tier, whose best is Colston Loveland at 120.4 proj versus Bowers' 143.7, and the cliff is flagged atRisk. positional_scarcity: Every position group behind Bowers is flat: WR tier 8 has 16 players left (Nabers 137.5 down to McLaurin 136.1) and RB tier 9 has 7 (186.9 to 173.1), so passing on a WR or RB now costs a few points, while passing Bowers costs a full tier. opponent_demand: Roster 10 picks twice at 30 and 31 with TE:high and no tight end, and seven of the nine opponents still list TE:high or medium - Bowers' 51% survival is a coin flip we should not take. survives_to_next_turn: At pick 32 the board projects A.J. Brown (69.6%), Rashee Rice (72.8%), Tee Higgins (77.8%), Javonte Williams (61.4%), Bucky Irving (65.8%) and Quinshon Judkins (85.6%) still there, so we can fill WR2 or RB2 immediately after with minimal loss. first_seed_prior: This is only a 1-rank reach past First Seed's best available (fsRank 29 versus Pickens at 28), with fsVal +0.71 and landmine 5.0 - essentially free relative to the board. opportunity_cost: Juancho's own simulation has Bowers within 0.5 plan points of Pickens (1317.2 vs 1317.7); the -11.5 dDec is the reach/anchor penalty, not a real roster-value gap, and it ignores that a second TE never starts here (usableCapacity TE 2, one TE slot, FLEX realistically RB/WR).",
+      "reasonCodes": [
+        "tier_cliff",
+        "positional_scarcity",
+        "opponent_demand",
+        "survives_to_next_turn",
+        "first_seed_prior",
+        "opportunity_cost"
+      ],
+      "confidence": 0.68
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reasoning": "George Pickens is First Seed's best available (fsRank 28) and would fill our second starting WR slot, but at 38.9% survival he is the likelier of the two to be gone at 32 - though a comparable WR (A.J. Brown, Rashee Rice, Tee Higgins) almost certainly is not.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:7588",
+        "reasoning": "Javonte Williams (proj 186.9, best RB left, dPlan +12.2) would fill the RB2 slot next to Saquon, but tier 9 still holds seven backs (Irving, Judkins, Skattebo, Swift, Montgomery) so the position does not cliff before our next turn.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Owns both intervening selections (30 and 31) with QB/RB/WR/TE all high and zero tight ends on a WR1 RB1 roster - the single most likely team to take Bowers, and capable of taking Pickens too.",
+    "confidence": 0.68,
+    "model": "claude-opus-5",
+    "strategy": "Balanced build with two elite anchors (Nacua, Saquon); this pick buys the one genuinely separating starter left at a scarce position - TE - so that the WR/RB slots and both FLEX spots can be filled from the deep tier-8 WR and tier-9/10 RB pools with our remaining eleven selections.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best of the WR pool that survives - A.J. Brown (163 proj, last of WR tier 5) preferred, otherwise Rashee Rice or Tee Higgins - or pivot to Javonte Williams/Quinshon Judkins if the run at 30-31 empties the receivers; then at 49/52 fill the remaining RB2/FLEX from the still-deep tier 9/10 backs (Swift, Montgomery, Stevenson, Pollard) and stream a QB in the 69-92 range where Dak, Herbert, Caleb Williams and Goff cluster within 25 points of Drake Maye.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both intervening selections (30 and 31) with QB/RB/WR/TE all high and zero tight ends on a WR1 RB1 roster - the single most likely team to take Bowers, and capable of taking Pickens too."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "George Pickens is First Seed's best available (fsRank 28) and would fill our second starting WR slot, but at 38.9% survival he is the likelier of the two to be gone at 32 - though a comparable WR (A.J. Brown, Rashee Rice, Tee Higgins) almost certainly is not."
+      },
+      {
+        "playerId": "jfp:7588",
+        "reason": "Javonte Williams (proj 186.9, best RB left, dPlan +12.2) would fill the RB2 slot next to Saquon, but tier 9 still holds seven backs (Irving, Judkins, Skattebo, Swift, Montgomery) so the position does not cliff before our next turn."
+      }
+    ],
+    "confidence": 68,
+    "strategy": "Balanced build with two elite anchors (Nacua, Saquon); this pick buys the one genuinely separating starter left at a scarce position - TE - so that the WR/RB slots and both FLEX spots can be filled from the deep tier-8 WR and tier-9/10 RB pools with our remaining eleven selections.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 1 has exactly one player left - Brock Bowers - with a 15.7-point gap to the next tier, whose best is Colston Loveland at 120.4 proj versus Bowers' 143.7, and the cliff is flagged atRisk."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "Every position group behind Bowers is flat: WR tier 8 has 16 players left (Nabers 137.5 down to McLaurin 136.1) and RB tier 9 has 7 (186.9 to 173.1), so passing on a WR or RB now costs a few points, while passing Bowers costs a full tier."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Roster 10 picks twice at 30 and 31 with TE:high and no tight end, and seven of the nine opponents still list TE:high or medium - Bowers' 51% survival is a coin flip we should not take."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "At pick 32 the board projects A.J. Brown (69.6%), Rashee Rice (72.8%), Tee Higgins (77.8%), Javonte Williams (61.4%), Bucky Irving (65.8%) and Quinshon Judkins (85.6%) still there, so we can fill WR2 or RB2 immediately after with minimal loss."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "This is only a 1-rank reach past First Seed's best available (fsRank 29 versus Pickens at 28), with fsVal +0.71 and landmine 5.0 - essentially free relative to the board."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Juancho's own simulation has Bowers within 0.5 plan points of Pickens (1317.2 vs 1317.7); the -11.5 dDec is the reach/anchor penalty, not a real roster-value gap, and it ignores that a second TE never starts here (usableCapacity TE 2, one TE slot, FLEX realistically RB/WR)."
+      }
+    ],
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best of the WR pool that survives - A.J. Brown (163 proj, last of WR tier 5) preferred, otherwise Rashee Rice or Tee Higgins - or pivot to Javonte Williams/Quinshon Judkins if the run at 30-31 empties the receivers; then at 49/52 fill the remaining RB2/FLEX from the still-deep tier 9/10 backs (Swift, Montgomery, Stevenson, Pollard) and stream a QB in the 69-92 range where Dak, Herbert, Caleb Williams and Goff cluster within 25 points of Drake Maye.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both intervening selections (30 and 31) with QB/RB/WR/TE all high and zero tight ends on a WR1 RB1 roster - the single most likely team to take Bowers, and capable of taking Pickens too."
+      }
+    ]
+  },
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 15483,
+    "outputTokens": 1541
+  },
+  "latencyMs": 22407,
+  "error": null,
+  "cachedAt": "2026-08-27T00:57:48.809Z",
+  "key": "ba3b0c567728895dc5b0e34dc45e09e8",
+  "label": "1398448522730221568 p29 claude-opus-5/playbook-v1"
+}

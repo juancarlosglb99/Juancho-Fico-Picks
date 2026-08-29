@@ -102,11 +102,37 @@ describe('live First Seed structured sheets', () => {
       roomRankings,
     });
 
+    /*
+     * KNOWN FAILING as of 2026-08-28, and deliberately not relaxed.
+     *
+     * First Seed published 213 ranked players on 2026-08-13 and publishes 192
+     * today - 10 fewer receivers, 10 fewer backs, 1 fewer tight end, the same
+     * quarterbacks. Ordinary editorial pruning as the season approaches.
+     *
+     * It is the SOURCE, not us. The importer matches 192 of 192 with zero
+     * unmatched rows, and matching against every player Sleeper has ever known
+     * gives the same 192 - so neither the mapping nor the eligibility rule is
+     * losing anybody.
+     *
+     * Lowering the number would silence the one thing telling us the board
+     * moved. 192 skill players plus 72 K/DST still covers a 12-team, 15-round
+     * draft (180 selections); a 14-team or 16-round league would run past the
+     * end of the board in the closing rounds. See DEPLOYMENT.md.
+     */
     expect(projections.resolution.matched).toBeGreaterThanOrEqual(200);
     expect(roomRankings.resolution.matched).toBeGreaterThanOrEqual(180);
     expect(adp.resolution.matched).toBeGreaterThanOrEqual(80);
     expect(result.recommendations.length).toBeGreaterThan(0);
-    expect(result.recommendations[0].projection.projectionSource).toContain('First Seed');
+    // Every skill-position recommendation must trace back to First Seed. Kicker
+    // and defense stand-ins deliberately do not, because no provider publishes
+    // them, and they say so in their own source label.
+    const skillRecommendations = result.recommendations.filter((recommendation) =>
+      ['QB', 'RB', 'WR', 'TE'].includes(recommendation.player.position),
+    );
+    expect(skillRecommendations.length).toBeGreaterThan(0);
+    for (const recommendation of skillRecommendations.slice(0, 10)) {
+      expect(recommendation.projection.projectionSource).toContain('First Seed');
+    }
     expect(result.recommendations.some((recommendation) => recommendation.draftRoomRank !== null))
       .toBe(true);
     expect(result.recommendations.some((recommendation) => recommendation.marketAdp !== null))

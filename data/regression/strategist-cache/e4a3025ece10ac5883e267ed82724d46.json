@@ -1,0 +1,114 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 68,
+      "currentOverallPick": 69,
+      "currentRound": 7,
+      "boardFingerprint": "1w-5085ddb9",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:12518",
+      "reasoning": "tier_cliff: TE tier 3 has exactly 2 players left (Tyler Warren, Tucker Kraft) with a 10.6-point gap to tier 4, which then holds 18 bodies — this is the last chance at the separating tier. starter_need: Our lineup shows TE=EMPTY with RB and WR fully covered (Saquon/Javonte/Judkins, Nacua/Pickens/Flowers filling both FLEX), so Warren is a starter, not depth. positional_scarcity: QB can wait: 16 quarterbacks sit in tier 4 (Herbert 283.8, Caleb 284.3, Dak 287.4, Purdy 279.1) all with 84-87% survival, so the drop from Hurts to a round-9 QB is small relative to the 10.6-point TE cliff. first_seed_prior: First Seed's best available is Tyler Warren at rank 60 — fsGap 0, so this is not a reach at all; Juancho independently ranks him jRec 1, DRAFT_NOW, plan 1363. opponent_demand: Team 10 picks twice at 70 and 71 with TE:medium and QB:high needs and no TE beyond Bowers-caliber depth; Warren's survival is only 62.5%, the lowest of any candidate we want. opportunity_cost: Passing on Hurts costs roughly 25-30 points versus the next QB tier, while passing on the last two tier-3 TEs would cost 10+ points at a slot we cannot otherwise fill, and RB/WR adds (Dowdle, Odunze) would be bench bodies with no open slot.",
+      "reasonCodes": [
+        "tier_cliff",
+        "starter_need",
+        "positional_scarcity",
+        "first_seed_prior",
+        "opponent_demand",
+        "opportunity_cost"
+      ],
+      "confidence": 0.78
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9484",
+        "reasoning": "Tucker Kraft is the other member of the last TE tier (tier 3, gap of 10.6 points to tier 4) and projects 116.3 to Warren's 116.8, so he is the near-identical fallback.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:6904",
+        "reasoning": "Jalen Hurts is the top remaining QB (309.6 proj, tier 3 with only 2 left) and fills our other empty starting slot, but QB is far more replaceable in this 1QB league with 16 tier-4 arms still on the board.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Owns both intervening picks (70, 71) with QB:high and TE:medium holes and no starting TE beyond Bowers-level need; a QB-then-TE double could take Warren or Kraft plus Hurts off the board before pick 72.",
+    "confidence": 0.78,
+    "model": "claude-opus-5",
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced build with six solid RB/WR starters already locked; now closing the two remaining startable holes (TE, QB) in the right order — take the scarce TE tier now, then a quarterback from the deep flat tier at 72 or later.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 72 take the best remaining quarterback — Hurts (77.2% survival) or Jayden Daniels (72.9%) if either lasts through team 10's two picks, otherwise Herbert/Caleb Williams/Dak from the 16-deep tier 4, all at 84%+ survival; that closes QB and TE by round 8 and leaves 89/92 for RB/WR bench and K/DEF at the end.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both intervening picks (70, 71) with QB:high and TE:medium holes and no starting TE beyond Bowers-level need; a QB-then-TE double could take Warren or Kraft plus Hurts off the board before pick 72."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:12518",
+    "alternatives": [
+      {
+        "playerId": "jfp:9484",
+        "reason": "Tucker Kraft is the other member of the last TE tier (tier 3, gap of 10.6 points to tier 4) and projects 116.3 to Warren's 116.8, so he is the near-identical fallback."
+      },
+      {
+        "playerId": "jfp:6904",
+        "reason": "Jalen Hurts is the top remaining QB (309.6 proj, tier 3 with only 2 left) and fills our other empty starting slot, but QB is far more replaceable in this 1QB league with 16 tier-4 arms still on the board."
+      }
+    ],
+    "confidence": 78,
+    "decision": "DRAFT_NOW",
+    "strategy": "Balanced build with six solid RB/WR starters already locked; now closing the two remaining startable holes (TE, QB) in the right order — take the scarce TE tier now, then a quarterback from the deep flat tier at 72 or later.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 3 has exactly 2 players left (Tyler Warren, Tucker Kraft) with a 10.6-point gap to tier 4, which then holds 18 bodies — this is the last chance at the separating tier."
+      },
+      {
+        "code": "starter_need",
+        "detail": "Our lineup shows TE=EMPTY with RB and WR fully covered (Saquon/Javonte/Judkins, Nacua/Pickens/Flowers filling both FLEX), so Warren is a starter, not depth."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "QB can wait: 16 quarterbacks sit in tier 4 (Herbert 283.8, Caleb 284.3, Dak 287.4, Purdy 279.1) all with 84-87% survival, so the drop from Hurts to a round-9 QB is small relative to the 10.6-point TE cliff."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "First Seed's best available is Tyler Warren at rank 60 — fsGap 0, so this is not a reach at all; Juancho independently ranks him jRec 1, DRAFT_NOW, plan 1363."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Team 10 picks twice at 70 and 71 with TE:medium and QB:high needs and no TE beyond Bowers-caliber depth; Warren's survival is only 62.5%, the lowest of any candidate we want."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Passing on Hurts costs roughly 25-30 points versus the next QB tier, while passing on the last two tier-3 TEs would cost 10+ points at a slot we cannot otherwise fill, and RB/WR adds (Dowdle, Odunze) would be bench bodies with no open slot."
+      }
+    ],
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 72 take the best remaining quarterback — Hurts (77.2% survival) or Jayden Daniels (72.9%) if either lasts through team 10's two picks, otherwise Herbert/Caleb Williams/Dak from the 16-deep tier 4, all at 84%+ survival; that closes QB and TE by round 8 and leaves 89/92 for RB/WR bench and K/DEF at the end.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Owns both intervening picks (70, 71) with QB:high and TE:medium holes and no starting TE beyond Bowers-level need; a QB-then-TE double could take Warren or Kraft plus Hurts off the board before pick 72."
+      }
+    ]
+  },
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 15387,
+    "outputTokens": 1356
+  },
+  "latencyMs": 19376,
+  "error": null,
+  "cachedAt": "2026-08-27T00:52:31.263Z",
+  "key": "e4a3025ece10ac5883e267ed82724d46",
+  "label": "1398448522730221568 p69 claude-opus-5/playbook-v1"
+}

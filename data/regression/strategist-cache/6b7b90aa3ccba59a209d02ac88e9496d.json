@@ -1,0 +1,311 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 28,
+      "currentOverallPick": 29,
+      "currentRound": 3,
+      "boardFingerprint": "s-51f80f39",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:11604",
+      "reasoning": "tier_cliff: Brock Bowers is the only player left in TE tier 1 with a 15.7-point gap to the next tier, and the tierCliffs row flags TE as atRisk=1. positional_scarcity: After Bowers the next TEs are Colston Loveland (120.4), Tyler Warren (116.8) and Tucker Kraft (116.3) - a 23-point drop we would eat all season at a mandatory starting slot. opportunity_cost: WR and RB behind him are deep: WR tier 8 has 16 members (Rice, Higgins, McMillan, G.Wilson, McConkey all 91-98% to survive) and RB tier 9 has 7 members with eitherRemains 100%, so passing costs us almost nothing at those slots. survives_to_next_turn: Bowers has the lowest survival of any candidate at 74.3%, and both roster 10 picks at 30 and 31 list TE:high need - he is the single player most likely to be gone at 32. first_seed_prior: fsGap is only 1 (rank 29 at pick 29), so this is following the board, not reaching. opponent_demand: Eight of nine opponents list TE:high or TE:medium and only Trey McBride has gone, so the elite-TE market is about to be picked clean.",
+      "reasonCodes": [
+        "tier_cliff",
+        "positional_scarcity",
+        "opportunity_cost",
+        "survives_to_next_turn",
+        "first_seed_prior",
+        "opponent_demand"
+      ],
+      "confidence": 0.68
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reasoning": "George Pickens is First Seed's best available and the top WR left, and he fills our open WR2/flex slot.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:5859",
+        "reasoning": "A.J. Brown is the last member of WR tier 5 with a 6.8-point gap to the next tier and would anchor our WR2 spot.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 10: Holds both picks 30 and 31 with TE:high, QB:high, RB:high and WR:high needs and only two players rostered - a back-to-back turn that can take Bowers plus a top WR, and the sole reason Bowers' survival is only 74.3%.",
+    "confidence": 0.68,
+    "model": "claude-opus-5",
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with Nacua and Barkley already banked; we spend this pick on the one genuinely scarce, separating asset - the alone-in-tier-1 TE - and then fill RB2/WR2 from the deep tier-8/tier-9 pools at 32 and 49.",
+    "firstSeedDeviationReason": null,
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's #28, the top WR left, and slots straight into our empty WR2 in a standard-scoring league where big-play receivers hold value.",
+    "strongestCounterargument": "Juancho's own simulation prefers Pickens - he is 78.3% to survive and 78.3% to be best available at 32, while the pair row shows Bowers and Pickens are both there in 55.7% of runs and bIfAGone says if Pickens goes first, Bowers still survives 86.2% of the time, implying we can often get both by taking Pickens now.",
+    "whyRecommendationStillWins": "That 86.2% is conditioned on Pickens being the one taken, which is exactly the branch where roster 10 spends a pick on a receiver instead of the tight end; the unconditional 74.3% is the honest number, and the WR replacement cost is trivial (a 16-man tier with Rice at 91.7%, Higgins 93.3%, McMillan 93%) against a 15.7-point TE cliff we cannot recover from.",
+    "expectedNextPickPlan": "At 32 take the best of Pickens (78.3%), Malik Nabers (81.7%), A.J. Brown (86.3%) or Tee Higgins (93.3%) to fill WR2, then use 49/52 on the RB tier-9 group - Judkins (98%), Montgomery (98%), Swift (97%) - to fill RB2 and a flex; QB waits until the 69/72 range given Hurts/Daniels sit at 100% survival and the tier-4 QB pool is 16 deep.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Holds both picks 30 and 31 with TE:high, QB:high, RB:high and WR:high needs and only two players rostered - a back-to-back turn that can take Bowers plus a top WR, and the sole reason Bowers' survival is only 74.3%."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "George Pickens is First Seed's best available and the top WR left, and he fills our open WR2/flex slot."
+      },
+      {
+        "playerId": "jfp:5859",
+        "reason": "A.J. Brown is the last member of WR tier 5 with a 6.8-point gap to the next tier and would anchor our WR2 spot."
+      }
+    ],
+    "confidence": 68,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with Nacua and Barkley already banked; we spend this pick on the one genuinely scarce, separating asset - the alone-in-tier-1 TE - and then fill RB2/WR2 from the deep tier-8/tier-9 pools at 32 and 49.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Brock Bowers is the only player left in TE tier 1 with a 15.7-point gap to the next tier, and the tierCliffs row flags TE as atRisk=1."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "After Bowers the next TEs are Colston Loveland (120.4), Tyler Warren (116.8) and Tucker Kraft (116.3) - a 23-point drop we would eat all season at a mandatory starting slot."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "WR and RB behind him are deep: WR tier 8 has 16 members (Rice, Higgins, McMillan, G.Wilson, McConkey all 91-98% to survive) and RB tier 9 has 7 members with eitherRemains 100%, so passing costs us almost nothing at those slots."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Bowers has the lowest survival of any candidate at 74.3%, and both roster 10 picks at 30 and 31 list TE:high need - he is the single player most likely to be gone at 32."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 1 (rank 29 at pick 29), so this is following the board, not reaching."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Eight of nine opponents list TE:high or TE:medium and only Trey McBride has gone, so the elite-TE market is about to be picked clean."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's #28, the top WR left, and slots straight into our empty WR2 in a standard-scoring league where big-play receivers hold value.",
+    "strongestCounterargument": "Juancho's own simulation prefers Pickens - he is 78.3% to survive and 78.3% to be best available at 32, while the pair row shows Bowers and Pickens are both there in 55.7% of runs and bIfAGone says if Pickens goes first, Bowers still survives 86.2% of the time, implying we can often get both by taking Pickens now.",
+    "whyRecommendationStillWins": "That 86.2% is conditioned on Pickens being the one taken, which is exactly the branch where roster 10 spends a pick on a receiver instead of the tight end; the unconditional 74.3% is the honest number, and the WR replacement cost is trivial (a 16-man tier with Rice at 91.7%, Higgins 93.3%, McMillan 93%) against a 15.7-point TE cliff we cannot recover from.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best of Pickens (78.3%), Malik Nabers (81.7%), A.J. Brown (86.3%) or Tee Higgins (93.3%) to fill WR2, then use 49/52 on the RB tier-9 group - Judkins (98%), Montgomery (98%), Swift (97%) - to fill RB2 and a flex; QB waits until the 69/72 range given Hurts/Daniels sit at 100% survival and the tier-4 QB pool is 16 deep.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Holds both picks 30 and 31 with TE:high, QB:high, RB:high and WR:high needs and only two players rostered - a back-to-back turn that can take Bowers plus a top WR, and the sole reason Bowers' survival is only 74.3%."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:11604",
+    "alternatives": [
+      {
+        "playerId": "jfp:8137",
+        "reason": "George Pickens is First Seed's best available and the top WR left, and he fills our open WR2/flex slot."
+      },
+      {
+        "playerId": "jfp:5859",
+        "reason": "A.J. Brown is the last member of WR tier 5 with a 6.8-point gap to the next tier and would anchor our WR2 spot."
+      }
+    ],
+    "confidence": 68,
+    "urgency": "must_take_now",
+    "strategy": "Balanced build with Nacua and Barkley already banked; we spend this pick on the one genuinely scarce, separating asset - the alone-in-tier-1 TE - and then fill RB2/WR2 from the deep tier-8/tier-9 pools at 32 and 49.",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "Brock Bowers is the only player left in TE tier 1 with a 15.7-point gap to the next tier, and the tierCliffs row flags TE as atRisk=1."
+      },
+      {
+        "code": "positional_scarcity",
+        "detail": "After Bowers the next TEs are Colston Loveland (120.4), Tyler Warren (116.8) and Tucker Kraft (116.3) - a 23-point drop we would eat all season at a mandatory starting slot."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "WR and RB behind him are deep: WR tier 8 has 16 members (Rice, Higgins, McMillan, G.Wilson, McConkey all 91-98% to survive) and RB tier 9 has 7 members with eitherRemains 100%, so passing costs us almost nothing at those slots."
+      },
+      {
+        "code": "survives_to_next_turn",
+        "detail": "Bowers has the lowest survival of any candidate at 74.3%, and both roster 10 picks at 30 and 31 list TE:high need - he is the single player most likely to be gone at 32."
+      },
+      {
+        "code": "first_seed_prior",
+        "detail": "fsGap is only 1 (rank 29 at pick 29), so this is following the board, not reaching."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Eight of nine opponents list TE:high or TE:medium and only Trey McBride has gone, so the elite-TE market is about to be picked clean."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:8137",
+    "strongestAlternativeWhy": "Pickens is First Seed's #28, the top WR left, and slots straight into our empty WR2 in a standard-scoring league where big-play receivers hold value.",
+    "strongestCounterargument": "Juancho's own simulation prefers Pickens - he is 78.3% to survive and 78.3% to be best available at 32, while the pair row shows Bowers and Pickens are both there in 55.7% of runs and bIfAGone says if Pickens goes first, Bowers still survives 86.2% of the time, implying we can often get both by taking Pickens now.",
+    "whyRecommendationStillWins": "That 86.2% is conditioned on Pickens being the one taken, which is exactly the branch where roster 10 spends a pick on a receiver instead of the tight end; the unconditional 74.3% is the honest number, and the WR replacement cost is trivial (a 16-man tier with Rice at 91.7%, Higgins 93.3%, McMillan 93%) against a 15.7-point TE cliff we cannot recover from.",
+    "firstSeedDeviationReason": null,
+    "expectedNextPickPlan": "At 32 take the best of Pickens (78.3%), Malik Nabers (81.7%), A.J. Brown (86.3%) or Tee Higgins (93.3%) to fill WR2, then use 49/52 on the RB tier-9 group - Judkins (98%), Montgomery (98%), Swift (97%) - to fill RB2 and a flex; QB waits until the 69/72 range given Hurts/Daniels sit at 100% survival and the tier-4 QB pool is 16 deep.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 10,
+        "why": "Holds both picks 30 and 31 with TE:high, QB:high, RB:high and WR:high needs and only two players rostered - a back-to-back turn that can take Bowers plus a top WR, and the sole reason Bowers' survival is only 74.3%."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [
+        {
+          "code": "missing_field",
+          "path": "urgency",
+          "message": "Required field \"urgency\" was not returned."
+        }
+      ],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:11604",
+        "alternatives": [
+          {
+            "playerId": "jfp:8137",
+            "reason": "George Pickens is First Seed's best available and the top WR left, and he fills our open WR2/flex slot."
+          },
+          {
+            "playerId": "jfp:5859",
+            "reason": "A.J. Brown is the last member of WR tier 5 with a 6.8-point gap to the next tier and would anchor our WR2 spot."
+          }
+        ],
+        "confidence": 68,
+        "strategy": "Balanced build with Nacua and Barkley already banked; we spend this pick on the one genuinely scarce, separating asset - the alone-in-tier-1 TE - and then fill RB2/WR2 from the deep tier-8/tier-9 pools at 32 and 49.",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "Brock Bowers is the only player left in TE tier 1 with a 15.7-point gap to the next tier, and the tierCliffs row flags TE as atRisk=1."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "After Bowers the next TEs are Colston Loveland (120.4), Tyler Warren (116.8) and Tucker Kraft (116.3) - a 23-point drop we would eat all season at a mandatory starting slot."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "WR and RB behind him are deep: WR tier 8 has 16 members (Rice, Higgins, McMillan, G.Wilson, McConkey all 91-98% to survive) and RB tier 9 has 7 members with eitherRemains 100%, so passing costs us almost nothing at those slots."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Bowers has the lowest survival of any candidate at 74.3%, and both roster 10 picks at 30 and 31 list TE:high need - he is the single player most likely to be gone at 32."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap is only 1 (rank 29 at pick 29), so this is following the board, not reaching."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Eight of nine opponents list TE:high or TE:medium and only Trey McBride has gone, so the elite-TE market is about to be picked clean."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8137",
+        "strongestAlternativeWhy": "Pickens is First Seed's #28, the top WR left, and slots straight into our empty WR2 in a standard-scoring league where big-play receivers hold value.",
+        "strongestCounterargument": "Juancho's own simulation prefers Pickens - he is 78.3% to survive and 78.3% to be best available at 32, while the pair row shows Bowers survives in only 55.7% of runs alongside him and bIfAGone says if Pickens goes, Bowers still survives 86.2% of the time, implying we can often get both by taking Pickens first.",
+        "whyRecommendationStillWins": "The pair row cuts the other way: taking Bowers now leaves Pickens available 93.8% of runs in the Javonte comparison analogue and, more importantly, the WR replacement is a 16-man tier where Rice/Higgins/McMillan/McConkey all survive above 91%, whereas the TE replacement is a 23-point cliff - we lose far less by missing Pickens than by missing Bowers in the 25.7% of runs he disappears.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At 32 take the best of Pickens (78.3%), Malik Nabers (81.7%), A.J. Brown (86.3%) or Tee Higgins (93.3%) to fill WR2, then use 49/52 on the RB tier-9 group - Judkins (98%), Montgomery (98%), Swift (97%) - to fill RB2 and a flex; QB waits until the 69/72 range given Hurts/Daniels sit at 100% survival and the tier-4 QBs are 16 deep.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Holds both picks 30 and 31 with TE:high, QB:high, RB:high and WR:high needs and only two players rostered - a back-to-back turn that can take Bowers plus a top WR, and the only reason Bowers' survival is 74.3%."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 15898,
+        "outputTokens": 1629
+      },
+      "latencyMs": 23140,
+      "error": "The strategist's response did not satisfy the contract. urgency: Required field \"urgency\" was not returned."
+    },
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:11604",
+        "alternatives": [
+          {
+            "playerId": "jfp:8137",
+            "reason": "George Pickens is First Seed's best available and the top WR left, and he fills our open WR2/flex slot."
+          },
+          {
+            "playerId": "jfp:5859",
+            "reason": "A.J. Brown is the last member of WR tier 5 with a 6.8-point gap to the next tier and would anchor our WR2 spot."
+          }
+        ],
+        "confidence": 68,
+        "urgency": "must_take_now",
+        "strategy": "Balanced build with Nacua and Barkley already banked; we spend this pick on the one genuinely scarce, separating asset - the alone-in-tier-1 TE - and then fill RB2/WR2 from the deep tier-8/tier-9 pools at 32 and 49.",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "Brock Bowers is the only player left in TE tier 1 with a 15.7-point gap to the next tier, and the tierCliffs row flags TE as atRisk=1."
+          },
+          {
+            "code": "positional_scarcity",
+            "detail": "After Bowers the next TEs are Colston Loveland (120.4), Tyler Warren (116.8) and Tucker Kraft (116.3) - a 23-point drop we would eat all season at a mandatory starting slot."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "WR and RB behind him are deep: WR tier 8 has 16 members (Rice, Higgins, McMillan, G.Wilson, McConkey all 91-98% to survive) and RB tier 9 has 7 members with eitherRemains 100%, so passing costs us almost nothing at those slots."
+          },
+          {
+            "code": "survives_to_next_turn",
+            "detail": "Bowers has the lowest survival of any candidate at 74.3%, and both roster 10 picks at 30 and 31 list TE:high need - he is the single player most likely to be gone at 32."
+          },
+          {
+            "code": "first_seed_prior",
+            "detail": "fsGap is only 1 (rank 29 at pick 29), so this is following the board, not reaching."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Eight of nine opponents list TE:high or TE:medium and only Trey McBride has gone, so the elite-TE market is about to be picked clean."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:8137",
+        "strongestAlternativeWhy": "Pickens is First Seed's #28, the top WR left, and slots straight into our empty WR2 in a standard-scoring league where big-play receivers hold value.",
+        "strongestCounterargument": "Juancho's own simulation prefers Pickens - he is 78.3% to survive and 78.3% to be best available at 32, while the pair row shows Bowers and Pickens are both there in 55.7% of runs and bIfAGone says if Pickens goes first, Bowers still survives 86.2% of the time, implying we can often get both by taking Pickens now.",
+        "whyRecommendationStillWins": "That 86.2% is conditioned on Pickens being the one taken, which is exactly the branch where roster 10 spends a pick on a receiver instead of the tight end; the unconditional 74.3% is the honest number, and the WR replacement cost is trivial (a 16-man tier with Rice at 91.7%, Higgins 93.3%, McMillan 93%) against a 15.7-point TE cliff we cannot recover from.",
+        "firstSeedDeviationReason": null,
+        "expectedNextPickPlan": "At 32 take the best of Pickens (78.3%), Malik Nabers (81.7%), A.J. Brown (86.3%) or Tee Higgins (93.3%) to fill WR2, then use 49/52 on the RB tier-9 group - Judkins (98%), Montgomery (98%), Swift (97%) - to fill RB2 and a flex; QB waits until the 69/72 range given Hurts/Daniels sit at 100% survival and the tier-4 QB pool is 16 deep.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 10,
+            "why": "Holds both picks 30 and 31 with TE:high, QB:high, RB:high and WR:high needs and only two players rostered - a back-to-back turn that can take Bowers plus a top WR, and the sole reason Bowers' survival is only 74.3%."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 17728,
+        "outputTokens": 1669
+      },
+      "latencyMs": 17295,
+      "error": null
+    }
+  ],
+  "repairAttempted": true,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 33626,
+    "outputTokens": 3298
+  },
+  "latencyMs": 40435,
+  "error": null,
+  "cachedAt": "2026-08-27T19:52:28.610Z",
+  "key": "6b7b90aa3ccba59a209d02ac88e9496d",
+  "label": "1398448522730221568 p29 claude-opus-5/playbook-v1 blind"
+}

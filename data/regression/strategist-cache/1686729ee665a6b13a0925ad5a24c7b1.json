@@ -1,0 +1,236 @@
+{
+  "advice": {
+    "state": {
+      "draftId": "1398448522730221568",
+      "picksMade": 51,
+      "currentOverallPick": 52,
+      "currentRound": 6,
+      "boardFingerprint": "1f-400a7bf0",
+      "onTheClockRosterId": 9,
+      "isOurSelection": true
+    },
+    "primary": {
+      "playerId": "jfp:12518",
+      "reasoning": "tier_cliff: TE tier 3 has 2 left (Warren, Kraft) with a 10.6-point gap to tier 4; expected members remaining at pick 69 is 0.8 and atRisk is flagged. opponent_demand: Seven of the eight teams picking between 53 and 68 list TE:high or TE:medium; Warren survives only 10% of runs. opportunity_cost: Warren's simGap is -3.6, best of any non-Stevenson candidate; Flowers is -16.1 and Burrow -13.4, and QB tier 3 still has Hurts (77.7%) and Daniels (61.7%) waiting.",
+      "reasonCodes": [
+        "tier_cliff",
+        "opponent_demand",
+        "opportunity_cost"
+      ],
+      "confidence": 0.72
+    },
+    "alternatives": [
+      {
+        "playerId": "jfp:9997",
+        "reasoning": "First Seed's best available WR and only 4% to survive, but WR tier 8 has seven bodies and we already start two.",
+        "reasonCodes": [],
+        "confidence": 0
+      },
+      {
+        "playerId": "jfp:6770",
+        "reasoning": "Joe Burrow at 7.3% survival is the last of QB tier 3 likely to clear, but Hurts/Daniels remain 92.7% of runs.",
+        "reasonCodes": [],
+        "confidence": 0
+      }
+    ],
+    "roomRead": "Roster 8: Picks 53; TE:high with no TE and WR:high. Roster 6: Picks 55; TE:high, QB/WR already set, RB or TE only. Roster 2: Picks 59 and 62; TE:high with zero TEs and four RBs.",
+    "confidence": 0.72,
+    "model": "claude-opus-5",
+    "urgency": "must_take_now",
+    "strategy": "RB-heavy build with both starting WRs and FLEX filled; now buy the last separating TE before the tier-3 cliff, then take QB and WR value at the 69/72 turn.",
+    "firstSeedDeviationReason": "Reaching 8 ranks past Flowers to secure the last realistically available separating TE for an empty starting slot facing a 10.6-point cliff.",
+    "strongestAlternativePlayerId": "jfp:9997",
+    "strongestAlternativeWhy": "Zay Flowers is First Seed's #52, exactly on the pick, and projects 144 versus Warren's 116.8.",
+    "strongestCounterargument": "Tucker Kraft is the same TE tier 3 at 72.3% survival and 116.3 proj — essentially identical to Warren's 116.8 — so the tier survives to pick 69 in 76.3% of runs and we can take Flowers-class WR value now.",
+    "whyRecommendationStillWins": "Kraft at 72.3% still fails 27.7% of the time, and if he goes we drop 10.6 points to tier 4 with no TE fallback; the WR we'd buy instead is fungible — tier 8 has seven members, 93% that at least one survives, and a third WR is only a FLEX body behind Judkins.",
+    "expectedNextPickPlan": "At 69/72 take a QB from tier 3 (Hurts 77.7%, Daniels 61.7%) plus a WR — McLaurin, Egbuka or Evans project 38-16% to be there.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 53; TE:high with no TE and WR:high."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 55; TE:high, QB/WR already set, RB or TE only."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 59 and 62; TE:high with zero TEs and four RBs."
+      }
+    ]
+  },
+  "response": {
+    "recommendedPlayerId": "jfp:12518",
+    "alternatives": [
+      {
+        "playerId": "jfp:9997",
+        "reason": "First Seed's best available WR and only 4% to survive, but WR tier 8 has seven bodies and we already start two."
+      },
+      {
+        "playerId": "jfp:6770",
+        "reason": "Joe Burrow at 7.3% survival is the last of QB tier 3 likely to clear, but Hurts/Daniels remain 92.7% of runs."
+      }
+    ],
+    "confidence": 72,
+    "strategy": "RB-heavy build with both starting WRs and FLEX filled; now buy the last separating TE before the tier-3 cliff, then take QB and WR value at the 69/72 turn.",
+    "urgency": "must_take_now",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 3 has 2 left (Warren, Kraft) with a 10.6-point gap to tier 4; expected members remaining at pick 69 is 0.8 and atRisk is flagged."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Seven of the eight teams picking between 53 and 68 list TE:high or TE:medium; Warren survives only 10% of runs."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Warren's simGap is -3.6, best of any non-Stevenson candidate; Flowers is -16.1 and Burrow -13.4, and QB tier 3 still has Hurts (77.7%) and Daniels (61.7%) waiting."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9997",
+    "strongestAlternativeWhy": "Zay Flowers is First Seed's #52, exactly on the pick, and projects 144 versus Warren's 116.8.",
+    "strongestCounterargument": "Tucker Kraft is the same TE tier 3 at 72.3% survival and 116.3 proj — essentially identical to Warren's 116.8 — so the tier survives to pick 69 in 76.3% of runs and we can take Flowers-class WR value now.",
+    "whyRecommendationStillWins": "Kraft at 72.3% still fails 27.7% of the time, and if he goes we drop 10.6 points to tier 4 with no TE fallback; the WR we'd buy instead is fungible — tier 8 has seven members, 93% that at least one survives, and a third WR is only a FLEX body behind Judkins.",
+    "firstSeedDeviationReason": "Reaching 8 ranks past Flowers to secure the last realistically available separating TE for an empty starting slot facing a 10.6-point cliff.",
+    "expectedNextPickPlan": "At 69/72 take a QB from tier 3 (Hurts 77.7%, Daniels 61.7%) plus a WR — McLaurin, Egbuka or Evans project 38-16% to be there.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 53; TE:high with no TE and WR:high."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 55; TE:high, QB/WR already set, RB or TE only."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 59 and 62; TE:high with zero TEs and four RBs."
+      }
+    ]
+  },
+  "rawResponse": {
+    "recommendedPlayerId": "jfp:12518",
+    "alternatives": [
+      {
+        "playerId": "jfp:9997",
+        "reason": "First Seed's best available WR and only 4% to survive, but WR tier 8 has seven bodies and we already start two."
+      },
+      {
+        "playerId": "jfp:6770",
+        "reason": "Joe Burrow at 7.3% survival is the last of QB tier 3 likely to clear, but Hurts/Daniels remain 92.7% of runs."
+      }
+    ],
+    "confidence": 72,
+    "strategy": "RB-heavy build with both starting WRs and FLEX filled; now buy the last separating TE before the tier-3 cliff, then take QB and WR value at the 69/72 turn.",
+    "urgency": "must_take_now",
+    "reasons": [
+      {
+        "code": "tier_cliff",
+        "detail": "TE tier 3 has 2 left (Warren, Kraft) with a 10.6-point gap to tier 4; expected members remaining at pick 69 is 0.8 and atRisk is flagged."
+      },
+      {
+        "code": "opponent_demand",
+        "detail": "Seven of the eight teams picking between 53 and 68 list TE:high or TE:medium; Warren survives only 10% of runs."
+      },
+      {
+        "code": "opportunity_cost",
+        "detail": "Warren's simGap is -3.6, best of any non-Stevenson candidate; Flowers is -16.1 and Burrow -13.4, and QB tier 3 still has Hurts (77.7%) and Daniels (61.7%) waiting."
+      }
+    ],
+    "strongestAlternativePlayerId": "jfp:9997",
+    "strongestAlternativeWhy": "Zay Flowers is First Seed's #52, exactly on the pick, and projects 144 versus Warren's 116.8.",
+    "strongestCounterargument": "Tucker Kraft is the same TE tier 3 at 72.3% survival and 116.3 proj — essentially identical to Warren's 116.8 — so the tier survives to pick 69 in 76.3% of runs and we can take Flowers-class WR value now.",
+    "whyRecommendationStillWins": "Kraft at 72.3% still fails 27.7% of the time, and if he goes we drop 10.6 points to tier 4 with no TE fallback; the WR we'd buy instead is fungible — tier 8 has seven members, 93% that at least one survives, and a third WR is only a FLEX body behind Judkins.",
+    "firstSeedDeviationReason": "Reaching 8 ranks past Flowers to secure the last realistically available separating TE for an empty starting slot facing a 10.6-point cliff.",
+    "expectedNextPickPlan": "At 69/72 take a QB from tier 3 (Hurts 77.7%, Daniels 61.7%) plus a WR — McLaurin, Egbuka or Evans project 38-16% to be there.",
+    "opponentsThatMatter": [
+      {
+        "rosterId": 8,
+        "why": "Picks 53; TE:high with no TE and WR:high."
+      },
+      {
+        "rosterId": 6,
+        "why": "Picks 55; TE:high, QB/WR already set, RB or TE only."
+      },
+      {
+        "rosterId": 2,
+        "why": "Picks 59 and 62; TE:high with zero TEs and four RBs."
+      }
+    ]
+  },
+  "problems": [],
+  "attempts": [
+    {
+      "problems": [],
+      "rawResponse": {
+        "recommendedPlayerId": "jfp:12518",
+        "alternatives": [
+          {
+            "playerId": "jfp:9997",
+            "reason": "First Seed's best available WR and only 4% to survive, but WR tier 8 has seven bodies and we already start two."
+          },
+          {
+            "playerId": "jfp:6770",
+            "reason": "Joe Burrow at 7.3% survival is the last of QB tier 3 likely to clear, but Hurts/Daniels remain 92.7% of runs."
+          }
+        ],
+        "confidence": 72,
+        "strategy": "RB-heavy build with both starting WRs and FLEX filled; now buy the last separating TE before the tier-3 cliff, then take QB and WR value at the 69/72 turn.",
+        "urgency": "must_take_now",
+        "reasons": [
+          {
+            "code": "tier_cliff",
+            "detail": "TE tier 3 has 2 left (Warren, Kraft) with a 10.6-point gap to tier 4; expected members remaining at pick 69 is 0.8 and atRisk is flagged."
+          },
+          {
+            "code": "opponent_demand",
+            "detail": "Seven of the eight teams picking between 53 and 68 list TE:high or TE:medium; Warren survives only 10% of runs."
+          },
+          {
+            "code": "opportunity_cost",
+            "detail": "Warren's simGap is -3.6, best of any non-Stevenson candidate; Flowers is -16.1 and Burrow -13.4, and QB tier 3 still has Hurts (77.7%) and Daniels (61.7%) waiting."
+          }
+        ],
+        "strongestAlternativePlayerId": "jfp:9997",
+        "strongestAlternativeWhy": "Zay Flowers is First Seed's #52, exactly on the pick, and projects 144 versus Warren's 116.8.",
+        "strongestCounterargument": "Tucker Kraft is the same TE tier 3 at 72.3% survival and 116.3 proj — essentially identical to Warren's 116.8 — so the tier survives to pick 69 in 76.3% of runs and we can take Flowers-class WR value now.",
+        "whyRecommendationStillWins": "Kraft at 72.3% still fails 27.7% of the time, and if he goes we drop 10.6 points to tier 4 with no TE fallback; the WR we'd buy instead is fungible — tier 8 has seven members, 93% that at least one survives, and a third WR is only a FLEX body behind Judkins.",
+        "firstSeedDeviationReason": "Reaching 8 ranks past Flowers to secure the last realistically available separating TE for an empty starting slot facing a 10.6-point cliff.",
+        "expectedNextPickPlan": "At 69/72 take a QB from tier 3 (Hurts 77.7%, Daniels 61.7%) plus a WR — McLaurin, Egbuka or Evans project 38-16% to be there.",
+        "opponentsThatMatter": [
+          {
+            "rosterId": 8,
+            "why": "Picks 53; TE:high with no TE and WR:high."
+          },
+          {
+            "rosterId": 6,
+            "why": "Picks 55; TE:high, QB/WR already set, RB or TE only."
+          },
+          {
+            "rosterId": 2,
+            "why": "Picks 59 and 62; TE:high with zero TEs and four RBs."
+          }
+        ]
+      },
+      "usage": {
+        "inputTokens": 16696,
+        "outputTokens": 1276
+      },
+      "latencyMs": 18157,
+      "error": null
+    }
+  ],
+  "repairAttempted": false,
+  "thinking": null,
+  "model": "claude-opus-5",
+  "usage": {
+    "inputTokens": 16696,
+    "outputTokens": 1276
+  },
+  "latencyMs": 18157,
+  "error": null,
+  "cachedAt": "2026-08-27T20:01:56.659Z",
+  "key": "1686729ee665a6b13a0925ad5a24c7b1",
+  "label": "1398448522730221568 p52 claude-opus-5/playbook-v1 blind concise"
+}

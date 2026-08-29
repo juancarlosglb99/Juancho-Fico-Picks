@@ -1,0 +1,39 @@
+# Caddy obtains and renews the certificate itself, the moment the domain's DNS
+# points at this Droplet. There is nothing to configure and nothing to put in
+# front of it: no Cloudflare, no certbot, no cron.
+#
+# If the certificate does not appear, the cause is almost always DNS not yet
+# pointing here, or ports 80/443 not open. Caddy's log says which.
+
+{
+	email {$ACME_EMAIL}
+	# Uncomment to test against Let's Encrypt's staging CA, which has far
+	# looser rate limits, while sorting out DNS.
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# The app is the only upstream, and it is not reachable any other way.
+	reverse_proxy app:8080 {
+		health_uri /api/health
+		health_interval 30s
+		health_timeout 5s
+	}
+
+	header {
+		# HSTS. Only meaningful once the certificate is working, which Caddy
+		# guarantees before it serves this vhost at all.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
