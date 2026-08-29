@@ -12,6 +12,7 @@
  * Everything diagnostic lives behind a disclosure. The main path is four
  * buttons.
  */
+import Link from 'next/link';
 import type { DraftReadiness } from '@/packages/ui/readiness';
 import type { SleeperDraft, SleeperLeague } from '@/packages/sleeper/types';
 import { Brand, ErrorBanner, LoadingMark, Panel, PanelTitle } from './primitives';
@@ -62,6 +63,12 @@ export function PreDraft(props: {
     email: string | null;
     plan: string;
     creditsRemaining: number | null;
+    /**
+     * Whether to offer the admin dashboard. Decided by `isAdmin` over the
+     * server's own summary - this component never infers it from the plan
+     * string it prints.
+     */
+    isAdmin: boolean;
     onSignOut: () => void;
   } | null;
 }) {
@@ -80,11 +87,11 @@ export function PreDraft(props: {
             {props.account && (
               <span className="flex items-center gap-2 text-[11px] font-bold text-[#5f7280]">
                 <span className="hidden sm:inline">{props.account.email}</span>
-                <span className="rounded-full border border-[#25373f] px-2 py-0.5 uppercase tracking-[0.08em] text-[#8fa0aa]">
-                  {props.account.plan}
-                  {props.account.creditsRemaining !== null &&
-                    ` · ${props.account.creditsRemaining}`}
-                </span>
+                <PlanBadge
+                  plan={props.account.plan}
+                  creditsRemaining={props.account.creditsRemaining}
+                  isAdmin={props.account.isAdmin}
+                />
                 <button
                   onClick={props.account.onSignOut}
                   className="transition hover:text-[#ff9a80]"
@@ -113,6 +120,47 @@ export function PreDraft(props: {
         </div>
       </div>
     </main>
+  );
+}
+
+/*
+ * The plan badge, which for an admin is also the way in to the admin page.
+ *
+ * That page was reachable only by typing the URL. The badge already said
+ * ADMIN, in the right place, to exactly the right people - so it becomes the
+ * link rather than the header growing a control beside it.
+ *
+ * `isAdmin` is decided by the server's summary, never inferred from the plan
+ * string printed here. A link is not permission either way: `/admin` fetches
+ * from routes that answer 404 to anybody the entitlement table does not call
+ * an admin.
+ */
+const BADGE_SHAPE = 'rounded-full border px-2 py-0.5 uppercase tracking-[0.08em]';
+const BADGE_TONE = 'border-[#25373f] text-[#8fa0aa]';
+
+function PlanBadge({
+  plan,
+  creditsRemaining,
+  isAdmin,
+}: {
+  plan: string;
+  creditsRemaining: number | null;
+  isAdmin: boolean;
+}) {
+  const label = `${plan}${creditsRemaining !== null ? ` · ${creditsRemaining}` : ''}`;
+
+  if (!isAdmin) {
+    return <span className={`${BADGE_SHAPE} ${BADGE_TONE}`}>{label}</span>;
+  }
+
+  return (
+    <Link
+      href="/admin"
+      title="Open the admin dashboard"
+      className={`${BADGE_SHAPE} ${BADGE_TONE} transition hover:border-[#b9ff38] hover:text-[#b9ff38] focus-visible:border-[#b9ff38] focus-visible:text-[#b9ff38] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b9ff38]/60`}
+    >
+      {label}
+    </Link>
   );
 }
 

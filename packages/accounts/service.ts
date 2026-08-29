@@ -26,6 +26,7 @@ import {
 import {
   creditsRemaining,
   decideAiAccess,
+  isAdmin,
   REFUSAL_MESSAGE,
   resolveAccess,
   type AccessState,
@@ -852,5 +853,5 @@ export async function requireAdmin(request: Request): Promise<SessionUser | null
   if (!user) return null;
   const account = await ensureAccount({ userId: user.id, displayName: user.name });
   const access = resolveAccess(account.entitlement, new Date());
-  return access.state === 'active' && access.plan === 'admin' ? user : null;
+  return isAdmin(access.state, access.plan) ? user : null;
 }

@@ -27,6 +27,7 @@ import { buildDraftReadiness } from '@/packages/ui/readiness';
 import { resolveRecommendationCard } from '@/packages/ui/recommendation';
 import { deriveDraftStatus } from '@/packages/ui/status';
 import { screenForUrl } from '@/packages/ui/auth-flow';
+import { isAdmin } from '@/packages/accounts/entitlements';
 import type { LeagueRosterView } from '@/packages/sleeper/types';
 import { DiagnosticsPanel, diagnosticsEnabled } from './components/diagnostics';
 import { DraftRoom } from './components/draft-room';
@@ -548,6 +549,7 @@ export function Dashboard() {
                 email: account.user?.email ?? null,
                 plan: account.plan,
                 creditsRemaining: account.creditsRemaining,
+                isAdmin: isAdmin(account.access, account.plan),
                 onSignOut: () => {
                   void signOut().then(() => account.refresh());
                 },

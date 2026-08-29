@@ -181,6 +181,23 @@ export function hasProductAccess(entitlement: Entitlement | null, now: Date): bo
 }
 
 /**
+ * Whether this account is an administrator.
+ *
+ * The one predicate behind both the server's `requireAdmin` and the admin link
+ * in the header, so the navigation can never offer a page the API would answer
+ * 404 to. Taking the two values rather than an `Access` lets the browser ask
+ * the same question of the `/api/account` summary, which carries them
+ * separately.
+ *
+ * Showing the link is not authorisation and is not treated as any: the page
+ * behind it fetches from routes that resolve the caller from their session
+ * cookie every time.
+ */
+export function isAdmin(state: AccessState, plan: Plan): boolean {
+  return state === 'active' && plan === 'admin';
+}
+
+/**
  * The plan in force right now.
  *
  * Kept as a narrower view over `resolveAccess` for the callers that only care
