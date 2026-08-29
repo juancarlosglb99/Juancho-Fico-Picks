@@ -189,7 +189,14 @@ describe('survival probability calibration', () => {
 
     expect(warren, 'Tyler Warren at pick 52 should be one of the observations').toBeTruthy();
     expect(warren!.survived).toBe(true);
-  });
+    /*
+     * Replays every benchmark case twice, once per survival model, which is the
+     * only way the two are comparable on identical boards. That lands around
+     * 5.6s on a developer machine - already over the default five seconds, and
+     * it fails on duration rather than on an assertion. Give it room rather
+     * than shrink what it covers. 20s matches vitest.smoke.config.ts.
+     */
+  }, 20_000);
 
   it('removes exactly as many players as there are selections', () => {
     /*
